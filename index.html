@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Kotono Nomikon - Positional Search</title>
+    <title>Kotono Nomikon - Flexible Search</title>
     <style>
         * {
             margin: 0;
@@ -68,18 +68,46 @@
         margin-bottom: 20px;
     }
 
-    .instruction-text {
-        font-size: 14px;
-        color: #555;
-        margin-bottom: 10px;
-        text-align: center;
+    .controls-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .align-toggle {
+        display: flex;
+        background: #e0e0e0;
+        border-radius: 8px;
+        padding: 2px;
+    }
+
+    .align-option {
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 6px;
+        color: #666;
+        user-select: none;
+    }
+
+    .align-option.active {
+        background: white;
+        color: #007AFF;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
     .pos-filter-container {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
         gap: 6px;
-        margin-bottom: 15px;
+        margin-bottom: 5px;
+    }
+
+    /* Direction change based on alignment for visual cue */
+    .pos-filter-container.align-right {
+        direction: rtl; /* Use RTL to visually suggest matching from right? Optional, but reordering boxes might confuse. Keeping LTR but changing logic is safer. */
     }
 
     .pos-input {
@@ -94,7 +122,7 @@
         background: #fff;
         -webkit-appearance: none;
         appearance: none;
-        transition: border-color 0.2s, background 0.2s;
+        transition: all 0.2s;
     }
 
     .pos-input:focus {
@@ -109,21 +137,22 @@
     }
     
     .pos-label {
-        font-size: 12px;
+        font-size: 10px;
         color: #999;
         text-align: center;
         margin-top: 4px;
+        height: 14px;
     }
 
     .action-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 10px;
+        margin-top: 15px;
     }
     
     .sort-select {
-        padding: 6px 12px;
+        padding: 8px 12px;
         border-radius: 6px;
         border: 1px solid #ccc;
         background: white;
@@ -265,6 +294,18 @@
         color: #999;
         font-size: 16px;
     }
+    
+    /* Highlight for Right Alignment mode */
+    .align-right-mode .pos-input {
+        border-color: #34c759; /* Green hint for right align */
+    }
+    .align-right-mode .pos-input:focus {
+        border-color: #248a3d;
+    }
+    .align-right-mode .pos-input.filled {
+        background: #f0fff4;
+        border-color: #34c759;
+    }
 </style>
 </head>
 <body>
@@ -275,40 +316,33 @@
 
             <div id="mainContent" style="display:none;">
                 
-                <div class="input-section">
-                    <div class="instruction-text">
-                        Type characters into positions.
+                <div class="input-section" id="inputSection">
+                    <div class="controls-top">
+                        <span style="font-size:14px; color:#555;">Alignment:</span>
+                        <div class="align-toggle">
+                            <div class="align-option active" data-align="left">Left (Start)</div>
+                            <div class="align-option" data-align="right">Right (End)</div>
+                        </div>
                     </div>
                     
                     <div class="pos-filter-container" id="posFilterContainer">
-                        <div>
-                            <input type="text" class="pos-input" data-index="0" autocomplete="off">
-                            <div class="pos-label">1</div>
-                        </div>
-                        <div>
-                            <input type="text" class="pos-input" data-index="1" autocomplete="off">
-                            <div class="pos-label">2</div>
-                        </div>
-                        <div>
-                            <input type="text" class="pos-input" data-index="2" autocomplete="off">
-                            <div class="pos-label">3</div>
-                        </div>
-                        <div>
-                            <input type="text" class="pos-input" data-index="3" autocomplete="off">
-                            <div class="pos-label">4</div>
-                        </div>
-                        <div>
-                            <input type="text" class="pos-input" data-index="4" autocomplete="off">
-                            <div class="pos-label">5</div>
-                        </div>
-                        <div>
-                            <input type="text" class="pos-input" data-index="5" autocomplete="off">
-                            <div class="pos-label">6</div>
-                        </div>
-                        <div>
-                            <input type="text" class="pos-input" data-index="6" autocomplete="off">
-                            <div class="pos-label">7</div>
-                        </div>
+                        <div><input type="text" class="pos-input" data-index="0" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="1" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="2" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="3" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="4" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="5" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
+                    </div>
+                    
+                    <div class="pos-filter-container" id="labelsRow">
+                        <div class="pos-label">1</div>
+                        <div class="pos-label">2</div>
+                        <div class="pos-label">3</div>
+                        <div class="pos-label">4</div>
+                        <div class="pos-label">5</div>
+                        <div class="pos-label">6</div>
+                        <div class="pos-label">7</div>
                     </div>
 
                     <div class="action-row">
@@ -337,7 +371,7 @@
                     <div class="filter-row">
                         <label>
                             <input type="checkbox" id="distinguishDiacritics">
-                            <span>Distinguish Diacritics (Dakuten)</span>
+                            <span>Distinguish Diacritics</span>
                         </label>
                     </div>
                 </div>
@@ -352,9 +386,10 @@
 
 <script>
     let dictionary = [];
-    
+    let currentAlign = 'left'; // 'left' or 'right'
+
+    // Fallback data
     function getSampleDictionary() {
-        // Fallback data
         const samples = [
             ["あい","",1,["愛","合い","藍"],["Plants/Fungi","Color"]],
             ["あお","",1,["青","粟生"],["Color"]],
@@ -377,7 +412,8 @@
             ["りんご","",2,["林檎","リンゴ"],["Vegetable/Fruit"]],
             ["るーれっと","",4,["ルーレット"],[]],
             ["れんあい","",3,["恋愛"],["Emotion"]],
-            ["がっこう","かっこう",3,["学校"],["School Subject"]]
+            ["がっこう","かっこう",3,["学校"],["School Subject"]],
+            ["ん","",1,["ん"],[]]
         ];
         
         return samples.map(entry => ({
@@ -426,7 +462,19 @@
         const clearBtn = document.getElementById('clearBtn');
         const posInputs = document.querySelectorAll('.pos-input');
         const sortSelect = document.getElementById('sortSelect');
+        const alignOptions = document.querySelectorAll('.align-option');
         
+        // Alignment Toggle
+        alignOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                alignOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                currentAlign = opt.getAttribute('data-align');
+                updateAlignmentUI();
+                performSearch();
+            });
+        });
+
         clearBtn.addEventListener('click', (e) => {
             e.preventDefault();
             posInputs.forEach(input => {
@@ -453,7 +501,6 @@
             });
         });
         
-        // Handle Checkboxes & Sort
         document.querySelectorAll('input[type="checkbox"]').forEach(input => {
             input.addEventListener('change', performSearch);
         });
@@ -473,7 +520,33 @@
             });
         });
 
+        updateAlignmentUI(); // Set initial labels
         performSearch();
+    }
+
+    function updateAlignmentUI() {
+        const inputSection = document.getElementById('inputSection');
+        const labels = document.getElementById('labelsRow').children;
+        
+        if (currentAlign === 'right') {
+            inputSection.classList.add('align-right-mode');
+            // Update labels to show relative position from end
+            // Box 7 is Last, Box 6 is 2nd Last...
+            // Or just keep it 1-7 but maybe color code?
+            // Let's use negative numbers or text to be clear.
+            for(let i=0; i<7; i++) {
+                // index 0 (leftmost) is the "furthest from end"
+                // index 6 (rightmost) is the "end"
+                // 0 -> -7, 6 -> -1
+                labels[i].textContent = (i - 7).toString(); 
+            }
+            labels[6].textContent = "End";
+        } else {
+            inputSection.classList.remove('align-right-mode');
+            for(let i=0; i<7; i++) {
+                labels[i].textContent = (i + 1).toString();
+            }
+        }
     }
     
     function performSearch() {
@@ -496,7 +569,7 @@
             if (val.length > 0) {
                 hasActivePosFilter = true;
                 constraints.push({
-                    index: parseInt(input.getAttribute('data-index')),
+                    uiIndex: parseInt(input.getAttribute('data-index')), // 0 to 6
                     chars: val.split('') 
                 });
             }
@@ -511,31 +584,47 @@
 
         if (hasActivePosFilter) {
             results = results.filter(word => {
+                const len = word.word.length;
+                
                 return constraints.every(constraint => {
-                    if (word.word.length <= constraint.index) {
+                    let targetIndex;
+
+                    if (currentAlign === 'left') {
+                        // Standard: UI Index 0 = Word Index 0
+                        targetIndex = constraint.uiIndex;
+                    } else {
+                        // Right Align: 
+                        // UI Index 6 (Rightmost Box) = len - 1 (Last char)
+                        // UI Index 5 = len - 2
+                        // Formula: len - (7 - uiIndex)
+                        targetIndex = len - (7 - constraint.uiIndex);
+                    }
+
+                    // Check bounds
+                    if (targetIndex < 0 || targetIndex >= len) {
                         return false; 
                     }
-                    const charAtPos = word.word[constraint.index];
+                    
+                    const charAtPos = word.word[targetIndex];
                     return constraint.chars.includes(charAtPos);
                 });
             });
         }
 
-        // 3. Sorting (Updated: Shortest First Default)
+        // 3. Sorting
         if (sortOrder === 'asc') {
             results.sort((a, b) => a.word.length - b.word.length);
         } else {
             results.sort((a, b) => b.word.length - a.word.length);
         }
         
-        // Increased max results to prevent truncation of small words
         const maxResults = 300; 
         const totalFound = results.length;
         const displayResults = results.slice(0, maxResults);
         
         // 4. Update UI
         if (!hasActivePosFilter && charFilters.length === 0) {
-            resultCount.textContent = `Waiting for input... (${dictionary.length} words loaded)`;
+            resultCount.textContent = `Waiting for input... (${dictionary.length} words)`;
             resultList.innerHTML = '';
             return;
         }
@@ -556,11 +645,31 @@
                 // Highlight Logic
                 let highlightedWord = '';
                 const chars = word.word.split('');
-                for (let i = 0; i < chars.length; i++) {
+                const len = word.word.length;
+
+                for (let i = 0; i < len; i++) {
                     const char = chars[i];
-                    const constraint = constraints.find(c => c.index === i);
-                    
-                    if (constraint && constraint.chars.includes(char)) {
+                    let isMatch = false;
+
+                    // Check if this index was targeted by any constraint
+                    if (hasActivePosFilter) {
+                        // Reverse lookup: which constraint maps to index i?
+                        const matchingConstraint = constraints.find(c => {
+                            let mappedIndex;
+                            if (currentAlign === 'left') {
+                                mappedIndex = c.uiIndex;
+                            } else {
+                                mappedIndex = len - (7 - c.uiIndex);
+                            }
+                            return mappedIndex === i;
+                        });
+
+                        if (matchingConstraint && matchingConstraint.chars.includes(char)) {
+                            isMatch = true;
+                        }
+                    }
+
+                    if (isMatch) {
                         highlightedWord += `<span style="color: #007AFF; font-weight: bold; text-decoration: underline;">${char}</span>`;
                     } else {
                         highlightedWord += char;

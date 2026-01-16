@@ -60,7 +60,6 @@
         color: #666;
     }
     
-    /* Input Section Styles */
     .input-section {
         background: #f8f9fa;
         padding: 20px;
@@ -85,7 +84,7 @@
 
     .pos-input {
         width: 100%;
-        aspect-ratio: 1/1; /* Make boxes square */
+        aspect-ratio: 1/1;
         padding: 0;
         font-size: 20px;
         font-weight: bold;
@@ -118,8 +117,17 @@
 
     .action-row {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
+        align-items: center;
         margin-top: 10px;
+    }
+    
+    .sort-select {
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        background: white;
+        font-size: 14px;
     }
 
     button {
@@ -139,7 +147,6 @@
         transform: scale(0.97);
     }
 
-    /* Filter Styles */
     .filters {
         margin-bottom: 20px;
         padding: 0 10px;
@@ -208,16 +215,14 @@
         touch-action: manipulation;
     }
 
-    /* Results Styles */
     .results {
         margin-top: 10px;
     }
     
     .result-count {
-        font-size: 16px;
-        font-weight: 600;
+        font-size: 15px;
+        color: #666;
         margin-bottom: 15px;
-        color: #333;
         padding-left: 10px;
     }
     
@@ -261,8 +266,6 @@
         font-size: 16px;
     }
 </style>
-
-
 </head>
 <body>
     <div id="app">
@@ -274,7 +277,7 @@
                 
                 <div class="input-section">
                     <div class="instruction-text">
-                        Type characters into positions. <br>Multiple chars in one box = OR. Boxes combined = AND.
+                        Type characters into positions.
                     </div>
                     
                     <div class="pos-filter-container" id="posFilterContainer">
@@ -309,6 +312,10 @@
                     </div>
 
                     <div class="action-row">
+                        <select id="sortSelect" class="sort-select">
+                            <option value="asc">Shortest First</option>
+                            <option value="desc">Longest First</option>
+                        </select>
                         <button id="clearBtn" type="button">Reset All</button>
                     </div>
                 </div>
@@ -346,8 +353,8 @@
 <script>
     let dictionary = [];
     
-    // Fallback sample dictionary
     function getSampleDictionary() {
+        // Fallback data
         const samples = [
             ["あい","",1,["愛","合い","藍"],["Plants/Fungi","Color"]],
             ["あお","",1,["青","粟生"],["Color"]],
@@ -406,7 +413,6 @@
         })
         .catch(error => {
             console.error('Dictionary load error:', error);
-            console.log('Using fallback dictionary...');
             dictionary = getSampleDictionary();
             document.getElementById('loadingMsg').textContent = 'Dictionary load failed. Using sample dictionary.';
             setTimeout(() => {
@@ -419,23 +425,21 @@
     function initializeApp() {
         const clearBtn = document.getElementById('clearBtn');
         const posInputs = document.querySelectorAll('.pos-input');
+        const sortSelect = document.getElementById('sortSelect');
         
-        // Handle Clear Button
         clearBtn.addEventListener('click', (e) => {
             e.preventDefault();
             posInputs.forEach(input => {
                 input.value = '';
                 input.classList.remove('filled');
             });
-            // Also reset checkboxes if desired? No, usually users want to keep length filters.
             performSearch();
         });
         
-        // Handle Input in boxes
+        // Handle Input
         let searchTimeout;
         posInputs.forEach(input => {
             input.addEventListener('input', () => {
-                // Visual feedback for filled box
                 if(input.value.length > 0) {
                     input.classList.add('filled');
                 } else {
@@ -447,17 +451,15 @@
                     performSearch();
                 }, 200);
             });
-
-            // Focus management: If user types 1 char, maybe move to next? 
-            // Kotodaman allows multiple chars (OR logic), so we don't auto-advance.
         });
         
-        // Handle Length Checkboxes & Diacritics
+        // Handle Checkboxes & Sort
         document.querySelectorAll('input[type="checkbox"]').forEach(input => {
             input.addEventListener('change', performSearch);
         });
+
+        sortSelect.addEventListener('change', performSearch);
         
-        // Tap on label toggles checkbox
         document.querySelectorAll('label').forEach(label => {
             label.addEventListener('touchend', function(e) {
                 if (e.target.tagName !== 'INPUT') {
@@ -471,23 +473,20 @@
             });
         });
 
-        // Run initial empty search to show state
         performSearch();
     }
     
     function performSearch() {
         const resultCount = document.getElementById('resultCount');
         const resultList = document.getElementById('resultList');
+        const sortOrder = document.getElementById('sortSelect').value;
         
         // 1. Gather Filters
-        // Length filters
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked'))
             .map(cb => parseInt(cb.value));
         
-        // Diacritics
-        const distinguishDiacritics = document.getElementById('distinguishDiacritics').checked; // Currently not applying logic for this simpler version, but keeping UI
+        const distinguishDiacritics = document.getElementById('distinguishDiacritics').checked;
 
-        // Positional constraints
         const posInputs = document.querySelectorAll('.pos-input');
         const constraints = []; 
         let hasActivePosFilter = false;
@@ -498,7 +497,7 @@
                 hasActivePosFilter = true;
                 constraints.push({
                     index: parseInt(input.getAttribute('data-index')),
-                    chars: val.split('') // 'ab' -> ['a','b'] (OR logic)
+                    chars: val.split('') 
                 });
             }
         });
@@ -506,43 +505,44 @@
         // 2. Filter Logic
         let results = dictionary;
 
-        // Apply Length Filter
         if (charFilters.length > 0) {
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // Apply Positional Filter
         if (hasActivePosFilter) {
             results = results.filter(word => {
                 return constraints.every(constraint => {
-                    // If word is too short for this constraint index, it fails
                     if (word.word.length <= constraint.index) {
                         return false; 
                     }
-                    
                     const charAtPos = word.word[constraint.index];
                     return constraint.chars.includes(charAtPos);
                 });
             });
         }
 
-        // 3. Sorting & Display Limits
-        results.sort((a, b) => b.word.length - a.word.length);
+        // 3. Sorting (Updated: Shortest First Default)
+        if (sortOrder === 'asc') {
+            results.sort((a, b) => a.word.length - b.word.length);
+        } else {
+            results.sort((a, b) => b.word.length - a.word.length);
+        }
         
-        const maxResults = 100;
+        // Increased max results to prevent truncation of small words
+        const maxResults = 300; 
         const totalFound = results.length;
         const displayResults = results.slice(0, maxResults);
         
         // 4. Update UI
         if (!hasActivePosFilter && charFilters.length === 0) {
-            resultCount.textContent = `Waiting for input... (Total words: ${dictionary.length})`;
-            resultList.innerHTML = ''; // Don't show entire dictionary by default
+            resultCount.textContent = `Waiting for input... (${dictionary.length} words loaded)`;
+            resultList.innerHTML = '';
             return;
         }
 
         if (totalFound === 0) {
-            resultCount.textContent = "No matching words found";
-            resultList.innerHTML = '<div class="no-results">No matches</div>';
+            resultCount.textContent = "No matches found";
+            resultList.innerHTML = '<div class="no-results">No words match your criteria</div>';
         } else {
             const suffix = totalFound > maxResults ? ` (Showing first ${maxResults})` : '';
             resultCount.textContent = `Found ${totalFound} words${suffix}`;
@@ -558,7 +558,6 @@
                 const chars = word.word.split('');
                 for (let i = 0; i < chars.length; i++) {
                     const char = chars[i];
-                    // Is there a constraint for this index?
                     const constraint = constraints.find(c => c.index === i);
                     
                     if (constraint && constraint.chars.includes(char)) {

@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -696,86 +695,103 @@
         }
     }
     
-    // Search function
+    // Search function with Sliding Window Permutation logic
     function performSearch() {
         const searchInput = document.getElementById('searchInput');
         const resultCount = document.getElementById('resultCount');
         const resultList = document.getElementById('resultList');
         
-        const query = searchInput.value.trim();
+        let query = searchInput.value.trim();
         const matchType = document.querySelector('input[name="match"]:checked').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked'))
             .map(cb => parseInt(cb.value));
+        const distinguishDiacritics = document.getElementById('distinguishDiacritics').checked;
         
         let results = [...dictionary];
         
-        // Filter by query
         if (query) {
-            // Check if query contains wildcards (dashes or spaces)
             const hasWildcard = query.includes('-') || query.includes(' ');
             
             if (hasWildcard) {
-                // Remove trailing wildcards to allow shorter matches
-                const trimmedQuery = query.replace(/-+$| +$/g, '');
-                
+                // WILDCARD LOGIC: SLIDING WINDOW
+                // Finds any word that fits anywhere inside the query pattern
+                const standardizedQuery = query.replace(/ /g, '-');
+                const queryLen = standardizedQuery.length;
+
                 results = results.filter(word => {
-                    // Check if word matches the pattern up to its length
-                    const patternUpToLength = trimmedQuery.slice(0, word.word.length);
-                    const pattern = patternUpToLength.split('').map(char => 
-                        (char === '-' || char === ' ') ? '.' : char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                    ).join('');
+                    const wordLen = word.word.length;
                     
-                    // Only match if the pattern up to this length has content
-                    if (patternUpToLength.length > 0 && patternUpToLength !== '-'.repeat(patternUpToLength.length)) {
-                        const regex = new RegExp(`^${pattern}$`);
-                        return regex.test(word.word);
+                    // Word cannot be longer than the pattern
+                    if (wordLen > queryLen) return false;
+                    
+                    // Sliding Window:
+                    // Try to align the word at every possible start index (i)
+                    // Query: A B C D E
+                    // Word:  X Y (len 2)
+                    // Valid start indices: 0, 1, 2, 3
+                    
+                    for (let i = 0; i <= queryLen - wordLen; i++) {
+                        let match = true;
+                        
+                        // Check every character for this alignment
+                        for (let j = 0; j < wordLen; j++) {
+                            const qChar = standardizedQuery[i + j];
+                            const wChar = word.word[j];
+                            
+                            // If query char is a dash, it matches anything.
+                            // Otherwise, it must match the word char.
+                            if (qChar !== '-' && qChar !== wChar) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        
+                        // If we found a valid alignment, the word is a match
+                        if (match) return true;
                     }
+                    
                     return false;
                 });
             } else {
-                // Normal search without wildcards
+                // Standard Logic (Prefix/Suffix/Fuzzy)
                 results = results.filter(word => {
-                    if (matchType === 'prefix') {
-                        return word.word.startsWith(query);
-                    } else if (matchType === 'suffix') {
-                        return word.word.endsWith(query);
-                    } else {
-                        return word.word.includes(query);
-                    }
+                    if (matchType === 'prefix') return word.word.startsWith(query);
+                    if (matchType === 'suffix') return word.word.endsWith(query);
+                    return word.word.includes(query);
                 });
             }
         }
         
-        // Filter by character count (use actual word length)
+        // Filter by character count
         if (charFilters.length > 0) {
             results = results.filter(word => charFilters.includes(word.word.length));
         }
         
-        // Limit results to prevent performance issues
+        // Sort results by length (descending) so matching long words appear first
+        results.sort((a, b) => b.word.length - a.word.length);
+        
+        // Limit results
         const maxResults = 200;
         const limited = results.length > maxResults;
-        if (limited) {
-            results = results.slice(0, maxResults);
-        }
+        const displayResults = limited ? results.slice(0, maxResults) : results;
         
         // Store current results for filtering
-        currentResults = results;
+        currentResults = displayResults;
         
-        // Display results
+        // Update UI
+        const resultFilter = document.getElementById('resultFilter');
+        if (resultFilter && resultFilter.value !== '') {
+             resultFilter.value = ''; 
+        }
+
         resultCount.textContent = limited 
             ? `${maxResults}件表示中（${results.length + '+'}件見つかりました）`
             : `${results.length}件見つかりました`;
         
-        // Clear result filter when new search is performed
-        const resultFilter = document.getElementById('resultFilter');
-        if (resultFilter) {
-            resultFilter.value = '';
-        }
-        
-        if (results.length === 0) {
+        if (displayResults.length === 0) {
             resultList.innerHTML = '<div class="no-results">結果がありません</div>';
         } else {
-            resultList.innerHTML = results.map(word => {
+            resultList.innerHTML = displayResults.map(word => {
                 const displayText = word.displays[0] || word.word;
                 const themesText = word.themes.length > 0 
                     ? `<div class="result-themes">テーマ: ${word.themes.join(', ')}</div>`
@@ -792,6 +808,5 @@
         }
     }
 </script>
-
 </body>
 </html>

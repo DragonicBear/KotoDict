@@ -63,6 +63,7 @@
         margin-bottom: 20px;
     }
     
+    /* Main Search Input */
     input[type="text"], input[type="search"] {
         width: 100%;
         padding: 14px;
@@ -249,6 +250,48 @@
         padding: 4px 0;
         touch-action: manipulation;
     }
+
+    /* --- NEW STYLES FOR SEGMENTED FILTER --- */
+    .pos-section {
+        background: #f0f4f8;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #d1d9e6;
+    }
+
+    .pos-filter-container {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+        margin-top: 5px;
+    }
+
+    /* Force specific style for these inputs to ensure they look like boxes */
+    input.pos-input {
+        width: 100% !important;
+        padding: 8px 0 !important;
+        font-size: 16px !important;
+        text-align: center !important;
+        border: 2px solid #ccc !important;
+        border-radius: 6px !important;
+        background: white !important;
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input.pos-input:focus {
+        border-color: #007AFF !important;
+        background: white !important;
+    }
+
+    .pos-label {
+        font-size: 13px;
+        color: #333;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+    }
     
     .results {
         margin-top: 20px;
@@ -319,7 +362,7 @@
 
         <div id="mainContent" style="display:none;">
             <div class="search-section">
-                <input type="search" id="searchInput" placeholder="検索... (例: せ-い---ん or せ い   ん)" 
+                <input type="search" id="searchInput" placeholder="検索... (例: せ-い---ん)" 
                        autocomplete="off" autocorrect="off" 
                        autocapitalize="off" spellcheck="false">
                 
@@ -376,12 +419,20 @@
             
             <div class="results">
                 <div class="result-count" id="resultCount">検索してください</div>
-                <div style="margin-bottom: 15px;">
-                    <input type="search" id="resultFilter" placeholder="結果内で文字検索... (例: あ, い, う)" 
-                           autocomplete="off" autocorrect="off" 
-                           autocapitalize="off" spellcheck="false"
-                           style="width: 100%; padding: 10px; font-size: 14px; border: 1px solid #ddd; border-radius: 6px; -webkit-user-select: text; user-select: text;">
+                
+                <div class="pos-section">
+                    <span class="pos-label">結果フィルター (文字位置指定):</span>
+                    <div class="pos-filter-container" id="posFilterContainer">
+                        <input type="text" class="pos-input" data-index="0" placeholder="1" autocomplete="off">
+                        <input type="text" class="pos-input" data-index="1" placeholder="2" autocomplete="off">
+                        <input type="text" class="pos-input" data-index="2" placeholder="3" autocomplete="off">
+                        <input type="text" class="pos-input" data-index="3" placeholder="4" autocomplete="off">
+                        <input type="text" class="pos-input" data-index="4" placeholder="5" autocomplete="off">
+                        <input type="text" class="pos-input" data-index="5" placeholder="6" autocomplete="off">
+                        <input type="text" class="pos-input" data-index="6" placeholder="7" autocomplete="off">
+                    </div>
                 </div>
+
                 <div id="resultList"></div>
             </div>
         </div>
@@ -455,7 +506,7 @@
         }));
     }
     
-    // Load dictionary from CDN (using jsdelivr for better CORS support)
+    // Load dictionary from CDN
     fetch('https://cdn.jsdelivr.net/npm/@kotodaman-unofficial/dictionary@0.1.1/dist/words.json')
         .then(response => {
             if (!response.ok) {
@@ -464,7 +515,6 @@
             return response.json();
         })
         .then(data => {
-            // Transform data: [word, chars, combo, [displays], [themes]]
             dictionary = data.map(entry => ({
                 word: entry[0],
                 chars: entry[1] || entry[0],
@@ -477,11 +527,10 @@
             document.getElementById('mainContent').style.display = 'block';
             
             initializeApp();
-            performSearch(); // Show all results initially
+            performSearch();
         })
         .catch(error => {
             console.error('Dictionary load error:', error);
-            // Fallback: use embedded sample dictionary
             console.log('Using fallback dictionary...');
             dictionary = getSampleDictionary();
             document.getElementById('loadingMsg').textContent = '辞書の読み込みに失敗しました。サンプル辞書を使用しています。';
@@ -515,7 +564,6 @@
         const clearBtn = document.getElementById('clearBtn');
         const searchBtn = document.getElementById('searchBtn');
         
-        // iOS-specific: Prevent double-tap zoom
         let lastTouchEnd = 0;
         document.addEventListener('touchend', function(e) {
             const now = Date.now();
@@ -548,7 +596,6 @@
             });
         });
         
-        // Toggle kana keyboard
         const toggleKana = (e) => {
             e.preventDefault();
             kanaKeyboard.classList.toggle('active');
@@ -560,7 +607,6 @@
         toggleKanaBtn.addEventListener('touchend', toggleKana);
         toggleKanaBtn.addEventListener('click', toggleKana);
         
-        // Clear button
         const handleClear = (e) => {
             e.preventDefault();
             searchInput.value = '';
@@ -571,7 +617,6 @@
         clearBtn.addEventListener('touchend', handleClear);
         clearBtn.addEventListener('click', handleClear);
         
-        // Search button
         const handleSearch = (e) => {
             e.preventDefault();
             performSearch();
@@ -581,7 +626,6 @@
         searchBtn.addEventListener('touchend', handleSearch);
         searchBtn.addEventListener('click', handleSearch);
         
-        // Search on enter
         searchInput.addEventListener('keyup', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -590,7 +634,6 @@
             }
         });
         
-        // Live search
         let searchTimeout;
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
@@ -599,7 +642,6 @@
             }, 300);
         });
         
-        // iOS Fix: Make labels work with touch
         document.querySelectorAll('label').forEach(label => {
             label.addEventListener('touchend', function(e) {
                 if (e.target.tagName !== 'INPUT') {
@@ -617,52 +659,74 @@
             });
         });
         
-        // Trigger search when filters change
         document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
             input.addEventListener('change', performSearch);
         });
         
-        // Result filter functionality
-        const resultFilter = document.getElementById('resultFilter');
-        let resultFilterTimeout;
+        // Initialize POSITIONAL INPUTS (Safe listeners)
+        const posInputs = document.querySelectorAll('.pos-input');
+        let posFilterTimeout;
         
-        resultFilter.addEventListener('input', () => {
-            clearTimeout(resultFilterTimeout);
-            resultFilterTimeout = setTimeout(() => {
-                filterResults();
-            }, 200);
+        posInputs.forEach(input => {
+            input.addEventListener('input', () => {
+                clearTimeout(posFilterTimeout);
+                posFilterTimeout = setTimeout(() => {
+                    filterResults();
+                }, 200);
+            });
         });
     }
     
     let currentResults = [];
     
-    // Filter displayed results based on hiragana input
+    // NEW: Filter results based on Positional Inputs
     function filterResults() {
-        const resultFilter = document.getElementById('resultFilter');
         const resultList = document.getElementById('resultList');
         const resultCount = document.getElementById('resultCount');
-        const filterQuery = resultFilter.value.trim();
+        
+        // Get constraints from the 7 input boxes
+        const posInputs = document.querySelectorAll('.pos-input');
+        const constraints = [];
+        let hasActiveFilter = false;
+        
+        posInputs.forEach(input => {
+            const val = input.value.trim();
+            if (val.length > 0) {
+                hasActiveFilter = true;
+                constraints.push({
+                    index: parseInt(input.getAttribute('data-index')),
+                    chars: val.split('') // 'abc' -> ['a','b','c'] (OR logic)
+                });
+            }
+        });
         
         let filtered = currentResults;
         
-        if (filterQuery) {
-            // Split filter query into individual characters
-            const requiredChars = filterQuery.split('');
-            
-            // Filter results to only show words containing ALL required characters
+        if (hasActiveFilter) {
             filtered = currentResults.filter(word => {
-                return requiredChars.every(char => word.word.includes(char));
+                // Check every active constraint (AND logic between positions)
+                return constraints.every(constraint => {
+                    // If word is too short for this constraint, exclude it
+                    if (word.word.length <= constraint.index) {
+                        return false; 
+                    }
+                    
+                    const charAtPos = word.word[constraint.index];
+                    
+                    // The character at this position must be in the allowed list (OR logic)
+                    return constraint.chars.includes(charAtPos);
+                });
             });
         }
         
         // Update count
-        if (filterQuery) {
+        if (hasActiveFilter) {
             resultCount.textContent = `${filtered.length}件表示中（${currentResults.length}件から絞り込み）`;
         } else {
             resultCount.textContent = `${currentResults.length}件見つかりました`;
         }
         
-        // Display filtered results
+        // Display
         if (filtered.length === 0) {
             resultList.innerHTML = '<div class="no-results">該当する結果がありません</div>';
         } else {
@@ -672,16 +736,22 @@
                     ? `<div class="result-themes">テーマ: ${word.themes.join(', ')}</div>`
                     : '';
                 
-                // Highlight the filtered characters
+                // Construct highlighting HTML
                 let highlightedWord = word.word;
-                if (filterQuery) {
-                    const chars = filterQuery.split('');
-                    chars.forEach(char => {
-                        highlightedWord = highlightedWord.replace(
-                            new RegExp(char, 'g'), 
-                            `<span style="color: #007AFF; font-weight: bold;">${char}</span>`
-                        );
-                    });
+                if (hasActiveFilter) {
+                    highlightedWord = '';
+                    const chars = word.word.split('');
+                    
+                    for (let i = 0; i < chars.length; i++) {
+                        const char = chars[i];
+                        const constraint = constraints.find(c => c.index === i);
+                        
+                        if (constraint && constraint.chars.includes(char)) {
+                            highlightedWord += `<span style="color: #007AFF; font-weight: bold; text-decoration: underline;">${char}</span>`;
+                        } else {
+                            highlightedWord += char;
+                        }
+                    }
                 }
                 
                 return `
@@ -695,7 +765,6 @@
         }
     }
     
-    // Search function with Sliding Window Permutation logic
     function performSearch() {
         const searchInput = document.getElementById('searchInput');
         const resultCount = document.getElementById('resultCount');
@@ -714,46 +783,28 @@
             
             if (hasWildcard) {
                 // WILDCARD LOGIC: SLIDING WINDOW
-                // Finds any word that fits anywhere inside the query pattern
                 const standardizedQuery = query.replace(/ /g, '-');
                 const queryLen = standardizedQuery.length;
 
                 results = results.filter(word => {
                     const wordLen = word.word.length;
-                    
-                    // Word cannot be longer than the pattern
                     if (wordLen > queryLen) return false;
-                    
-                    // Sliding Window:
-                    // Try to align the word at every possible start index (i)
-                    // Query: A B C D E
-                    // Word:  X Y (len 2)
-                    // Valid start indices: 0, 1, 2, 3
                     
                     for (let i = 0; i <= queryLen - wordLen; i++) {
                         let match = true;
-                        
-                        // Check every character for this alignment
                         for (let j = 0; j < wordLen; j++) {
                             const qChar = standardizedQuery[i + j];
                             const wChar = word.word[j];
-                            
-                            // If query char is a dash, it matches anything.
-                            // Otherwise, it must match the word char.
                             if (qChar !== '-' && qChar !== wChar) {
                                 match = false;
                                 break;
                             }
                         }
-                        
-                        // If we found a valid alignment, the word is a match
                         if (match) return true;
                     }
-                    
                     return false;
                 });
             } else {
-                // Standard Logic (Prefix/Suffix/Fuzzy)
                 results = results.filter(word => {
                     if (matchType === 'prefix') return word.word.startsWith(query);
                     if (matchType === 'suffix') return word.word.endsWith(query);
@@ -762,27 +813,20 @@
             }
         }
         
-        // Filter by character count
         if (charFilters.length > 0) {
             results = results.filter(word => charFilters.includes(word.word.length));
         }
         
-        // Sort results by length (descending) so matching long words appear first
         results.sort((a, b) => b.word.length - a.word.length);
         
-        // Limit results
         const maxResults = 200;
         const limited = results.length > maxResults;
         const displayResults = limited ? results.slice(0, maxResults) : results;
         
-        // Store current results for filtering
         currentResults = displayResults;
         
-        // Update UI
-        const resultFilter = document.getElementById('resultFilter');
-        if (resultFilter && resultFilter.value !== '') {
-             resultFilter.value = ''; 
-        }
+        // Clear the positional filters when a NEW main search is done
+        document.querySelectorAll('.pos-input').forEach(input => input.value = '');
 
         resultCount.textContent = limited 
             ? `${maxResults}件表示中（${results.length + '+'}件見つかりました）`

@@ -66,13 +66,19 @@
         border-radius: 12px;
         border: 1px solid #e0e0e0;
         margin-bottom: 20px;
+        transition: border-color 0.3s;
     }
 
     .controls-top {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         margin-bottom: 15px;
+    }
+    
+    .align-label {
+        font-size:14px; 
+        color:#555; 
+        margin-bottom: 8px; 
+        display:block;
+        font-weight: 600;
     }
 
     .align-toggle {
@@ -80,16 +86,20 @@
         background: #e0e0e0;
         border-radius: 8px;
         padding: 2px;
+        gap: 2px;
     }
 
     .align-option {
-        padding: 6px 12px;
+        flex: 1;
+        text-align: center;
+        padding: 8px 4px;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         border-radius: 6px;
         color: #666;
         user-select: none;
+        transition: all 0.2s;
     }
 
     .align-option.active {
@@ -103,11 +113,6 @@
         grid-template-columns: repeat(7, 1fr);
         gap: 6px;
         margin-bottom: 5px;
-    }
-
-    /* Direction change based on alignment for visual cue */
-    .pos-filter-container.align-right {
-        direction: rtl; /* Use RTL to visually suggest matching from right? Optional, but reordering boxes might confuse. Keeping LTR but changing logic is safer. */
     }
 
     .pos-input {
@@ -137,11 +142,13 @@
     }
     
     .pos-label {
-        font-size: 10px;
+        font-size: 11px;
         color: #999;
         text-align: center;
         margin-top: 4px;
-        height: 14px;
+        height: 16px;
+        white-space: nowrap;
+        overflow: hidden;
     }
 
     .action-row {
@@ -295,33 +302,38 @@
         font-size: 16px;
     }
     
-    /* Highlight for Right Alignment mode */
-    .align-right-mode .pos-input {
-        border-color: #34c759; /* Green hint for right align */
+    /* Mode Specific Styling */
+    .align-right-mode .pos-input { border-color: #34c759; }
+    .align-right-mode .pos-input.filled { background: #f0fff4; border-color: #34c759; }
+    
+    .align-free-mode .pos-input { border-color: #ff9500; }
+    .align-free-mode .pos-input.filled { background: #fff8eb; border-color: #ff9500; }
+    
+    /* Highlight matches inside results */
+    .match-highlight {
+        color: #007AFF;
+        font-weight: bold;
+        text-decoration: underline;
     }
-    .align-right-mode .pos-input:focus {
-        border-color: #248a3d;
-    }
-    .align-right-mode .pos-input.filled {
-        background: #f0fff4;
-        border-color: #34c759;
-    }
+    .align-right-mode .match-highlight { color: #248a3d; }
+    .align-free-mode .match-highlight { color: #d67a00; }
 </style>
 </head>
 <body>
     <div id="app">
         <div class="container">
-            <h1>Positional Search</h1>
+            <h1>Word Pattern Search</h1>
             <div class="loading" id="loadingMsg">Loading dictionary...</div>
 
             <div id="mainContent" style="display:none;">
                 
                 <div class="input-section" id="inputSection">
                     <div class="controls-top">
-                        <span style="font-size:14px; color:#555;">Alignment:</span>
+                        <span class="align-label">Search Mode:</span>
                         <div class="align-toggle">
-                            <div class="align-option active" data-align="left">Left (Start)</div>
-                            <div class="align-option" data-align="right">Right (End)</div>
+                            <div class="align-option active" data-align="left">Starts With</div>
+                            <div class="align-option" data-align="free">Contains (Anywhere)</div>
+                            <div class="align-option" data-align="right">Ends With</div>
                         </div>
                     </div>
                     
@@ -386,7 +398,7 @@
 
 <script>
     let dictionary = [];
-    let currentAlign = 'left'; // 'left' or 'right'
+    let currentAlign = 'left'; // 'left', 'right', or 'free'
 
     // Fallback data
     function getSampleDictionary() {
@@ -413,7 +425,8 @@
             ["るーれっと","",4,["ルーレット"],[]],
             ["れんあい","",3,["恋愛"],["Emotion"]],
             ["がっこう","かっこう",3,["学校"],["School Subject"]],
-            ["ん","",1,["ん"],[]]
+            ["ん","",1,["ん"],[]],
+            ["かんけい","",4,["関係"],[]]
         ];
         
         return samples.map(entry => ({
@@ -528,21 +541,24 @@
         const inputSection = document.getElementById('inputSection');
         const labels = document.getElementById('labelsRow').children;
         
+        // Reset classes
+        inputSection.classList.remove('align-right-mode', 'align-free-mode');
+        
         if (currentAlign === 'right') {
             inputSection.classList.add('align-right-mode');
-            // Update labels to show relative position from end
-            // Box 7 is Last, Box 6 is 2nd Last...
-            // Or just keep it 1-7 but maybe color code?
-            // Let's use negative numbers or text to be clear.
+            // Labels show distance from end
             for(let i=0; i<7; i++) {
-                // index 0 (leftmost) is the "furthest from end"
-                // index 6 (rightmost) is the "end"
-                // 0 -> -7, 6 -> -1
                 labels[i].textContent = (i - 7).toString(); 
             }
             labels[6].textContent = "End";
+        } else if (currentAlign === 'free') {
+            inputSection.classList.add('align-free-mode');
+            // Labels just show relative pattern
+            for(let i=0; i<7; i++) {
+                labels[i].textContent = "•"; 
+            }
         } else {
-            inputSection.classList.remove('align-right-mode');
+            // Left (Default)
             for(let i=0; i<7; i++) {
                 labels[i].textContent = (i + 1).toString();
             }
@@ -554,26 +570,14 @@
         const resultList = document.getElementById('resultList');
         const sortOrder = document.getElementById('sortSelect').value;
         
-        // 1. Gather Filters
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked'))
             .map(cb => parseInt(cb.value));
-        
         const distinguishDiacritics = document.getElementById('distinguishDiacritics').checked;
 
-        const posInputs = document.querySelectorAll('.pos-input');
-        const constraints = []; 
-        let hasActivePosFilter = false;
-        
-        posInputs.forEach(input => {
-            const val = input.value.trim();
-            if (val.length > 0) {
-                hasActivePosFilter = true;
-                constraints.push({
-                    uiIndex: parseInt(input.getAttribute('data-index')), // 0 to 6
-                    chars: val.split('') 
-                });
-            }
-        });
+        // 1. Collect inputs
+        const posInputs = Array.from(document.querySelectorAll('.pos-input'));
+        const inputValues = posInputs.map(i => i.value.trim());
+        const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
         // 2. Filter Logic
         let results = dictionary;
@@ -582,33 +586,58 @@
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
+        let regexPattern = null;
+        let validConstraints = [];
+
         if (hasActivePosFilter) {
-            results = results.filter(word => {
-                const len = word.word.length;
-                
-                return constraints.every(constraint => {
-                    let targetIndex;
+            if (currentAlign === 'free') {
+                // --- FREE MODE (Pattern Matching) ---
+                // Find first and last non-empty indices to determine the pattern window
+                let firstIndex = inputValues.findIndex(v => v.length > 0);
+                let lastIndex = 6; 
+                while(lastIndex >= 0 && inputValues[lastIndex].length === 0) lastIndex--;
 
-                    if (currentAlign === 'left') {
-                        // Standard: UI Index 0 = Word Index 0
-                        targetIndex = constraint.uiIndex;
+                // Build Regex
+                let patternStr = "";
+                for (let i = firstIndex; i <= lastIndex; i++) {
+                    const val = inputValues[i];
+                    if (val.length === 0) {
+                        patternStr += "."; // Wildcard for empty box in middle of pattern
                     } else {
-                        // Right Align: 
-                        // UI Index 6 (Rightmost Box) = len - 1 (Last char)
-                        // UI Index 5 = len - 2
-                        // Formula: len - (7 - uiIndex)
-                        targetIndex = len - (7 - constraint.uiIndex);
+                        patternStr += "[" + val + "]"; // Character class for filled box
                     }
+                }
+                // Regex checks for this pattern anywhere
+                regexPattern = new RegExp(patternStr);
 
-                    // Check bounds
-                    if (targetIndex < 0 || targetIndex >= len) {
-                        return false; 
+                results = results.filter(word => regexPattern.test(word.word));
+
+            } else {
+                // --- FIXED MODES (Left/Right) ---
+                // Build constraints array
+                const constraints = [];
+                inputValues.forEach((val, idx) => {
+                    if (val.length > 0) {
+                        constraints.push({ uiIndex: idx, chars: val.split('') });
                     }
-                    
-                    const charAtPos = word.word[targetIndex];
-                    return constraint.chars.includes(charAtPos);
                 });
-            });
+                validConstraints = constraints;
+
+                results = results.filter(word => {
+                    const len = word.word.length;
+                    return constraints.every(constraint => {
+                        let targetIndex;
+                        if (currentAlign === 'left') {
+                            targetIndex = constraint.uiIndex;
+                        } else {
+                            targetIndex = len - (7 - constraint.uiIndex);
+                        }
+                        
+                        if (targetIndex < 0 || targetIndex >= len) return false;
+                        return constraint.chars.includes(word.word[targetIndex]);
+                    });
+                });
+            }
         }
 
         // 3. Sorting
@@ -642,38 +671,40 @@
                     ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
                     : '';
                 
-                // Highlight Logic
+                // --- Highlight Logic ---
                 let highlightedWord = '';
                 const chars = word.word.split('');
-                const len = word.word.length;
-
-                for (let i = 0; i < len; i++) {
-                    const char = chars[i];
-                    let isMatch = false;
-
-                    // Check if this index was targeted by any constraint
-                    if (hasActivePosFilter) {
-                        // Reverse lookup: which constraint maps to index i?
-                        const matchingConstraint = constraints.find(c => {
-                            let mappedIndex;
-                            if (currentAlign === 'left') {
-                                mappedIndex = c.uiIndex;
-                            } else {
-                                mappedIndex = len - (7 - c.uiIndex);
+                
+                if (currentAlign === 'free' && regexPattern) {
+                    // For Regex match, we want to highlight the substring that matched
+                    // We use the regex to find the position
+                    const match = regexPattern.exec(word.word);
+                    if (match) {
+                        const start = match.index;
+                        const end = start + match[0].length;
+                        
+                        highlightedWord = chars.map((char, i) => {
+                            if (i >= start && i < end) {
+                                return `<span class="match-highlight">${char}</span>`;
                             }
-                            return mappedIndex === i;
-                        });
-
-                        if (matchingConstraint && matchingConstraint.chars.includes(char)) {
-                            isMatch = true;
-                        }
-                    }
-
-                    if (isMatch) {
-                        highlightedWord += `<span style="color: #007AFF; font-weight: bold; text-decoration: underline;">${char}</span>`;
+                            return char;
+                        }).join('');
                     } else {
-                        highlightedWord += char;
+                        highlightedWord = word.word;
                     }
+                } else {
+                    // Fixed index highlighting
+                    highlightedWord = chars.map((char, i) => {
+                        let isMatch = false;
+                        if (hasActivePosFilter) {
+                            const constraint = validConstraints.find(c => {
+                                let mappedIndex = currentAlign === 'left' ? c.uiIndex : word.word.length - (7 - c.uiIndex);
+                                return mappedIndex === i;
+                            });
+                            if (constraint && constraint.chars.includes(char)) isMatch = true;
+                        }
+                        return isMatch ? `<span class="match-highlight">${char}</span>` : char;
+                    }).join('');
                 }
                 
                 return `

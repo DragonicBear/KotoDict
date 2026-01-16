@@ -1,492 +1,194 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>ことののみこん - iOS対応版</title>
+    <title>Kotono Nomikon - Board Search</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: rgba(0,0,0,0);
-        }
-
-    html, body {
-        width: 100%;
-        height: 100%;
-        overflow-x: hidden;
-        position: fixed;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-        background: #f5f5f5;
-        -webkit-touch-callout: none;
-        overscroll-behavior: none;
-    }
-    
-    #app {
-        width: 100%;
-        height: 100%;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding: 10px;
-    }
-    
-    .container {
-        max-width: 800px;
-        margin: 0 auto 60px;
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
-    
-    h1 {
-        font-size: 24px;
-        margin-bottom: 20px;
-        color: #333;
-        font-weight: 600;
-    }
-    
-    .loading {
-        text-align: center;
-        padding: 40px;
-        color: #666;
-    }
-    
-    .search-section {
-        margin-bottom: 20px;
-    }
-    
-    input[type="text"], input[type="search"] {
-        width: 100%;
-        padding: 14px;
-        font-size: 16px;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
-        -webkit-appearance: none;
-        appearance: none;
-        background: #fafafa;
-        transition: all 0.2s;
-        -webkit-user-select: text;
-        user-select: text;
-    }
-    
-    input[type="text"]:focus, input[type="search"]:focus {
-        outline: none;
-        border-color: #007AFF;
-        background: white;
-    }
-    
-    .button-group {
-        display: flex;
-        gap: 10px;
-        margin: 15px 0;
-        flex-wrap: wrap;
-    }
-    
-    button, .btn {
-        padding: 12px 20px;
-        font-size: 16px;
-        border: none;
-        border-radius: 8px;
-        background: #007AFF;
-        color: white;
-        font-weight: 500;
-        -webkit-appearance: none;
-        appearance: none;
-        cursor: pointer;
-        touch-action: manipulation;
-        transition: all 0.1s;
-    }
-    
-    button:active, .btn:active {
-        background: #0051D5;
-        transform: scale(0.97);
-    }
-    
-    button.secondary {
-        background: #8E8E93;
-    }
-    
-    button.secondary:active {
-        background: #636366;
-    }
-    
-    .kana-keyboard {
-        display: none;
-        background: #f9f9f9;
-        padding: 15px;
-        border-radius: 8px;
-        margin: 15px 0;
-        border: 1px solid #e0e0e0;
-    }
-    
-    .kana-keyboard.active {
-        display: block;
-    }
-    
-    .kana-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 8px;
-        margin-bottom: 10px;
-    }
-    
-    .kana-btn {
-        padding: 14px 8px;
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        font-size: 18px;
-        text-align: center;
-        cursor: pointer;
-        touch-action: manipulation;
-        transition: all 0.1s;
-        -webkit-user-select: none;
-        user-select: none;
-    }
-    
-    .kana-btn:active {
-        background: #007AFF;
-        color: white;
-        transform: scale(0.95);
-    }
-    
-    .kana-btn.empty {
-        background: transparent;
-        border: none;
-        cursor: default;
-    }
-    
-    .filters {
-        background: #f9f9f9;
-        padding: 15px;
-        border-radius: 8px;
-        margin: 15px 0;
-        border: 1px solid #e0e0e0;
-    }
-    
-    .filter-row {
-        margin: 12px 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    
-    .filter-label {
-        font-weight: 600;
-        color: #333;
-        min-width: 80px;
-        font-size: 15px;
-    }
-    
-    .radio-group {
-        display: flex;
-        gap: 15px;
-        flex-wrap: wrap;
-    }
-    
-    input[type="radio"], input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-        margin: 0;
-        -webkit-appearance: none;
-        appearance: none;
-        border: 2px solid #ccc;
-        border-radius: 3px;
-        position: relative;
-        flex-shrink: 0;
-    }
-    
-    input[type="radio"] {
-        border-radius: 50%;
-    }
-    
-    input[type="radio"]:checked, input[type="checkbox"]:checked {
-        background: #007AFF;
-        border-color: #007AFF;
-    }
-    
-    input[type="radio"]:checked::after, input[type="checkbox"]:checked::after {
-        content: '';
-        position: absolute;
-        width: 6px;
-        height: 11px;
-        border: solid white;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-        top: 2px;
-        left: 5px;
-    }
-    
-    input[type="radio"]:checked::after {
-        width: 8px;
-        height: 8px;
-        border: none;
-        border-radius: 50%;
-        background: white;
-        transform: none;
-        top: 4px;
-        left: 4px;
-    }
-    
-    label {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-        -webkit-user-select: none;
-        user-select: none;
-        font-size: 15px;
-        padding: 4px 0;
-        touch-action: manipulation;
-    }
-
-    /* Styles for the new Positional Filter */
-    .pos-filter-container {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 4px;
-        margin-bottom: 10px;
-    }
-
-    .pos-input {
-        width: 100%;
-        padding: 8px 2px;
-        font-size: 14px;
-        text-align: center;
-        border: 1px solid #ddd;
-        border-radius: 6px;
-        background: #fff;
-        -webkit-user-select: text;
-        user-select: text;
-    }
-
-    .pos-input:focus {
-        border-color: #007AFF;
-        outline: none;
-        background: #f0f8ff;
-    }
-
-    .pos-label {
-        font-size: 12px;
-        color: #666;
-        margin-bottom: 5px;
-        display: block;
-    }
-    
-    .results {
-        margin-top: 20px;
-    }
-    
-    .result-count {
-        font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 15px;
-        color: #333;
-    }
-    
-    .result-item {
-        padding: 16px;
-        background: #fafafa;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        border-left: 4px solid #007AFF;
-        cursor: pointer;
-        touch-action: manipulation;
-        transition: background 0.1s;
-    }
-    
-    .result-item:active {
-        background: #f0f0f0;
-    }
-    
-    .result-word {
-        font-size: 20px;
-        font-weight: 600;
-        margin-bottom: 6px;
-        color: #111;
-    }
-    
-    .result-info {
-        color: #666;
-        font-size: 14px;
-    }
-    
-    .result-themes {
-        color: #007AFF;
-        font-size: 13px;
-        margin-top: 4px;
-    }
-    
-    .no-results {
-        text-align: center;
-        padding: 40px 20px;
-        color: #999;
-        font-size: 16px;
-    }
-    
-    @supports (-webkit-touch-callout: none) {
-        input[type="text"], input[type="search"] {
-            font-size: 16px !important;
-        }
-    }
-</style>
-
-
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); }
+        html, body { width: 100%; height: 100%; overflow-x: hidden; position: fixed; -webkit-overflow-scrolling: touch; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; background: #f5f5f5; -webkit-touch-callout: none; overscroll-behavior: none; }
+        #app { width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px; }
+        
+        .container { max-width: 800px; margin: 0 auto 60px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        h1 { font-size: 24px; margin-bottom: 20px; color: #333; font-weight: 600; text-align: center; }
+        .loading { text-align: center; padding: 40px; color: #666; }
+        
+        .input-section { background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 15px; }
+        .instruction-text { font-size: 13px; color: #666; margin-bottom: 15px; text-align: center; line-height: 1.4; }
+        
+        .pos-filter-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
+        .pos-labels-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
+        
+        .pos-input { width: 100%; aspect-ratio: 1/1; padding: 0; font-size: 18px; font-weight: bold; text-align: center; border: 2px solid #ddd; border-radius: 8px; background: #fff; -webkit-appearance: none; appearance: none; transition: all 0.2s; }
+        .pos-input:focus { border-color: #007AFF; outline: none; background: #fff; }
+        .pos-input.filled { background: #f0f8ff; border-color: #007AFF; }
+        .pos-label { font-size: 11px; color: #999; text-align: center; margin-top: 4px; height: 16px; }
+        
+        .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        .sort-select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; font-size: 14px; }
+        button { padding: 8px 16px; font-size: 14px; border: none; border-radius: 6px; background: #8E8E93; color: white; font-weight: 500; cursor: pointer; transition: background 0.1s; }
+        button:active { background: #636366; transform: scale(0.97); }
+        
+        .filters { margin-bottom: 15px; padding: 0 5px; }
+        .filter-row { margin: 12px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; }
+        .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; border: 2px solid #ccc; border-radius: 4px; }
+        input[type="checkbox"]:checked { background: #007AFF; border-color: #007AFF; }
+        label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
+        
+        .refine-section { background: #fff8f0; border: 1px solid #ffe4cc; padding: 15px; border-radius: 8px; margin-bottom: 20px; transition: background 0.2s, border-color 0.2s; }
+        .refine-section.and-mode { background: #f0f7ff; border-color: #cce4ff; }
+        
+        .refine-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .refine-title { font-size: 14px; font-weight: 600; color: #333; }
+        
+        .toggle-switch { display: flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
+        .toggle-option { padding: 4px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; }
+        .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .toggle-option[data-logic="OR"].active { color: #d67a00; }
+        .toggle-option[data-logic="AND"].active { color: #007AFF; }
+        
+        .refine-inputs { display: flex; gap: 10px; }
+        .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
+        .refine-input:focus { outline: none; background: #fff; }
+        .refine-section .refine-input:focus { border-color: #d67a00; }
+        .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
+        .refine-input.filled { background: #fffdf5; border-color: #d67a00; font-weight: bold; }
+        .refine-section.and-mode .refine-input.filled { background: #f0f8ff; border-color: #007AFF; }
+        
+        .results { margin-top: 10px; }
+        .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
+        .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #007AFF; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
+        .result-item:active { background: #f0f0f0; }
+        .result-word { font-size: 20px; font-weight: 600; margin-bottom: 6px; color: #111; display:flex; justify-content: space-between; align-items: center;}
+        .result-info { color: #666; font-size: 14px; }
+        .result-themes { color: #007AFF; font-size: 13px; margin-top: 4px; }
+        .no-results { text-align: center; padding: 40px 20px; color: #999; font-size: 16px; }
+        
+        /* Grid Viz */
+        .mini-grid { display: grid; grid-template-columns: repeat(7, 18px); gap: 2px; }
+        .mini-box { width: 18px; height: 18px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px; display: flex; align-items: center; justify-content: center; background: #fff; color: #ccc; }
+        .mini-box.matched { background: #007AFF; border-color: #007AFF; color: white; }
+        .mini-box.overlap { background: #e0efff; border-color: #007AFF; color: #007AFF; }
+    </style>
 </head>
 <body>
     <div id="app">
         <div class="container">
-            <h1>ことののみこん (iOS対応版)</h1>
-            <div class="loading" id="loadingMsg">辞書を読み込み中...</div>
+            <h1>Board Search</h1>
+            <div class="loading" id="loadingMsg">Loading dictionary...</div>
 
-
-        <div id="mainContent" style="display:none;">
-            <div class="search-section">
-                <input type="search" id="searchInput" placeholder="検索... (例: せ-い---ん or せ い   ん)" 
-                       autocomplete="off" autocorrect="off" 
-                       autocapitalize="off" spellcheck="false">
+            <div id="mainContent" style="display:none;">
                 
-                <div class="button-group">
-                    <button id="toggleKana" type="button">かな入力</button>
-                    <button id="clearBtn" type="button" class="secondary">クリア</button>
-                    <button id="searchBtn" type="button">検索</button>
-                </div>
-            </div>
-            
-            <div class="kana-keyboard" id="kanaKeyboard">
-                <div class="kana-grid" id="kanaGrid"></div>
-            </div>
-            
-            <div class="filters">
-                <div class="filter-row">
-                    <span class="filter-label">一致:</span>
-                    <div class="radio-group">
-                        <label>
-                            <input type="radio" name="match" value="prefix" checked>
-                            <span>前方</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="match" value="fuzzy">
-                            <span>あいまい</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="match" value="suffix">
-                            <span>後方</span>
-                        </label>
+                <div class="input-section">
+                    <div class="instruction-text">
+                        <strong>Board Placement:</strong> Words must fit on the board.<br>
+                        Overlaps must match exactly. Empty spaces are wildcards.
+                    </div>
+                    
+                    <div class="pos-filter-container">
+                        <div><input type="text" class="pos-input" data-index="0" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="1" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="2" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="3" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="4" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="5" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
+                    </div>
+
+                    <div class="pos-labels-container">
+                        <div class="pos-label">1</div>
+                        <div class="pos-label">2</div>
+                        <div class="pos-label">3</div>
+                        <div class="pos-label">4</div>
+                        <div class="pos-label">5</div>
+                        <div class="pos-label">6</div>
+                        <div class="pos-label">7</div>
+                    </div>
+
+                    <div class="action-row">
+                        <select id="sortSelect" class="sort-select">
+                            <option value="asc">Shortest First</option>
+                            <option value="desc">Longest First</option>
+                        </select>
+                        <button id="clearBtn" type="button">Reset Grid</button>
                     </div>
                 </div>
                 
-                <div class="filter-row">
-                    <span class="filter-label">文字数:</span>
-                    <div class="radio-group">
-                        <label><input type="checkbox" name="chars" value="1"><span>1</span></label>
-                        <label><input type="checkbox" name="chars" value="2"><span>2</span></label>
-                        <label><input type="checkbox" name="chars" value="3"><span>3</span></label>
-                        <label><input type="checkbox" name="chars" value="4"><span>4</span></label>
-                        <label><input type="checkbox" name="chars" value="5"><span>5</span></label>
-                        <label><input type="checkbox" name="chars" value="6"><span>6</span></label>
-                        <label><input type="checkbox" name="chars" value="7"><span>7</span></label>
-                    </div>
-                </div>
-                
-                <div class="filter-row">
-                    <label>
-                        <input type="checkbox" id="distinguishDiacritics">
-                        <span>濁音拗音を区別する</span>
-                    </label>
-                </div>
-            </div>
-            
-            <div class="results">
-                <div class="result-count" id="resultCount">検索してください</div>
-                
-                <div style="margin-bottom: 15px;">
-                    <span class="pos-label">結果内で文字位置検索（枠内はOR、枠間はAND）:</span>
-                    <div class="pos-filter-container" id="posFilterContainer">
-                        <input type="text" class="pos-input" data-index="0" placeholder="1" autocomplete="off">
-                        <input type="text" class="pos-input" data-index="1" placeholder="2" autocomplete="off">
-                        <input type="text" class="pos-input" data-index="2" placeholder="3" autocomplete="off">
-                        <input type="text" class="pos-input" data-index="3" placeholder="4" autocomplete="off">
-                        <input type="text" class="pos-input" data-index="4" placeholder="5" autocomplete="off">
-                        <input type="text" class="pos-input" data-index="5" placeholder="6" autocomplete="off">
-                        <input type="text" class="pos-input" data-index="6" placeholder="7" autocomplete="off">
+                <div class="filters">
+                    <div class="filter-row">
+                        <span class="filter-label">Length:</span>
+                        <div class="radio-group">
+                            <label><input type="checkbox" name="chars" value="1"><span>1</span></label>
+                            <label><input type="checkbox" name="chars" value="2"><span>2</span></label>
+                            <label><input type="checkbox" name="chars" value="3"><span>3</span></label>
+                            <label><input type="checkbox" name="chars" value="4"><span>4</span></label>
+                            <label><input type="checkbox" name="chars" value="5"><span>5</span></label>
+                            <label><input type="checkbox" name="chars" value="6"><span>6</span></label>
+                            <label><input type="checkbox" name="chars" value="7"><span>7</span></label>
+                        </div>
                     </div>
                 </div>
 
-                <div id="resultList"></div>
+                <div class="refine-section" id="refineSection">
+                    <div class="refine-header">
+                        <span class="refine-title">Refine Results:</span>
+                        <div class="toggle-switch refine-toggle">
+                            <div class="toggle-option active" data-logic="OR">Any (OR)</div>
+                            <div class="toggle-option" data-logic="AND">All (AND)</div>
+                        </div>
+                    </div>
+                    
+                    <div class="refine-inputs">
+                        <input type="text" class="refine-input" placeholder="A" autocomplete="off">
+                        <input type="text" class="refine-input" placeholder="B" autocomplete="off">
+                        <input type="text" class="refine-input" placeholder="C" autocomplete="off">
+                        <input type="text" class="refine-input" placeholder="D" autocomplete="off">
+                    </div>
+                    <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">
+                        Refine filters search the <strong>unused</strong> characters of the word.<br>
+                        Duplicate inputs (e.g. A, A) require multiple distinct instances.
+                    </div>
+                </div>
+                
+                <div class="results">
+                    <div class="result-count" id="resultCount">Enter characters to search</div>
+                    <div id="resultList"></div>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 <script>
     let dictionary = [];
-    
-    // Fallback sample dictionary
+    let currentRefineLogic = 'OR';
+
     function getSampleDictionary() {
         const samples = [
-            ["あい","",1,["愛","合い","藍"],["植物・キノコ","色"]],
-            ["あお","",1,["青","粟生"],["色"]],
-            ["あか","",1,["赤","緋","朱"],["色"]],
-            ["いぬ","",1,["犬","イヌ"],["哺乳類","いきもの"]],
-            ["うみ","",1,["海","膿"],["自然地形"]],
-            ["えき","",1,["駅","液"],[]],
-            ["おと","",1,["音"],[]],
-            ["かぜ","かせ",1,["風邪","風"],["天気"]],
-            ["きく","",1,["菊","キク"],["植物・キノコ"]],
-            ["くも","",1,["雲","蜘蛛"],["天気","いきもの"]],
-            ["けむり","",2,["煙"],["自然"]],
-            ["こころ","",2,["心"],["感情"]],
-            ["さかな","",2,["魚"],["魚介"]],
-            ["しお","",1,["塩","潮"],[]],
-            ["すいか","",2,["スイカ"],["野菜・果物"]],
-            ["そら","",1,["空"],["自然"]],
-            ["たいよう","",3,["太陽"],["天気"]],
-            ["ちから","",2,["力"],["感情"]],
-            ["つき","",1,["月"],["星"]],
-            ["てんき","",2,["天気"],["天気"]],
-            ["とり","",1,["鳥","酉"],["いきもの","鳥"]],
-            ["なつ","",1,["夏"],[]],
-            ["にじ","にし",1,["虹"],["天気"]],
-            ["ぬま","",1,["沼"],["自然地形"]],
-            ["ねこ","",1,["ネコ","猫"],["哺乳類","いきもの"]],
-            ["のら","",1,["野良"],[]],
-            ["はな","",1,["花","鼻"],["植物・キノコ","身体"]],
-            ["ひかり","",2,["光"],[]],
-            ["ふゆ","",1,["冬"],[]],
-            ["へび","へひ",1,["蛇"],["いきもの"]],
-            ["ほし","",1,["星"],["星"]],
-            ["まち","",1,["街","町"],[]],
-            ["みず","みす",1,["水"],[]],
-            ["むし","",1,["虫","無視"],["いきもの"]],
-            ["め","",0,["目"],["身体"]],
-            ["もり","",1,["森"],["自然地形"]],
-            ["やま","",1,["山"],["自然地形"]],
-            ["ゆき","",1,["雪"],["天気"]],
-            ["よる","",1,["夜"],[]],
-            ["らいおん","",3,["ライオン"],["哺乳類","いきもの"]],
-            ["りんご","",2,["林檎","リンゴ"],["野菜・果物"]],
-            ["るーれっと","",4,["ルーレット"],[]],
-            ["れんあい","",3,["恋愛"],["感情"]],
-            ["ろうそく","",3,["蝋燭"],[]],
-            ["わたし","",2,["私"],[]],
-            ["さくら","",2,["桜"],["植物・キノコ"]],
-            ["たべもの","",3,["食べ物"],[]],
-            ["のみもの","",3,["飲み物"],[]],
-            ["ともだち","",3,["友達"],[]],
-            ["がっこう","かっこう",3,["学校"],["学校の教科"]]
+            ["あい","",1,["愛"],[]],
+            ["あお","",1,["青"],[]],
+            ["うみ","",1,["海"],[]],
+            ["うそう","",1,["雨窓"],[]],
+            ["しょうそう","",4,["焦燥"],[]],
+            ["うそうかい","",5,["有象海"],[]],
+            ["さいし","",3,["祭祀"],[]],
+            ["さいしょ","",4,["最初"],[]],
+            ["さいしょう","",5,["最小"],[]],
+            ["しょうさ","",4,["勝差"],[]],
+            ["しょうさい","",5,["詳細"],[]],
+            ["さんしょう","",5,["参照"],[]],
+            ["あした","",3,["明日"],[]],
+            ["あいさつ","",4,["挨拶"],[]],
+            ["こう","",2,["甲"],[]],
+            ["こうこう","",4,["高校"],[]],
+            ["こうそ","",3,["酵素"],[]],
+            ["たいいく","",4,["体育"],[]]
         ];
-        
         return samples.map(entry => ({
             word: entry[0],
             chars: entry[1] || entry[0],
@@ -496,14 +198,8 @@
         }));
     }
     
-    // Load dictionary from CDN
     fetch('https://cdn.jsdelivr.net/npm/@kotodaman-unofficial/dictionary@0.1.1/dist/words.json')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
+        .then(response => { if (!response.ok) throw new Error('Network error'); return response.json(); })
         .then(data => {
             dictionary = data.map(entry => ({
                 word: entry[0],
@@ -512,331 +208,322 @@
                 displays: entry[3],
                 themes: entry[4] || []
             }));
-            
             document.getElementById('loadingMsg').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
-            
             initializeApp();
-            performSearch();
         })
         .catch(error => {
-            console.error('Dictionary load error:', error);
-            console.log('Using fallback dictionary...');
+            console.error('Error:', error);
             dictionary = getSampleDictionary();
-            document.getElementById('loadingMsg').textContent = '辞書の読み込みに失敗しました。サンプル辞書を使用しています。';
+            document.getElementById('loadingMsg').textContent = 'Loaded sample dictionary.';
             setTimeout(() => {
                 document.getElementById('loadingMsg').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
                 initializeApp();
-                performSearch();
-            }, 1500);
+            }, 1000);
         });
-    
-    // Hiragana characters
-    const kanaChars = [
-        ['あ', 'い', 'う', 'え', 'お'],
-        ['か', 'き', 'く', 'け', 'こ'],
-        ['さ', 'し', 'す', 'せ', 'そ'],
-        ['た', 'ち', 'つ', 'て', 'と'],
-        ['な', 'に', 'ぬ', 'ね', 'の'],
-        ['は', 'ひ', 'ふ', 'へ', 'ほ'],
-        ['ま', 'み', 'む', 'め', 'も'],
-        ['や', '', 'ゆ', '', 'よ'],
-        ['ら', 'り', 'る', 'れ', 'ろ'],
-        ['わ', '', '', '', 'ん']
-    ];
     
     function initializeApp() {
-        const searchInput = document.getElementById('searchInput');
-        const toggleKanaBtn = document.getElementById('toggleKana');
-        const kanaKeyboard = document.getElementById('kanaKeyboard');
-        const kanaGrid = document.getElementById('kanaGrid');
         const clearBtn = document.getElementById('clearBtn');
-        const searchBtn = document.getElementById('searchBtn');
-        
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function(e) {
-            const now = Date.now();
-            if (now - lastTouchEnd <= 300) {
-                e.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
-        
-        // Initialize kana keyboard
-        kanaChars.forEach(row => {
-            row.forEach(char => {
-                const btn = document.createElement('div');
-                btn.className = char ? 'kana-btn' : 'kana-btn empty';
-                btn.textContent = char || '';
-                
-                if (char) {
-                    const handleClick = (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        searchInput.value += char;
-                        searchInput.focus();
-                    };
-                    
-                    btn.addEventListener('touchend', handleClick);
-                    btn.addEventListener('click', handleClick);
+        const posInputs = document.querySelectorAll('.pos-input');
+        const refineInputs = document.querySelectorAll('.refine-input');
+        const sortSelect = document.getElementById('sortSelect');
+        const refineLogicOptions = document.querySelectorAll('.refine-toggle .toggle-option');
+        const refineSection = document.getElementById('refineSection');
+
+        refineLogicOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                refineLogicOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                currentRefineLogic = opt.getAttribute('data-logic');
+                if (currentRefineLogic === 'AND') {
+                    refineSection.classList.add('and-mode');
+                } else {
+                    refineSection.classList.remove('and-mode');
                 }
-                
-                kanaGrid.appendChild(btn);
+                performSearch();
             });
         });
-        
-        const toggleKana = (e) => {
+
+        clearBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            kanaKeyboard.classList.toggle('active');
-            toggleKanaBtn.textContent = kanaKeyboard.classList.contains('active') 
-                ? 'かな入力を閉じる' 
-                : 'かな入力';
-        };
-        
-        toggleKanaBtn.addEventListener('touchend', toggleKana);
-        toggleKanaBtn.addEventListener('click', toggleKana);
-        
-        const handleClear = (e) => {
-            e.preventDefault();
-            searchInput.value = '';
+            posInputs.forEach(input => { input.value = ''; input.classList.remove('filled'); });
             performSearch();
-            searchInput.focus();
-        };
-        
-        clearBtn.addEventListener('touchend', handleClear);
-        clearBtn.addEventListener('click', handleClear);
-        
-        const handleSearch = (e) => {
-            e.preventDefault();
-            performSearch();
-            searchInput.blur();
-        };
-        
-        searchBtn.addEventListener('touchend', handleSearch);
-        searchBtn.addEventListener('click', handleSearch);
-        
-        searchInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                performSearch();
-                searchInput.blur();
-            }
         });
         
         let searchTimeout;
-        searchInput.addEventListener('input', () => {
+        const debouncedSearch = () => {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                performSearch();
-            }, 300);
+            searchTimeout = setTimeout(performSearch, 200);
+        };
+
+        posInputs.forEach(input => {
+            input.addEventListener('input', () => {
+                input.classList.toggle('filled', input.value.length > 0);
+                debouncedSearch();
+            });
         });
+
+        refineInputs.forEach(input => {
+            input.addEventListener('input', () => {
+                input.classList.toggle('filled', input.value.length > 0);
+                debouncedSearch();
+            });
+        });
+        
+        document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+            input.addEventListener('change', performSearch);
+        });
+
+        sortSelect.addEventListener('change', performSearch);
         
         document.querySelectorAll('label').forEach(label => {
             label.addEventListener('touchend', function(e) {
                 if (e.target.tagName !== 'INPUT') {
                     e.preventDefault();
                     const input = this.querySelector('input');
-                    if (input) {
-                        if (input.type === 'radio') {
-                            input.checked = true;
-                        } else if (input.type === 'checkbox') {
-                            input.checked = !input.checked;
-                        }
-                        performSearch();
-                    }
+                    if (input) { input.checked = !input.checked; performSearch(); }
                 }
             });
         });
-        
-        document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
-            input.addEventListener('change', performSearch);
-        });
-        
-        // Initialize POSITIONAL INPUTS
-        const posInputs = document.querySelectorAll('.pos-input');
-        let posFilterTimeout;
-        
-        posInputs.forEach(input => {
-            input.addEventListener('input', () => {
-                clearTimeout(posFilterTimeout);
-                posFilterTimeout = setTimeout(() => {
-                    filterResults();
-                }, 200);
-            });
-        });
-    }
-    
-    let currentResults = [];
-    
-    // NEW: Filter results based on Positional Inputs
-    function filterResults() {
-        const resultList = document.getElementById('resultList');
-        const resultCount = document.getElementById('resultCount');
-        
-        // Get constraints from the 7 input boxes
-        const posInputs = document.querySelectorAll('.pos-input');
-        const constraints = []; // array of { index: number, chars: string[] }
-        let hasActiveFilter = false;
-        
-        posInputs.forEach(input => {
-            const val = input.value.trim();
-            if (val.length > 0) {
-                hasActiveFilter = true;
-                constraints.push({
-                    index: parseInt(input.getAttribute('data-index')),
-                    chars: val.split('') // 'abc' -> ['a','b','c'] (OR logic)
-                });
-            }
-        });
-        
-        let filtered = currentResults;
-        
-        if (hasActiveFilter) {
-            filtered = currentResults.filter(word => {
-                // Check every active constraint (AND logic between positions)
-                return constraints.every(constraint => {
-                    // If word is too short for this constraint, exclude it
-                    if (word.word.length <= constraint.index) {
-                        return false; 
-                    }
-                    
-                    const charAtPos = word.word[constraint.index];
-                    
-                    // The character at this position must be in the allowed list (OR logic)
-                    return constraint.chars.includes(charAtPos);
-                });
-            });
-        }
-        
-        // Update count
-        if (hasActiveFilter) {
-            resultCount.textContent = `${filtered.length}件表示中（${currentResults.length}件から絞り込み）`;
-        } else {
-            resultCount.textContent = `${currentResults.length}件見つかりました`;
-        }
-        
-        // Display
-        if (filtered.length === 0) {
-            resultList.innerHTML = '<div class="no-results">該当する結果がありません</div>';
-        } else {
-            resultList.innerHTML = filtered.map(word => {
-                const displayText = word.displays[0] || word.word;
-                const themesText = word.themes.length > 0 
-                    ? `<div class="result-themes">テーマ: ${word.themes.join(', ')}</div>`
-                    : '';
-                
-                // Construct highlighting HTML
-                let highlightedWord = word.word;
-                if (hasActiveFilter) {
-                    highlightedWord = '';
-                    const chars = word.word.split('');
-                    
-                    // Rebuild word char by char, highlighting those that matched a filter
-                    for (let i = 0; i < chars.length; i++) {
-                        const char = chars[i];
-                        // Is there a constraint for this index?
-                        const constraint = constraints.find(c => c.index === i);
-                        
-                        if (constraint && constraint.chars.includes(char)) {
-                            highlightedWord += `<span style="color: #007AFF; font-weight: bold; text-decoration: underline;">${char}</span>`;
-                        } else {
-                            highlightedWord += char;
-                        }
-                    }
-                }
-                
-                return `
-                    <div class="result-item">
-                        <div class="result-word">${displayText} (${highlightedWord})</div>
-                        <div class="result-info">${word.word.length}文字 | コンボ: ${word.combo}</div>
-                        ${themesText}
-                    </div>
-                `;
-            }).join('');
-        }
+
+        performSearch();
     }
     
     function performSearch() {
-        const searchInput = document.getElementById('searchInput');
         const resultCount = document.getElementById('resultCount');
         const resultList = document.getElementById('resultList');
-        
-        let query = searchInput.value.trim();
-        const matchType = document.querySelector('input[name="match"]:checked').value;
-        const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked'))
-            .map(cb => parseInt(cb.value));
-        const distinguishDiacritics = document.getElementById('distinguishDiacritics').checked;
-        
-        let results = [...dictionary];
-        
-        if (query) {
-            const hasWildcard = query.includes('-') || query.includes(' ');
-            
-            if (hasWildcard) {
-                // WILDCARD LOGIC: SLIDING WINDOW
-                const standardizedQuery = query.replace(/ /g, '-');
-                const queryLen = standardizedQuery.length;
+        const sortOrder = document.getElementById('sortSelect').value;
+        const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
 
-                results = results.filter(word => {
-                    const wordLen = word.word.length;
-                    if (wordLen > queryLen) return false;
-                    
-                    for (let i = 0; i <= queryLen - wordLen; i++) {
-                        let match = true;
-                        for (let j = 0; j < wordLen; j++) {
-                            const qChar = standardizedQuery[i + j];
-                            const wChar = word.word[j];
-                            if (qChar !== '-' && qChar !== wChar) {
-                                match = false;
-                                break;
-                            }
-                        }
-                        if (match) return true;
-                    }
-                    return false;
-                });
-            } else {
-                results = results.filter(word => {
-                    if (matchType === 'prefix') return word.word.startsWith(query);
-                    if (matchType === 'suffix') return word.word.endsWith(query);
-                    return word.word.includes(query);
-                });
-            }
-        }
-        
+        const posInputs = Array.from(document.querySelectorAll('.pos-input'));
+        const inputValues = posInputs.map(i => i.value.trim());
+        const hasActivePosFilter = inputValues.some(v => v.length > 0);
+
+        const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
+            .map(input => input.value.trim().split('')) 
+            .filter(arr => arr.length > 0);
+        const hasRefineFilter = refineConstraints.length > 0;
+
+        let results = dictionary;
+
+        // A. Length Filter
         if (charFilters.length > 0) {
             results = results.filter(word => charFilters.includes(word.word.length));
         }
-        
-        results.sort((a, b) => b.word.length - a.word.length);
-        
-        const maxResults = 200;
-        const limited = results.length > maxResults;
-        const displayResults = limited ? results.slice(0, maxResults) : results;
-        
-        currentResults = displayResults;
-        
-        // Clear the positional filters when a NEW main search is done
-        document.querySelectorAll('.pos-input').forEach(input => input.value = '');
 
-        resultCount.textContent = limited 
-            ? `${maxResults}件表示中（${results.length + '+'}件見つかりました）`
-            : `${results.length}件見つかりました`;
-        
-        if (displayResults.length === 0) {
-            resultList.innerHTML = '<div class="no-results">結果がありません</div>';
+        // B. Board Placement Calculation
+        // Map word -> Array of valid start offsets [0, 2, ...]
+        let wordPlacements = new Map();
+
+        if (hasActivePosFilter) {
+            results = results.filter(word => {
+                const len = word.word.length;
+                let validOffsets = [];
+
+                for (let start = 0; start <= 7 - len; start++) {
+                    let fits = true;
+                    for (let i = 0; i < len; i++) {
+                        const boardChar = inputValues[start + i];
+                        const wordChar = word.word[i];
+                        if (boardChar && boardChar.length > 0) {
+                            if (!boardChar.includes(wordChar)) {
+                                fits = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (fits) validOffsets.push(start);
+                }
+
+                if (validOffsets.length > 0) {
+                    wordPlacements.set(word.word, validOffsets);
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        // C. Refine Filter
+        // For each word, check if *any* valid placement allows the Refine constraints to pass
+        if (hasRefineFilter) {
+            results = results.filter(word => {
+                let placementsToCheck = hasActivePosFilter ? wordPlacements.get(word.word) : [-1];
+                let foundValidPlacement = false;
+
+                // We need to store the *best* placement that made it pass, for visualization logic
+                // But filter just needs boolean true/false.
+                
+                for (let offset of placementsToCheck) {
+                    // 1. Identify Available Characters (Consumption Logic)
+                    let availableIndices = []; // Indices of chars in word that are NOT used by grid
+                    const chars = word.word.split('');
+                    
+                    for (let i = 0; i < chars.length; i++) {
+                        let isUsedByGrid = false;
+                        if (offset !== -1) {
+                            let boardIndex = offset + i;
+                            if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
+                                isUsedByGrid = true;
+                            }
+                        }
+                        if (!isUsedByGrid) availableIndices.push(i);
+                    }
+
+                    // 2. Check Constraints
+                    let placementPasses = false;
+
+                    if (currentRefineLogic === 'OR') {
+                        // Any constraint must match any available char
+                        // We don't strictly need consumption for OR, just existence
+                        placementPasses = refineConstraints.some(constraint => {
+                            return availableIndices.some(idx => constraint.includes(chars[idx]));
+                        });
+                    } else {
+                        // AND Logic with Strict Consumption
+                        let currentIndices = [...availableIndices]; // Copy for consumption
+                        let allConstraintsMet = true;
+
+                        for (let constraint of refineConstraints) {
+                            // Find an available char that matches this constraint
+                            let matchFoundIndex = -1;
+                            for (let k = 0; k < currentIndices.length; k++) {
+                                let idx = currentIndices[k];
+                                if (constraint.includes(chars[idx])) {
+                                    matchFoundIndex = k;
+                                    break;
+                                }
+                            }
+
+                            if (matchFoundIndex !== -1) {
+                                // Consume it
+                                currentIndices.splice(matchFoundIndex, 1); 
+                            } else {
+                                allConstraintsMet = false;
+                                break;
+                            }
+                        }
+                        placementPasses = allConstraintsMet;
+                    }
+
+                    if (placementPasses) {
+                        foundValidPlacement = true;
+                        // Optimization: We could update wordPlacements to only contain this valid one
+                        // so visualization is correct?
+                        // Let's replace the map entry with just this "winning" offset for display simplicity
+                        if (hasActivePosFilter) wordPlacements.set(word.word, [offset]);
+                        break; 
+                    }
+                }
+                
+                return foundValidPlacement;
+            });
+        }
+
+        // 3. Sorting
+        if (sortOrder === 'asc') {
+            results.sort((a, b) => a.word.length - b.word.length);
         } else {
+            results.sort((a, b) => b.word.length - a.word.length);
+        }
+        
+        const maxResults = 300; 
+        const displayResults = results.slice(0, maxResults);
+        
+        // 4. Update UI
+        if (!hasActivePosFilter && !hasRefineFilter && charFilters.length === 0) {
+            resultCount.textContent = `Waiting for input... (${dictionary.length} words)`;
+            resultList.innerHTML = '';
+            return;
+        }
+
+        if (results.length === 0) {
+            resultCount.textContent = "No matches found";
+            resultList.innerHTML = '<div class="no-results">No words match your criteria</div>';
+        } else {
+            const suffix = results.length > maxResults ? ` (Showing first ${maxResults})` : '';
+            resultCount.textContent = `Found ${results.length} words${suffix}`;
+
             resultList.innerHTML = displayResults.map(word => {
                 const displayText = word.displays[0] || word.word;
                 const themesText = word.themes.length > 0 
-                    ? `<div class="result-themes">テーマ: ${word.themes.join(', ')}</div>`
+                    ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
                     : '';
                 
+                // Visualization Logic
+                // If filtered, wordPlacements has the specific winning offset (or first valid one)
+                let placementOffset = hasActivePosFilter ? wordPlacements.get(word.word)[0] : -1;
+                
+                // Recalculate which indices correspond to what for highlighting
+                const chars = word.word.split('');
+                let gridIndices = new Set();
+                let refineIndices = new Set();
+                
+                // Mark Grid Indices
+                if (placementOffset !== -1) {
+                    for(let i=0; i<chars.length; i++) {
+                        let boardIndex = placementOffset + i;
+                        if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
+                            gridIndices.add(i);
+                        }
+                    }
+                }
+
+                // Mark Refine Indices (Greedy match for viz)
+                if (hasRefineFilter) {
+                    let availIndices = [];
+                    chars.forEach((_, i) => { if(!gridIndices.has(i)) availIndices.push(i); });
+                    
+                    // Simple greedy consumption for highlighting visualization
+                    let vizConsumed = new Set();
+                    for(let constraint of refineConstraints) {
+                        for(let idx of availIndices) {
+                            if(!vizConsumed.has(idx) && constraint.includes(chars[idx])) {
+                                refineIndices.add(idx);
+                                vizConsumed.add(idx);
+                                // If AND mode, we consume one per constraint.
+                                // If OR mode, technically highlighting all matches is fine.
+                                if(currentRefineLogic === 'AND') break; 
+                            }
+                        }
+                    }
+                }
+
+                let highlightedWordHTML = chars.map((char, i) => {
+                    let style = '';
+                    if (gridIndices.has(i)) {
+                        style = "font-weight:bold; text-decoration:underline; color:#007AFF;";
+                    } else if (refineIndices.has(i)) {
+                        style = currentRefineLogic === 'AND' 
+                            ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
+                            : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;";
+                    }
+                    return style ? `<span style="${style}">${char}</span>` : char;
+                }).join('');
+
+                let gridHtml = '';
+                if (placementOffset !== -1) {
+                    gridHtml = '<div class="mini-grid">';
+                    for(let b=0; b<7; b++) {
+                        let content = '';
+                        let className = 'mini-box';
+                        if (b >= placementOffset && b < placementOffset + word.word.length) {
+                            content = word.word[b - placementOffset];
+                            if (inputValues[b] && inputValues[b].length > 0) className += ' matched';
+                            else className += ' overlap';
+                        }
+                        gridHtml += `<div class="${className}">${content}</div>`;
+                    }
+                    gridHtml += '</div>';
+                }
+
                 return `
                     <div class="result-item">
-                        <div class="result-word">${displayText} (${word.word})</div>
-                        <div class="result-info">${word.word.length}文字 | コンボ: ${word.combo}</div>
+                        <div class="result-word">
+                            <span>${displayText} <span style="font-weight:normal; font-size:0.8em; color:#666;">(${highlightedWordHTML})</span></span>
+                            ${gridHtml}
+                        </div>
+                        <div class="result-info">${word.word.length} chars | Combo: ${word.combo}</div>
                         ${themesText}
                     </div>
                 `;

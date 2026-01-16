@@ -394,7 +394,7 @@
                 
                 <div class="input-section" id="inputSection">
                     <div class="instruction-text">
-                        <strong>Pattern Search:</strong> Finds the sequence anywhere in the word. Gaps act as wildcards.
+                        <strong>Pattern Search:</strong> Finds the sequence anywhere in the word. Gaps between boxes act as wildcards.
                     </div>
                     
                     <div class="pos-filter-container" id="posFilterContainer">
@@ -439,12 +439,6 @@
                             <label><input type="checkbox" name="chars" value="7"><span>7</span></label>
                         </div>
                     </div>
-                    <div class="filter-row">
-                        <label>
-                            <input type="checkbox" id="distinguishDiacritics">
-                            <span>Distinguish Diacritics</span>
-                        </label>
-                    </div>
                 </div>
 
                 <div class="refine-section" id="refineSection">
@@ -463,8 +457,9 @@
                         <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
                     <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">
-                        <strong>AND:</strong> Must contain ALL characters.<br>
-                        <strong>OR:</strong> Must contain AT LEAST one.
+                        <strong>AND:</strong> All boxes must satisfy (Box 1 AND Box 2...).<br>
+                        <strong>OR:</strong> At least one box must satisfy (Box 1 OR Box 2...).<br>
+                        <em>Note: Characters used in the Grid are ignored here.</em>
                     </div>
                 </div>
                 
@@ -512,7 +507,9 @@
             ["さいしょう","",5,["最小"],[]],
             ["しょうさ","",4,["勝差"],[]],
             ["しょうさい","",5,["詳細"],[]],
-            ["さんしょう","",5,["参照"],[]]
+            ["さんしょう","",5,["参照"],[]],
+            ["あした","",3,["明日"],[]],
+            ["あいさつ","",4,["挨拶"],[]]
         ];
         
         return samples.map(entry => ({
@@ -644,14 +641,15 @@
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
-        // 2. Collect Refine Inputs (Flatten to single char array)
-        // This splits "さい" into "さ","い" and treats them as individual requirements/options
-        const refineChars = Array.from(document.querySelectorAll('.refine-input'))
+        // 2. Collect Refine Inputs 
+        // We want separate constraints per box. 
+        // Box 1 "AB" -> Constraint 1: ['A','B'] (A or B)
+        // Box 2 "C"  -> Constraint 2: ['C']
+        const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
             .map(input => input.value.trim().split('')) 
-            .flat()
-            .filter(c => c.length > 0);
+            .filter(arr => arr.length > 0);
         
-        const hasRefineFilter = refineChars.length > 0;
+        const hasRefineFilter = refineConstraints.length > 0;
 
         let results = dictionary;
 
@@ -664,12 +662,10 @@
         let regexPattern = null;
 
         if (hasActivePosFilter) {
-            // 1. Find the bounds of the user input
             let firstIndex = inputValues.findIndex(v => v.length > 0);
             let lastIndex = 6; 
             while(lastIndex >= 0 && inputValues[lastIndex].length === 0) lastIndex--;
             
-            // 2. Build Regex Pattern
             let patternStr = "";
             for (let i = firstIndex; i <= lastIndex; i++) {
                 const val = inputValues[i];
@@ -684,15 +680,61 @@
             results = results.filter(word => regexPattern.test(word.word));
         }
 
-        // C. Refine Filter (AND / OR)
+        // C. Refine Filter
         if (hasRefineFilter) {
             results = results.filter(word => {
+                let textToSearch = word.word;
+
+                // ** EXCLUSION LOGIC **
+                // If a pattern matched, we must "remove" the matched characters 
+                // so they don't count towards the Refine check.
+                if (regexPattern) {
+                    const match = regexPattern.exec(word.word);
+                    if (match) {
+                        // We construct a "remaining" string.
+                        // The regex pattern might contain wildcards (.).
+                        // We only want to remove the characters that satisfied EXPLICIT grid inputs.
+                        // However, simply removing the whole match range is safer if we consider 
+                        // the pattern "consumes" that part of the word.
+                        // But the prompt said "original pattern search hiragana should not be considered".
+                        // This implies SPECIFICALLY the letters typed in the grid.
+                        
+                        // Let's go with the simpler, more robust method:
+                        // Mask ONLY the indices corresponding to NON-WILDCARD matches.
+                        
+                        let chars = word.word.split('');
+                        let matchStart = match.index;
+                        
+                        // We need to map grid indices to match indices.
+                        let firstGridIndex = inputValues.findIndex(v => v.length > 0);
+                        
+                        // Iterate through the pattern length
+                        for (let i = 0; i < match[0].length; i++) {
+                             // Corresponding grid index relative to pattern start
+                             let relativeGridIdx = firstGridIndex + i; 
+                             
+                             // If the grid had input at this relative index, exclude this char
+                             if (inputValues[relativeGridIdx] && inputValues[relativeGridIdx].length > 0) {
+                                 chars[matchStart + i] = null; // Mask it
+                             }
+                        }
+                        
+                        textToSearch = chars.filter(c => c !== null).join('');
+                    }
+                }
+
+                // ** REFINE LOGIC **
+                // constraint is e.g. ['A', 'B'] -> word must contain A or B
+                const checkBox = (constraintChars) => {
+                    return constraintChars.some(char => textToSearch.includes(char));
+                };
+
                 if (currentRefineLogic === 'OR') {
-                    // Contains ANY of the characters
-                    return refineChars.some(val => word.word.includes(val));
+                    // Match if ANY box is satisfied
+                    return refineConstraints.some(checkBox);
                 } else {
-                    // Contains ALL of the characters
-                    return refineChars.every(val => word.word.includes(val));
+                    // Match if ALL boxes are satisfied
+                    return refineConstraints.every(checkBox);
                 }
             });
         }
@@ -731,39 +773,62 @@
                 // --- Highlight Logic ---
                 const chars = word.word.split('');
                 let gridIndices = new Set();
+                let refineIndices = new Set(); // indices matched by refine
 
                 // 1. Grid Highlights (Pattern)
+                let firstGridIndex = -1;
+                let matchStart = -1;
+                
                 if (regexPattern) {
                     const match = regexPattern.exec(word.word);
                     if (match) {
-                        for(let i=match.index; i < match.index + match[0].length; i++) {
-                            gridIndices.add(i);
+                        firstGridIndex = inputValues.findIndex(v => v.length > 0);
+                        matchStart = match.index;
+                        
+                        // Highlight Grid Matches
+                        for (let i = 0; i < match[0].length; i++) {
+                            // Only highlight if it corresponds to an actual input, NOT a wildcard gap
+                            let relativeGridIdx = firstGridIndex + i; 
+                            if (inputValues[relativeGridIdx] && inputValues[relativeGridIdx].length > 0) {
+                                gridIndices.add(matchStart + i);
+                            }
                         }
                     }
+                }
+
+                // 2. Refine Highlights (Only on non-grid characters)
+                if (hasRefineFilter) {
+                    chars.forEach((char, i) => {
+                        // Skip if already used by grid
+                        if (gridIndices.has(i)) return;
+
+                        // Check if this char helps satisfy constraints
+                        // We need to know WHICH constraint this char satisfies to be precise,
+                        // but generally highlighting the char if it exists in any refine box is helpful enough
+                        // provided the word passed the filter.
+                        
+                        let isRefineChar = false;
+                        refineConstraints.forEach(constraint => {
+                            if (constraint.includes(char)) isRefineChar = true;
+                        });
+                        
+                        if (isRefineChar) {
+                            refineIndices.add(i);
+                        }
+                    });
                 }
 
                 const highlightedWord = chars.map((char, i) => {
                     let styles = [];
                     
-                    // Grid Highlight Style
                     if (gridIndices.has(i)) {
                         styles.push("font-weight:bold; text-decoration:underline; color:#007AFF;");
                     }
-
-                    // Refine Highlight Style
-                    if (hasRefineFilter && refineChars.includes(char)) {
-                        let isRefineMatch = false;
-                        if (currentRefineLogic === 'AND') {
-                            isRefineMatch = true; // In AND mode, if word is here, all are present
-                        } else {
-                            isRefineMatch = true; // In OR mode, highlight matches
-                        }
-
-                        if(isRefineMatch) {
-                            styles.push(currentRefineLogic === 'AND' 
-                                ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
-                                : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;");
-                        }
+                    else if (refineIndices.has(i)) {
+                        // Refine Highlight
+                        styles.push(currentRefineLogic === 'AND' 
+                            ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
+                            : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;");
                     }
 
                     if (styles.length > 0) {

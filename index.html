@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -696,86 +695,83 @@
         }
     }
     
-    // Search function
+    // Search function with right-aligned wildcard support
     function performSearch() {
         const searchInput = document.getElementById('searchInput');
         const resultCount = document.getElementById('resultCount');
         const resultList = document.getElementById('resultList');
         
-        const query = searchInput.value.trim();
+        let query = searchInput.value.trim();
         const matchType = document.querySelector('input[name="match"]:checked').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked'))
             .map(cb => parseInt(cb.value));
         
         let results = [...dictionary];
         
-        // Filter by query
         if (query) {
-            // Check if query contains wildcards (dashes or spaces)
             const hasWildcard = query.includes('-') || query.includes(' ');
             
             if (hasWildcard) {
-                // Remove trailing wildcards to allow shorter matches
-                const trimmedQuery = query.replace(/-+$| +$/g, '');
-                
+                // Wildcard Logic: Right-Alignment
+                const standardizedQuery = query.replace(/ /g, '-');
+                const queryLen = standardizedQuery.length;
+
                 results = results.filter(word => {
-                    // Check if word matches the pattern up to its length
-                    const patternUpToLength = trimmedQuery.slice(0, word.word.length);
-                    const pattern = patternUpToLength.split('').map(char => 
-                        (char === '-' || char === ' ') ? '.' : char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                    ).join('');
+                    const wordLen = word.word.length;
                     
-                    // Only match if the pattern up to this length has content
-                    if (patternUpToLength.length > 0 && patternUpToLength !== '-'.repeat(patternUpToLength.length)) {
-                        const regex = new RegExp(`^${pattern}$`);
+                    // Logic: Right-Alignment (Suffix Match)
+                    // Matches words that fit at the END of the query pattern
+                    if (wordLen <= queryLen) {
+                        const patternSegment = standardizedQuery.slice(queryLen - wordLen);
+                        const regexStr = patternSegment.replace(/-/g, '.');
+                        const regex = new RegExp(`^${regexStr}$`);
+                        
                         return regex.test(word.word);
                     }
                     return false;
                 });
             } else {
-                // Normal search without wildcards
+                // Standard Logic
                 results = results.filter(word => {
-                    if (matchType === 'prefix') {
-                        return word.word.startsWith(query);
-                    } else if (matchType === 'suffix') {
-                        return word.word.endsWith(query);
-                    } else {
-                        return word.word.includes(query);
-                    }
+                    if (matchType === 'prefix') return word.word.startsWith(query);
+                    if (matchType === 'suffix') return word.word.endsWith(query);
+                    return word.word.includes(query);
                 });
             }
         }
         
-        // Filter by character count (use actual word length)
+        // Filter by character count
         if (charFilters.length > 0) {
             results = results.filter(word => charFilters.includes(word.word.length));
         }
         
-        // Limit results to prevent performance issues
+        // Sort results by length (descending) so matching long words appear first
+        results.sort((a, b) => b.word.length - a.word.length);
+        
+        // Limit results
         const maxResults = 200;
         const limited = results.length > maxResults;
-        if (limited) {
-            results = results.slice(0, maxResults);
-        }
+        
+        // Slice AFTER sorting but BEFORE storing in currentResults to ensure consistency
+        const displayResults = limited ? results.slice(0, maxResults) : results;
         
         // Store current results for filtering
-        currentResults = results;
+        currentResults = displayResults;
         
-        // Display results
+        // Update UI
+        const resultFilter = document.getElementById('resultFilter');
+        if (resultFilter && resultFilter.value !== '') {
+             resultFilter.value = ''; // Reset the inner filter
+        }
+
         resultCount.textContent = limited 
             ? `${maxResults}件表示中（${results.length + '+'}件見つかりました）`
             : `${results.length}件見つかりました`;
         
-        // Clear result filter when new search is performed
-        const resultFilter = document.getElementById('resultFilter');
-        if (resultFilter) {
-            resultFilter.value = '';
-        }
-        
-        if (results.length === 0) {
+        if (displayResults.length === 0) {
             resultList.innerHTML = '<div class="no-results">結果がありません</div>';
         } else {
-            resultList.innerHTML = results.map(word => {
+            resultList.innerHTML = displayResults.map(word => {
                 const displayText = word.displays[0] || word.word;
                 const themesText = word.themes.length > 0 
                     ? `<div class="result-themes">テーマ: ${word.themes.join(', ')}</div>`
@@ -792,7 +788,5 @@
         }
     }
 </script>
-```
-
 </body>
 </html>

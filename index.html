@@ -192,7 +192,7 @@ document.getElementById('clearBtn').onclick = () => {
 };
 
 document.getElementById('searchBtn').onclick = performSearch;
-srchInpu.addEventListener('input', () => {
+searchInput.addEventListener('input', () => {
     clearTimeout(window._t);
     window._t = setTimeout(performSearch, 300);
 });

@@ -88,7 +88,7 @@
                 <div class="input-section">
                     <div class="instruction-text">
                         <strong>Board Placement:</strong> Words must fit on the board.<br>
-                        Gaps can be any character. Overlaps must match.
+                        Overlaps must match exactly. Empty spaces are wildcards.
                     </div>
                     
                     <div class="pos-filter-container">
@@ -151,7 +151,8 @@
                         <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
                     <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">
-                        Refine filters <strong>exclude</strong> characters matched by the Grid.
+                        Refine filters search the <strong>unused</strong> characters of the word.<br>
+                        Duplicate inputs (e.g. A, A) require multiple distinct instances.
                     </div>
                 </div>
                 
@@ -169,9 +170,9 @@
 
     function getSampleDictionary() {
         const samples = [
-            ["あい","",1,["愛"],["Plants/Fungi","Color"]],
-            ["あお","",1,["青"],["Color"]],
-            ["うみ","",1,["海"],["Natural Terrain"]],
+            ["あい","",1,["愛"],[]],
+            ["あお","",1,["青"],[]],
+            ["うみ","",1,["海"],[]],
             ["うそう","",1,["雨窓"],[]],
             ["しょうそう","",4,["焦燥"],[]],
             ["うそうかい","",5,["有象海"],[]],
@@ -185,7 +186,8 @@
             ["あいさつ","",4,["挨拶"],[]],
             ["こう","",2,["甲"],[]],
             ["こうこう","",4,["高校"],[]],
-            ["こうそ","",3,["酵素"],[]]
+            ["こうそ","",3,["酵素"],[]],
+            ["たいいく","",4,["体育"],[]]
         ];
         return samples.map(entry => ({
             word: entry[0],
@@ -196,7 +198,6 @@
         }));
     }
     
-    // Load dictionary
     fetch('https://cdn.jsdelivr.net/npm/@kotodaman-unofficial/dictionary@0.1.1/dist/words.json')
         .then(response => { if (!response.ok) throw new Error('Network error'); return response.json(); })
         .then(data => {
@@ -276,7 +277,6 @@
 
         sortSelect.addEventListener('change', performSearch);
         
-        // Tap label to toggle checkbox
         document.querySelectorAll('label').forEach(label => {
             label.addEventListener('touchend', function(e) {
                 if (e.target.tagName !== 'INPUT') {
@@ -296,12 +296,10 @@
         const sortOrder = document.getElementById('sortSelect').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
 
-        // 1. Inputs
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
-        // Refine Inputs
         const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
             .map(input => input.value.trim().split('')) 
             .filter(arr => arr.length > 0);
@@ -314,9 +312,8 @@
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // --- B. Board Placement Search Calculation ---
-        // For every word, we calculate ALL possible valid start offsets.
-        // We store this in a Map: word.word -> [offset1, offset2, ...]
+        // B. Board Placement Calculation
+        // Map word -> Array of valid start offsets [0, 2, ...]
         let wordPlacements = new Map();
 
         if (hasActivePosFilter) {
@@ -324,16 +321,11 @@
                 const len = word.word.length;
                 let validOffsets = [];
 
-                // Try placing the word at every possible board start index
-                // Valid start indices: 0 up to 7-len
                 for (let start = 0; start <= 7 - len; start++) {
                     let fits = true;
-                    
                     for (let i = 0; i < len; i++) {
                         const boardChar = inputValues[start + i];
                         const wordChar = word.word[i];
-                        
-                        // Overlap Check
                         if (boardChar && boardChar.length > 0) {
                             if (!boardChar.includes(wordChar)) {
                                 fits = false;
@@ -341,10 +333,7 @@
                             }
                         }
                     }
-                    
-                    if (fits) {
-                        validOffsets.push(start);
-                    }
+                    if (fits) validOffsets.push(start);
                 }
 
                 if (validOffsets.length > 0) {
@@ -355,52 +344,79 @@
             });
         }
 
-        // --- C. Refine Filter with Smart Exclusion ---
+        // C. Refine Filter
+        // For each word, check if *any* valid placement allows the Refine constraints to pass
         if (hasRefineFilter) {
             results = results.filter(word => {
-                let validRefineFitFound = false;
-                
-                // Determine which placements to check.
-                // If Grid Search is active, only check valid grid placements.
-                // If no Grid Search, consider the word "placed" naturally (no exclusion needed? or exclude nothing).
-                
-                let placementsToCheck = hasActivePosFilter ? wordPlacements.get(word.word) : [-1]; // -1 dummy for "no grid"
+                let placementsToCheck = hasActivePosFilter ? wordPlacements.get(word.word) : [-1];
+                let foundValidPlacement = false;
 
-                // Check EVERY valid placement. If ANY placement satisfies Refine, the word is valid.
+                // We need to store the *best* placement that made it pass, for visualization logic
+                // But filter just needs boolean true/false.
+                
                 for (let offset of placementsToCheck) {
+                    // 1. Identify Available Characters (Consumption Logic)
+                    let availableIndices = []; // Indices of chars in word that are NOT used by grid
+                    const chars = word.word.split('');
                     
-                    let textToSearch;
-                    
-                    if (offset === -1) {
-                        // No Grid Filter -> Search whole word
-                        textToSearch = word.word;
-                    } else {
-                        // Grid Active -> Construct text excluding overlapped chars
-                        let chars = word.word.split('');
-                        for (let i = 0; i < chars.length; i++) {
+                    for (let i = 0; i < chars.length; i++) {
+                        let isUsedByGrid = false;
+                        if (offset !== -1) {
                             let boardIndex = offset + i;
-                            // If this position on board was explicitly filled by user, exclude char
                             if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
-                                chars[i] = null;
+                                isUsedByGrid = true;
                             }
                         }
-                        textToSearch = chars.filter(c => c !== null).join('');
+                        if (!isUsedByGrid) availableIndices.push(i);
                     }
 
-                    // Check Refine Constraints against this specific textToSearch
-                    const checkBox = (constraintChars) => constraintChars.some(char => textToSearch.includes(char));
-                    
-                    let refinePasses = (currentRefineLogic === 'OR') 
-                        ? refineConstraints.some(checkBox)
-                        : refineConstraints.every(checkBox);
+                    // 2. Check Constraints
+                    let placementPasses = false;
 
-                    if (refinePasses) {
-                        validRefineFitFound = true;
-                        break; // Found a valid configuration!
+                    if (currentRefineLogic === 'OR') {
+                        // Any constraint must match any available char
+                        // We don't strictly need consumption for OR, just existence
+                        placementPasses = refineConstraints.some(constraint => {
+                            return availableIndices.some(idx => constraint.includes(chars[idx]));
+                        });
+                    } else {
+                        // AND Logic with Strict Consumption
+                        let currentIndices = [...availableIndices]; // Copy for consumption
+                        let allConstraintsMet = true;
+
+                        for (let constraint of refineConstraints) {
+                            // Find an available char that matches this constraint
+                            let matchFoundIndex = -1;
+                            for (let k = 0; k < currentIndices.length; k++) {
+                                let idx = currentIndices[k];
+                                if (constraint.includes(chars[idx])) {
+                                    matchFoundIndex = k;
+                                    break;
+                                }
+                            }
+
+                            if (matchFoundIndex !== -1) {
+                                // Consume it
+                                currentIndices.splice(matchFoundIndex, 1); 
+                            } else {
+                                allConstraintsMet = false;
+                                break;
+                            }
+                        }
+                        placementPasses = allConstraintsMet;
+                    }
+
+                    if (placementPasses) {
+                        foundValidPlacement = true;
+                        // Optimization: We could update wordPlacements to only contain this valid one
+                        // so visualization is correct?
+                        // Let's replace the map entry with just this "winning" offset for display simplicity
+                        if (hasActivePosFilter) wordPlacements.set(word.word, [offset]);
+                        break; 
                     }
                 }
                 
-                return validRefineFitFound;
+                return foundValidPlacement;
             });
         }
 
@@ -412,7 +428,6 @@
         }
         
         const maxResults = 300; 
-        const totalFound = results.length;
         const displayResults = results.slice(0, maxResults);
         
         // 4. Update UI
@@ -422,12 +437,12 @@
             return;
         }
 
-        if (totalFound === 0) {
+        if (results.length === 0) {
             resultCount.textContent = "No matches found";
             resultList.innerHTML = '<div class="no-results">No words match your criteria</div>';
         } else {
-            const suffix = totalFound > maxResults ? ` (Showing first ${maxResults})` : '';
-            resultCount.textContent = `Found ${totalFound} words${suffix}`;
+            const suffix = results.length > maxResults ? ` (Showing first ${maxResults})` : '';
+            resultCount.textContent = `Found ${results.length} words${suffix}`;
 
             resultList.innerHTML = displayResults.map(word => {
                 const displayText = word.displays[0] || word.word;
@@ -435,18 +450,16 @@
                     ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
                     : '';
                 
-                // Pick the first valid placement for visualization
-                // (Ideally we visualize the one that passed Refine, but simply picking first valid grid fit is okay for UI)
+                // Visualization Logic
+                // If filtered, wordPlacements has the specific winning offset (or first valid one)
                 let placementOffset = hasActivePosFilter ? wordPlacements.get(word.word)[0] : -1;
-
-                // Build Highlighted Word
-                let highlightedWordHTML = '';
+                
+                // Recalculate which indices correspond to what for highlighting
                 const chars = word.word.split('');
-                
-                // We need to know which chars matched Grid vs Refine for this specific placement
-                // Note: This is purely visual. We recalculate for the chosen offset.
                 let gridIndices = new Set();
+                let refineIndices = new Set();
                 
+                // Mark Grid Indices
                 if (placementOffset !== -1) {
                     for(let i=0; i<chars.length; i++) {
                         let boardIndex = placementOffset + i;
@@ -456,21 +469,38 @@
                     }
                 }
 
-                highlightedWordHTML = chars.map((char, i) => {
+                // Mark Refine Indices (Greedy match for viz)
+                if (hasRefineFilter) {
+                    let availIndices = [];
+                    chars.forEach((_, i) => { if(!gridIndices.has(i)) availIndices.push(i); });
+                    
+                    // Simple greedy consumption for highlighting visualization
+                    let vizConsumed = new Set();
+                    for(let constraint of refineConstraints) {
+                        for(let idx of availIndices) {
+                            if(!vizConsumed.has(idx) && constraint.includes(chars[idx])) {
+                                refineIndices.add(idx);
+                                vizConsumed.add(idx);
+                                // If AND mode, we consume one per constraint.
+                                // If OR mode, technically highlighting all matches is fine.
+                                if(currentRefineLogic === 'AND') break; 
+                            }
+                        }
+                    }
+                }
+
+                let highlightedWordHTML = chars.map((char, i) => {
                     let style = '';
                     if (gridIndices.has(i)) {
                         style = "font-weight:bold; text-decoration:underline; color:#007AFF;";
-                    } else if (hasRefineFilter) {
-                        // Check if char is a Refine target
-                        let isRefine = refineConstraints.some(c => c.includes(char));
-                        if(isRefine) style = currentRefineLogic === 'AND' 
+                    } else if (refineIndices.has(i)) {
+                        style = currentRefineLogic === 'AND' 
                             ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
                             : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;";
                     }
                     return style ? `<span style="${style}">${char}</span>` : char;
                 }).join('');
 
-                // Grid Visualization
                 let gridHtml = '';
                 if (placementOffset !== -1) {
                     gridHtml = '<div class="mini-grid">';

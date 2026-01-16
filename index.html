@@ -70,7 +70,7 @@
         position: relative;
     }
 
-    /* Grid for Inputs (With Line) */
+    /* Grid for Inputs (Line Removed) */
     .pos-filter-container {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
@@ -79,27 +79,7 @@
         position: relative;
     }
     
-    /* The Connector Line */
-    .pos-filter-container::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 20px;
-        right: 20px;
-        height: 2px;
-        background: #e0e0e0;
-        z-index: 0;
-        transform: translateY(-50%);
-    }
-
-    /* Grid for Labels (NO Line) */
-    .pos-labels-container {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 6px;
-        margin-bottom: 5px;
-        /* No position relative or pseudo-element here */
-    }
+    /* Removed the ::before pseudo-element that drew the line */
 
     .pos-input {
         width: 100%;
@@ -417,7 +397,7 @@
                         <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
                     </div>
 
-                    <div class="pos-labels-container">
+                    <div class="pos-filter-container">
                         <div class="pos-label">1</div>
                         <div class="pos-label">2</div>
                         <div class="pos-label">3</div>
@@ -467,8 +447,8 @@
                         <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
                     <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">
-                        <strong>AND:</strong> Must satisfy ALL boxes.<br>
-                        <strong>OR:</strong> Must satisfy AT LEAST ONE box.<br>
+                        <strong>AND:</strong> All boxes must satisfy (Box 1 AND Box 2...).<br>
+                        <strong>OR:</strong> At least one box must satisfy (Box 1 OR Box 2...).<br>
                         <em>(Chars within the same box act as "OR")</em>
                     </div>
                 </div>

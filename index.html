@@ -75,6 +75,7 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 15px;
+        gap: 15px;
     }
     
     .instruction-text {
@@ -82,7 +83,6 @@
         color: #666;
         line-height: 1.4;
         flex: 1;
-        margin-right: 15px;
     }
 
     .control-label {
@@ -100,13 +100,13 @@
         background: #e0e0e0;
         border-radius: 8px;
         padding: 2px;
-        width: 120px;
+        width: 140px;
     }
 
     .segment-option {
         flex: 1;
         text-align: center;
-        padding: 6px 4px;
+        padding: 8px 4px;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
@@ -129,7 +129,21 @@
         display: grid;
         grid-template-columns: repeat(7, 1fr);
         gap: 6px;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
+        position: relative;
+    }
+    
+    /* Connector lines for Pattern Mode */
+    .logic-and-mode .pos-filter-container::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 20px;
+        right: 20px;
+        height: 2px;
+        background: #e0e0e0;
+        z-index: 0;
+        transform: translateY(-50%);
     }
 
     .pos-input {
@@ -145,6 +159,8 @@
         -webkit-appearance: none;
         appearance: none;
         transition: all 0.2s;
+        z-index: 1; /* Sit above connector line */
+        position: relative;
     }
 
     .pos-input:focus {
@@ -163,6 +179,14 @@
         background: #fff8eb;
         border-color: #ff9500;
         border-style: dashed;
+    }
+    
+    .pos-label {
+        font-size: 11px;
+        color: #999;
+        text-align: center;
+        margin-top: 4px;
+        height: 16px;
     }
 
     .action-row {
@@ -370,14 +394,6 @@
     .logic-or-mode .match-highlight {
         color: #ff9500;
     }
-    
-    /* Refine match highlight */
-    .refine-highlight {
-        background: #ffeb3b;
-        color: #333;
-        border-radius: 2px;
-        padding: 0 1px;
-    }
 </style>
 </head>
 <body>
@@ -388,22 +404,18 @@
 
             <div id="mainContent" style="display:none;">
                 
-                <div class="input-section" id="inputSection">
+                <div class="input-section logic-and-mode" id="inputSection">
                     
                     <div class="controls-row">
-                        <div class="instruction-text">
-                            <strong>Logic:</strong>
-                            <br>
-                            AND = Matches relative spacing (pattern can float).
-                            <br>
-                            OR = Matches any box anywhere.
+                        <div class="instruction-text" id="instructionText">
+                            <strong>Pattern Mode (AND):</strong> Searches for the specific sequence. Gaps between boxes act as wildcards. Pattern can appear anywhere.
                         </div>
 
-                        <div class="control-group">
-                            <span class="control-label">Box Logic</span>
+                        <div style="flex-shrink: 0;">
+                            <span class="control-label">Logic</span>
                             <div class="segmented-control logic-toggle">
-                                <div class="segment-option active" data-logic="AND">AND</div>
-                                <div class="segment-option" data-logic="OR">OR</div>
+                                <div class="segment-option active" data-logic="AND">Pattern</div>
+                                <div class="segment-option" data-logic="OR">Any</div>
                             </div>
                         </div>
                     </div>
@@ -416,6 +428,16 @@
                         <div><input type="text" class="pos-input" data-index="4" autocomplete="off"></div>
                         <div><input type="text" class="pos-input" data-index="5" autocomplete="off"></div>
                         <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
+                    </div>
+
+                    <div class="pos-filter-container">
+                        <div class="pos-label">1</div>
+                        <div class="pos-label">2</div>
+                        <div class="pos-label">3</div>
+                        <div class="pos-label">4</div>
+                        <div class="pos-label">5</div>
+                        <div class="pos-label">6</div>
+                        <div class="pos-label">7</div>
                     </div>
 
                     <div class="action-row">
@@ -496,7 +518,12 @@
             ["れんあい","",3,["恋愛"],["Emotion"]],
             ["がっこう","かっこう",3,["学校"],["School Subject"]],
             ["ん","",1,["ん"],[]],
-            ["かんけい","",4,["関係"],[]]
+            ["かんけい","",4,["関係"],[]],
+            ["さいし","",3,["祭祀"],[]],
+            ["さいしょ","",4,["最初"],[]],
+            ["さいしょう","",5,["最小"],[]],
+            ["しょうさ","",4,["勝差"],[]],
+            ["しょうさい","",5,["詳細"],[]]
         ];
         
         return samples.map(entry => ({
@@ -547,6 +574,7 @@
         const refineInputs = document.querySelectorAll('.refine-input');
         const sortSelect = document.getElementById('sortSelect');
         const logicOptions = document.querySelectorAll('.logic-toggle .segment-option');
+        const instructionText = document.getElementById('instructionText');
 
         // Logic Toggle
         logicOptions.forEach(opt => {
@@ -556,10 +584,15 @@
                 currentLogic = opt.getAttribute('data-logic');
                 
                 const inputSection = document.getElementById('inputSection');
+                
                 if (currentLogic === 'OR') {
+                    inputSection.classList.remove('logic-and-mode');
                     inputSection.classList.add('logic-or-mode');
+                    instructionText.innerHTML = "<strong>Any Mode (OR):</strong> Finds words containing <em>any</em> of the entered characters, regardless of position.";
                 } else {
                     inputSection.classList.remove('logic-or-mode');
+                    inputSection.classList.add('logic-and-mode');
+                    instructionText.innerHTML = "<strong>Pattern Mode (AND):</strong> Searches for the specific sequence. Gaps between boxes act as wildcards. Pattern can appear anywhere.";
                 }
                 
                 performSearch();
@@ -641,29 +674,26 @@
 
         // B. Grid Filter
         let regexPattern = null;
-        let orConstraints = []; // For OR logic highlighting
+        let orConstraints = []; 
 
         if (hasActivePosFilter) {
-            
             if (currentLogic === 'AND') {
-                // --- AND LOGIC: RELATIVE POSITIONING + FLOATING ---
+                // --- AND LOGIC: PATTERN SEARCH ---
                 // We construct a Regex based on the grid spacing.
                 
-                // 1. Find the bounds of the user input in the grid (e.g., Box 2 to Box 5)
+                // 1. Find the bounds of the user input
                 let firstIndex = inputValues.findIndex(v => v.length > 0);
                 let lastIndex = 6; 
                 while(lastIndex >= 0 && inputValues[lastIndex].length === 0) lastIndex--;
                 
                 // 2. Build Regex Pattern
-                // If a box has multiple chars (e.g. "AB"), regex is [AB]
-                // Empty boxes between first and last index become "." (any char)
                 let patternStr = "";
                 for (let i = firstIndex; i <= lastIndex; i++) {
                     const val = inputValues[i];
                     if (val.length === 0) {
-                        patternStr += "."; 
+                        patternStr += "."; // Wildcard
                     } else {
-                        patternStr += "[" + val + "]"; 
+                        patternStr += "[" + val + "]"; // User chars (OR if multiple)
                     }
                 }
                 
@@ -672,22 +702,14 @@
                 results = results.filter(word => regexPattern.test(word.word));
 
             } else {
-                // --- OR LOGIC: MATCH ANYWHERE INDEPENDENTLY ---
-                // Collect all valid inputs as separate constraints
+                // --- OR LOGIC: CONTAINMENT SEARCH ---
                 inputValues.forEach((val, idx) => {
                     if (val.length > 0) {
-                        // Split ensures multiple chars in one box are treated as options
                         orConstraints.push(val.split('')); 
                     }
                 });
 
                 results = results.filter(word => {
-                    // Check if word contains AT LEAST ONE of the characters from ANY of the filled boxes
-                    // Flatten constraints to a single list of allowed chars? 
-                    // No, usually "OR" in this grid context implies: Does it match criteria of Box 1? OR criteria of Box 2?
-                    // Since specific box position implies nothing in "OR" mode (no spacing), 
-                    // it effectively becomes: Does the word contain any of the letters typed in the grid?
-                    
                     return orConstraints.some(chars => {
                         return chars.some(char => word.word.includes(char));
                     });
@@ -738,13 +760,9 @@
                 const chars = word.word.split('');
                 let gridIndices = new Set();
 
-                // Calculate Grid Highlights
                 if (hasActivePosFilter) {
                     if (currentLogic === 'AND' && regexPattern) {
                         // Highlight the SEQUENCE found by Regex
-                        // Note: Regex.exec only finds the first occurrence. 
-                        // To highlight correctly if pattern appears multiple times is complex, 
-                        // but usually first match is enough for visual cue.
                         const match = regexPattern.exec(word.word);
                         if (match) {
                             for(let i=match.index; i < match.index + match[0].length; i++) {
@@ -754,7 +772,6 @@
                     } else if (currentLogic === 'OR') {
                         // Highlight ANY char that matched ANY constraint
                         chars.forEach((char, i) => {
-                            // Check if this char exists in any of our OR constraints
                             const isMatch = orConstraints.some(allowedChars => allowedChars.includes(char));
                             if (isMatch) gridIndices.add(i);
                         });

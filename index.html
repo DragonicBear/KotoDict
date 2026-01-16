@@ -68,63 +68,11 @@
         border: 1px solid #e0e0e0;
         margin-bottom: 15px;
         transition: border-color 0.3s;
+        /* Always show connector line now since it's always Pattern mode */
+        position: relative;
     }
 
-    .controls-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-        gap: 15px;
-    }
-    
-    .instruction-text {
-        font-size: 13px;
-        color: #666;
-        line-height: 1.4;
-        flex: 1;
-    }
-
-    .control-label {
-        font-size: 12px; 
-        color: #888; 
-        margin-bottom: 4px; 
-        display: block;
-        font-weight: 600;
-        text-align: center;
-    }
-
-    /* Segmented Controls */
-    .segmented-control {
-        display: flex;
-        background: #e0e0e0;
-        border-radius: 8px;
-        padding: 2px;
-        width: 140px;
-    }
-
-    .segment-option {
-        flex: 1;
-        text-align: center;
-        padding: 8px 4px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        border-radius: 6px;
-        color: #666;
-        user-select: none;
-        transition: all 0.2s;
-    }
-
-    .segment-option.active {
-        background: white;
-        color: #007AFF;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .logic-toggle .segment-option.active[data-logic="AND"] { color: #007AFF; }
-    .logic-toggle .segment-option.active[data-logic="OR"] { color: #ff9500; }
-
+    /* Connector line for Pattern Mode */
     .pos-filter-container {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
@@ -133,8 +81,7 @@
         position: relative;
     }
     
-    /* Connector lines for Pattern Mode */
-    .logic-and-mode .pos-filter-container::before {
+    .pos-filter-container::before {
         content: '';
         position: absolute;
         top: 50%;
@@ -159,7 +106,7 @@
         -webkit-appearance: none;
         appearance: none;
         transition: all 0.2s;
-        z-index: 1; /* Sit above connector line */
+        z-index: 1; 
         position: relative;
     }
 
@@ -174,19 +121,19 @@
         border-color: #007AFF;
     }
     
-    /* Logic specific styles */
-    .logic-or-mode .pos-input.filled {
-        background: #fff8eb;
-        border-color: #ff9500;
-        border-style: dashed;
-    }
-    
     .pos-label {
         font-size: 11px;
         color: #999;
         text-align: center;
         margin-top: 4px;
         height: 16px;
+    }
+    
+    .instruction-text {
+        font-size: 13px;
+        color: #666;
+        margin-bottom: 15px;
+        text-align: center;
     }
 
     .action-row {
@@ -289,21 +236,61 @@
         touch-action: manipulation;
     }
 
-    /* Refine Section (OR Logic) */
+    /* Refine Section */
     .refine-section {
         background: #fff8f0;
         border: 1px solid #ffe4cc;
         padding: 15px;
         border-radius: 8px;
         margin-bottom: 20px;
+        transition: background 0.2s, border-color 0.2s;
+    }
+    
+    /* Style for AND mode in refine */
+    .refine-section.and-mode {
+        background: #f0f7ff;
+        border-color: #cce4ff;
+    }
+
+    .refine-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
     }
     
     .refine-title {
         font-size: 14px;
         font-weight: 600;
-        color: #d67a00;
-        margin-bottom: 8px;
+        color: #333;
     }
+
+    /* Toggle Switch */
+    .toggle-switch {
+        display: flex;
+        background: #e0e0e0;
+        border-radius: 6px;
+        padding: 2px;
+    }
+    
+    .toggle-option {
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #666;
+        user-select: none;
+    }
+    
+    .toggle-option.active {
+        background: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    
+    /* Logic Colors */
+    .toggle-option[data-logic="OR"].active { color: #d67a00; }
+    .toggle-option[data-logic="AND"].active { color: #007AFF; }
 
     .refine-inputs {
         display: flex;
@@ -322,15 +309,22 @@
     }
     
     .refine-input:focus {
-        border-color: #d67a00;
         outline: none;
         background: #fff;
     }
+    
+    /* Input Border Colors based on Logic */
+    .refine-section .refine-input:focus { border-color: #d67a00; }
+    .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
     
     .refine-input.filled {
         background: #fffdf5;
         border-color: #d67a00;
         font-weight: bold;
+    }
+    .refine-section.and-mode .refine-input.filled {
+        background: #f0f8ff;
+        border-color: #007AFF;
     }
 
     .results {
@@ -390,10 +384,6 @@
         font-weight: bold;
         text-decoration: underline;
     }
-    
-    .logic-or-mode .match-highlight {
-        color: #ff9500;
-    }
 </style>
 </head>
 <body>
@@ -404,20 +394,9 @@
 
             <div id="mainContent" style="display:none;">
                 
-                <div class="input-section logic-and-mode" id="inputSection">
-                    
-                    <div class="controls-row">
-                        <div class="instruction-text" id="instructionText">
-                            <strong>Pattern Mode (AND):</strong> Searches for the specific sequence. Gaps between boxes act as wildcards. Pattern can appear anywhere.
-                        </div>
-
-                        <div style="flex-shrink: 0;">
-                            <span class="control-label">Logic</span>
-                            <div class="segmented-control logic-toggle">
-                                <div class="segment-option active" data-logic="AND">Pattern</div>
-                                <div class="segment-option" data-logic="OR">Any</div>
-                            </div>
-                        </div>
+                <div class="input-section" id="inputSection">
+                    <div class="instruction-text">
+                        <strong>Pattern Search:</strong> Words matching the sequence. <br>Gaps between boxes act as wildcards.
                     </div>
                     
                     <div class="pos-filter-container" id="posFilterContainer">
@@ -470,8 +449,15 @@
                     </div>
                 </div>
 
-                <div class="refine-section">
-                    <div class="refine-title">Refine Results (Contains ANY):</div>
+                <div class="refine-section" id="refineSection">
+                    <div class="refine-header">
+                        <span class="refine-title">Refine Results:</span>
+                        <div class="toggle-switch refine-toggle">
+                            <div class="toggle-option active" data-logic="OR">Any (OR)</div>
+                            <div class="toggle-option" data-logic="AND">All (AND)</div>
+                        </div>
+                    </div>
+                    
                     <div class="refine-inputs">
                         <input type="text" class="refine-input" placeholder="A" autocomplete="off">
                         <input type="text" class="refine-input" placeholder="B" autocomplete="off">
@@ -490,7 +476,7 @@
 
 <script>
     let dictionary = [];
-    let currentLogic = 'AND';
+    let currentRefineLogic = 'OR';
 
     // Fallback data
     function getSampleDictionary() {
@@ -573,26 +559,20 @@
         const posInputs = document.querySelectorAll('.pos-input');
         const refineInputs = document.querySelectorAll('.refine-input');
         const sortSelect = document.getElementById('sortSelect');
-        const logicOptions = document.querySelectorAll('.logic-toggle .segment-option');
-        const instructionText = document.getElementById('instructionText');
+        const refineLogicOptions = document.querySelectorAll('.refine-toggle .toggle-option');
+        const refineSection = document.getElementById('refineSection');
 
-        // Logic Toggle
-        logicOptions.forEach(opt => {
+        // Refine Logic Toggle
+        refineLogicOptions.forEach(opt => {
             opt.addEventListener('click', () => {
-                logicOptions.forEach(o => o.classList.remove('active'));
+                refineLogicOptions.forEach(o => o.classList.remove('active'));
                 opt.classList.add('active');
-                currentLogic = opt.getAttribute('data-logic');
+                currentRefineLogic = opt.getAttribute('data-logic');
                 
-                const inputSection = document.getElementById('inputSection');
-                
-                if (currentLogic === 'OR') {
-                    inputSection.classList.remove('logic-and-mode');
-                    inputSection.classList.add('logic-or-mode');
-                    instructionText.innerHTML = "<strong>Any Mode (OR):</strong> Finds words containing <em>any</em> of the entered characters, regardless of position.";
+                if (currentRefineLogic === 'AND') {
+                    refineSection.classList.add('and-mode');
                 } else {
-                    inputSection.classList.remove('logic-or-mode');
-                    inputSection.classList.add('logic-and-mode');
-                    instructionText.innerHTML = "<strong>Pattern Mode (AND):</strong> Searches for the specific sequence. Gaps between boxes act as wildcards. Pattern can appear anywhere.";
+                    refineSection.classList.remove('and-mode');
                 }
                 
                 performSearch();
@@ -672,55 +652,40 @@
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // B. Grid Filter
+        // B. Grid Filter (ALWAYS PATTERN)
         let regexPattern = null;
-        let orConstraints = []; 
 
         if (hasActivePosFilter) {
-            if (currentLogic === 'AND') {
-                // --- AND LOGIC: PATTERN SEARCH ---
-                // We construct a Regex based on the grid spacing.
-                
-                // 1. Find the bounds of the user input
-                let firstIndex = inputValues.findIndex(v => v.length > 0);
-                let lastIndex = 6; 
-                while(lastIndex >= 0 && inputValues[lastIndex].length === 0) lastIndex--;
-                
-                // 2. Build Regex Pattern
-                let patternStr = "";
-                for (let i = firstIndex; i <= lastIndex; i++) {
-                    const val = inputValues[i];
-                    if (val.length === 0) {
-                        patternStr += "."; // Wildcard
-                    } else {
-                        patternStr += "[" + val + "]"; // User chars (OR if multiple)
-                    }
+            // 1. Find the bounds of the user input
+            let firstIndex = inputValues.findIndex(v => v.length > 0);
+            let lastIndex = 6; 
+            while(lastIndex >= 0 && inputValues[lastIndex].length === 0) lastIndex--;
+            
+            // 2. Build Regex Pattern
+            let patternStr = "";
+            for (let i = firstIndex; i <= lastIndex; i++) {
+                const val = inputValues[i];
+                if (val.length === 0) {
+                    patternStr += "."; // Wildcard for gap
+                } else {
+                    patternStr += "[" + val + "]"; // User chars
                 }
-                
-                // The regex allows this pattern to appear anywhere in the string
-                regexPattern = new RegExp(patternStr);
-                results = results.filter(word => regexPattern.test(word.word));
-
-            } else {
-                // --- OR LOGIC: CONTAINMENT SEARCH ---
-                inputValues.forEach((val, idx) => {
-                    if (val.length > 0) {
-                        orConstraints.push(val.split('')); 
-                    }
-                });
-
-                results = results.filter(word => {
-                    return orConstraints.some(chars => {
-                        return chars.some(char => word.word.includes(char));
-                    });
-                });
             }
+            
+            regexPattern = new RegExp(patternStr);
+            results = results.filter(word => regexPattern.test(word.word));
         }
 
-        // C. Refine Filter (Always OR)
+        // C. Refine Filter (AND / OR)
         if (hasRefineFilter) {
             results = results.filter(word => {
-                return refineValues.some(val => word.word.includes(val));
+                if (currentRefineLogic === 'OR') {
+                    // Contains ANY
+                    return refineValues.some(val => word.word.includes(val));
+                } else {
+                    // Contains ALL
+                    return refineValues.every(val => word.word.includes(val));
+                }
             });
         }
 
@@ -760,34 +725,41 @@
                 const chars = word.word.split('');
                 let gridIndices = new Set();
 
-                if (hasActivePosFilter) {
-                    if (currentLogic === 'AND' && regexPattern) {
-                        // Highlight the SEQUENCE found by Regex
-                        const match = regexPattern.exec(word.word);
-                        if (match) {
-                            for(let i=match.index; i < match.index + match[0].length; i++) {
-                                gridIndices.add(i);
-                            }
+                // 1. Grid Highlights (Pattern)
+                if (regexPattern) {
+                    const match = regexPattern.exec(word.word);
+                    if (match) {
+                        for(let i=match.index; i < match.index + match[0].length; i++) {
+                            gridIndices.add(i);
                         }
-                    } else if (currentLogic === 'OR') {
-                        // Highlight ANY char that matched ANY constraint
-                        chars.forEach((char, i) => {
-                            const isMatch = orConstraints.some(allowedChars => allowedChars.includes(char));
-                            if (isMatch) gridIndices.add(i);
-                        });
                     }
                 }
 
                 highlightedWord = chars.map((char, i) => {
                     let styles = [];
                     
+                    // Grid Highlight Style
                     if (gridIndices.has(i)) {
-                        styles.push("font-weight:bold; text-decoration:underline;");
-                        styles.push(currentLogic === 'OR' ? "color:#ff9500;" : "color:#007AFF;");
+                        styles.push("font-weight:bold; text-decoration:underline; color:#007AFF;");
                     }
 
-                    if (hasRefineFilter && refineValues.some(v => v === char)) {
-                        styles.push("background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;");
+                    // Refine Highlight Style
+                    // Check if char is in refine inputs
+                    if (hasRefineFilter && refineValues.includes(char)) {
+                        let isMatch = false;
+                        if (currentRefineLogic === 'OR') {
+                            isMatch = true;
+                        } else {
+                            // In AND mode, we know the word has all of them.
+                            // We can highlight all occurrences.
+                            isMatch = true; 
+                        }
+                        
+                        if(isMatch) {
+                            styles.push(currentRefineLogic === 'AND' 
+                                ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
+                                : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;");
+                        }
                     }
 
                     if (styles.length > 0) {

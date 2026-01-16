@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Kotono Nomikon - Pattern Search</title>
+    <title>Kotono Nomikon - Board Search</title>
     <style>
         * {
             margin: 0;
@@ -60,6 +60,7 @@
         color: #666;
     }
     
+    /* Main Grid Section */
     .input-section {
         background: #f8f9fa;
         padding: 20px;
@@ -77,7 +78,6 @@
         position: relative;
     }
     
-    /* Input Style */
     .pos-input {
         width: 100%;
         aspect-ratio: 1/1;
@@ -119,7 +119,6 @@
         color: #666;
         margin-bottom: 15px;
         text-align: center;
-        line-height: 1.4;
     }
 
     .action-row {
@@ -341,11 +340,15 @@
         font-weight: 600;
         margin-bottom: 6px;
         color: #111;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     
     .result-info {
         color: #666;
         font-size: 14px;
+        margin-top: 4px;
     }
     
     .result-themes {
@@ -360,20 +363,51 @@
         color: #999;
         font-size: 16px;
     }
+    
+    /* Result Grid Visualization */
+    .mini-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 20px);
+        gap: 2px;
+        margin-left: 10px;
+    }
+    .mini-box {
+        width: 20px;
+        height: 20px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        color: #ccc;
+    }
+    .mini-box.matched {
+        background: #007AFF;
+        border-color: #007AFF;
+        color: white;
+        font-weight: bold;
+    }
+    .mini-box.overlap {
+        background: #e0efff;
+        border-color: #007AFF;
+        color: #007AFF;
+    }
 </style>
 </head>
 <body>
     <div id="app">
         <div class="container">
-            <h1>Positional Pattern Search</h1>
+            <h1>Board Search</h1>
             <div class="loading" id="loadingMsg">Loading dictionary...</div>
 
             <div id="mainContent" style="display:none;">
                 
                 <div class="input-section" id="inputSection">
                     <div class="instruction-text">
-                        <strong>Logic:</strong> Fill Box 1 to Start-Anchor. Fill Box 7 to End-Anchor.<br>
-                        Fill Middle to float. Gaps = Wildcards.
+                        <strong>Board Placement:</strong> Simulates playing the word on the board.<br>
+                        Word must fit within 7 slots and match any filled boxes it touches.
                     </div>
                     
                     <div class="pos-filter-container" id="posFilterContainer">
@@ -436,9 +470,7 @@
                         <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
                     <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">
-                        <strong>AND:</strong> All boxes must be present.<br>
-                        <strong>OR:</strong> At least one box must be present.<br>
-                        (Chars within one box = OR. Grid matches are ignored.)
+                        Refine filters ignore characters already used by the Grid.
                     </div>
                 </div>
                 
@@ -454,7 +486,6 @@
     let dictionary = [];
     let currentRefineLogic = 'OR';
 
-    // Fallback data
     function getSampleDictionary() {
         const samples = [
             ["あい","",1,["愛"],["Plants/Fungi","Color"]],
@@ -472,7 +503,8 @@
             ["あした","",3,["明日"],[]],
             ["あいさつ","",4,["挨拶"],[]],
             ["こう","",2,["甲"],[]],
-            ["こうこう","",4,["高校"],[]]
+            ["こうこう","",4,["高校"],[]],
+            ["こうそ","",3,["酵素"],[]]
         ];
         
         return samples.map(entry => ({
@@ -525,19 +557,16 @@
         const refineLogicOptions = document.querySelectorAll('.refine-toggle .toggle-option');
         const refineSection = document.getElementById('refineSection');
 
-        // Refine Logic Toggle
         refineLogicOptions.forEach(opt => {
             opt.addEventListener('click', () => {
                 refineLogicOptions.forEach(o => o.classList.remove('active'));
                 opt.classList.add('active');
                 currentRefineLogic = opt.getAttribute('data-logic');
-                
                 if (currentRefineLogic === 'AND') {
                     refineSection.classList.add('and-mode');
                 } else {
                     refineSection.classList.remove('and-mode');
                 }
-                
                 performSearch();
             });
         });
@@ -603,7 +632,6 @@
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
-        // Refine Inputs: array of arrays [['A','B'], ['C']]
         const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
             .map(input => input.value.trim().split('')) 
             .filter(arr => arr.length > 0);
@@ -612,107 +640,75 @@
 
         let results = dictionary;
 
-        // A. Length Filter
         if (charFilters.length > 0) {
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // B. Grid Filter
-        let regexPattern = null;
-        let isAnchoredStart = false;
-        let isAnchoredEnd = false;
-        let corePattern = "";
+        // --- B. Board Placement Search ---
+        // Map word -> Valid Start Offset (0..6)
+        let validOffsets = new Map(); 
 
         if (hasActivePosFilter) {
-            let firstIndex = inputValues.findIndex(v => v.length > 0);
-            let lastIndex = 6; 
-            while(lastIndex >= 0 && inputValues[lastIndex].length === 0) lastIndex--;
-            
-            // Build Core Pattern (preserved spacing)
-            for (let i = firstIndex; i <= lastIndex; i++) {
-                const val = inputValues[i];
-                if (val.length === 0) {
-                    corePattern += "."; 
-                } else {
-                    corePattern += "[" + val + "]"; 
+            results = results.filter(word => {
+                const len = word.word.length;
+                let foundFit = false;
+
+                // Try placing the word starting at every possible board index (0 to 7-len)
+                for (let start = 0; start <= 7 - len; start++) {
+                    let fits = true;
+                    
+                    // Check overlaps for this specific position
+                    for (let i = 0; i < len; i++) {
+                        const boardChar = inputValues[start + i];
+                        const wordChar = word.word[i];
+                        
+                        // If board box is filled, word char must match one of the chars in the box (OR logic)
+                        if (boardChar && boardChar.length > 0) {
+                            if (!boardChar.includes(wordChar)) {
+                                fits = false;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (fits) {
+                        foundFit = true;
+                        validOffsets.set(word.word, start); // Store first valid fit for visualization
+                        break; 
+                    }
                 }
-            }
-
-            // Determine Anchors based on specific boxes
-            let patternStr = "";
-            
-            if (firstIndex === 0) {
-                patternStr += "^"; // Box 1 = Start Anchor
-                isAnchoredStart = true;
-            } else {
-                patternStr += ".*"; // Floating Start
-            }
-
-            patternStr += corePattern;
-
-            if (lastIndex === 6) {
-                patternStr += "$"; // Box 7 = End Anchor
-                isAnchoredEnd = true;
-            } else {
-                patternStr += ".*"; // Floating End
-            }
-            
-            regexPattern = new RegExp(patternStr);
-            results = results.filter(word => regexPattern.test(word.word));
+                return foundFit;
+            });
         }
 
-        // C. Refine Filter
+        // --- C. Refine Filter ---
         if (hasRefineFilter) {
             results = results.filter(word => {
                 let textToSearch = word.word;
 
-                // Exclusion Logic
-                if (hasActivePosFilter) {
-                    // We need to mask the characters that satisfied the Grid Pattern
-                    // Re-match logic to find location
+                // Exclusion: Mask chars that physically overlapped with Filled Grid Boxes
+                if (hasActivePosFilter && validOffsets.has(word.word)) {
+                    let start = validOffsets.get(word.word);
+                    let chars = word.word.split('');
                     
-                    // Construct a localized regex to find the core match position
-                    let checkRegex;
-                    if (isAnchoredEnd) {
-                        checkRegex = new RegExp(corePattern + "$");
-                    } else if (isAnchoredStart) {
-                        checkRegex = new RegExp("^" + corePattern);
-                    } else {
-                        checkRegex = new RegExp(corePattern);
-                    }
-
-                    const match = checkRegex.exec(word.word);
-                    
-                    if (match) {
-                        let chars = word.word.split('');
-                        let matchStart = match.index;
-                        
-                        // Mask the Explicitly Filled Inputs
-                        let firstGridIndex = inputValues.findIndex(v => v.length > 0);
-                        
-                        // Iterate through the matched core
-                        for (let i = 0; i < match[0].length; i++) {
-                             let relativeGridIdx = firstGridIndex + i; 
-                             // If the grid had input here, remove this char from search pool
-                             if (inputValues[relativeGridIdx] && inputValues[relativeGridIdx].length > 0) {
-                                 chars[matchStart + i] = null; 
-                             }
+                    for (let i = 0; i < chars.length; i++) {
+                        // Position on board
+                        let boardIdx = start + i;
+                        // If board has explicit input here, exclude this char from refine search
+                        if (inputValues[boardIdx] && inputValues[boardIdx].length > 0) {
+                            chars[i] = null;
                         }
-                        textToSearch = chars.filter(c => c !== null).join('');
                     }
+                    textToSearch = chars.filter(c => c !== null).join('');
                 }
 
-                // Apply Refine Constraints
                 const checkBox = (constraintChars) => {
-                    // Inside box = OR
                     return constraintChars.some(char => textToSearch.includes(char));
                 };
 
                 if (currentRefineLogic === 'OR') {
-                    // Between boxes = OR
                     return refineConstraints.some(checkBox);
                 } else {
-                    // Between boxes = AND
                     return refineConstraints.every(checkBox);
                 }
             });
@@ -749,68 +745,40 @@
                     ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
                     : '';
                 
-                // --- Highlight Logic ---
-                const chars = word.word.split('');
-                let gridIndices = new Set();
-                let refineIndices = new Set();
-
-                // 1. Grid Highlights
-                if (hasActivePosFilter) {
-                    let checkRegex;
-                    if (isAnchoredEnd) {
-                        checkRegex = new RegExp(corePattern + "$");
-                    } else if (isAnchoredStart) {
-                        checkRegex = new RegExp("^" + corePattern);
-                    } else {
-                        checkRegex = new RegExp(corePattern);
-                    }
-
-                    const match = checkRegex.exec(word.word);
-                    if (match) {
-                        let firstGridIndex = inputValues.findIndex(v => v.length > 0);
-                        for (let i = 0; i < match[0].length; i++) {
-                            let relativeGridIdx = firstGridIndex + i; 
-                            if (inputValues[relativeGridIdx] && inputValues[relativeGridIdx].length > 0) {
-                                gridIndices.add(match.index + i);
+                // --- Highlight & Grid Viz ---
+                let offset = hasActivePosFilter ? validOffsets.get(word.word) : -1;
+                
+                // Build Mini Grid HTML
+                let gridHtml = '';
+                if (offset !== undefined && offset !== -1) {
+                    gridHtml = '<div class="mini-grid">';
+                    for(let b=0; b<7; b++) {
+                        let content = '';
+                        let className = 'mini-box';
+                        
+                        // Is the word occupying this box?
+                        if (b >= offset && b < offset + word.word.length) {
+                            let wordCharIndex = b - offset;
+                            content = word.word[wordCharIndex];
+                            
+                            // Did this box have input?
+                            if (inputValues[b] && inputValues[b].length > 0) {
+                                className += ' matched';
+                            } else {
+                                className += ' overlap';
                             }
                         }
+                        gridHtml += `<div class="${className}">${content}</div>`;
                     }
+                    gridHtml += '</div>';
                 }
 
-                // 2. Refine Highlights
-                if (hasRefineFilter) {
-                    chars.forEach((char, i) => {
-                        if (gridIndices.has(i)) return; 
-
-                        // Check if char is in any refine constraint
-                        let isRefineChar = refineConstraints.some(constraint => constraint.includes(char));
-                        if (isRefineChar) {
-                            refineIndices.add(i);
-                        }
-                    });
-                }
-
-                const highlightedWord = chars.map((char, i) => {
-                    let styles = [];
-                    
-                    if (gridIndices.has(i)) {
-                        styles.push("font-weight:bold; text-decoration:underline; color:#007AFF;");
-                    }
-                    else if (refineIndices.has(i)) {
-                        styles.push(currentRefineLogic === 'AND' 
-                            ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
-                            : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;");
-                    }
-
-                    if (styles.length > 0) {
-                        return `<span style="${styles.join(' ')}">${char}</span>`;
-                    }
-                    return char;
-                }).join('');
-                
                 return `
                     <div class="result-item">
-                        <div class="result-word">${displayText} <span style="font-weight:normal; font-size:0.8em; color:#666;">(${highlightedWord})</span></div>
+                        <div class="result-word">
+                            <span>${displayText}</span>
+                            ${gridHtml}
+                        </div>
                         <div class="result-info">${word.word.length} chars | Combo: ${word.combo}</div>
                         ${themesText}
                     </div>

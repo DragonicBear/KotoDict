@@ -60,7 +60,6 @@
         color: #666;
     }
     
-    /* Main Grid Section */
     .input-section {
         background: #f8f9fa;
         padding: 20px;
@@ -70,7 +69,6 @@
         position: relative;
     }
 
-    /* Grid for Inputs */
     .pos-filter-container {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
@@ -79,6 +77,7 @@
         position: relative;
     }
     
+    /* Input Style */
     .pos-input {
         width: 100%;
         aspect-ratio: 1/1;
@@ -120,6 +119,7 @@
         color: #666;
         margin-bottom: 15px;
         text-align: center;
+        line-height: 1.4;
     }
 
     .action-row {
@@ -232,7 +232,6 @@
         transition: background 0.2s, border-color 0.2s;
     }
     
-    /* Style for AND mode in refine */
     .refine-section.and-mode {
         background: #f0f7ff;
         border-color: #cce4ff;
@@ -274,7 +273,6 @@
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
     
-    /* Logic Colors */
     .toggle-option[data-logic="OR"].active { color: #d67a00; }
     .toggle-option[data-logic="AND"].active { color: #007AFF; }
 
@@ -299,7 +297,6 @@
         background: #fff;
     }
     
-    /* Input Border Colors based on Logic */
     .refine-section .refine-input:focus { border-color: #d67a00; }
     .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
     
@@ -363,13 +360,6 @@
         color: #999;
         font-size: 16px;
     }
-    
-    /* Highlights */
-    .match-highlight {
-        color: #007AFF;
-        font-weight: bold;
-        text-decoration: underline;
-    }
 </style>
 </head>
 <body>
@@ -382,8 +372,8 @@
                 
                 <div class="input-section" id="inputSection">
                     <div class="instruction-text">
-                        <strong>Positional Search:</strong> The grid matches the exact character position.<br>
-                        Filling Box 1 = Starts with... | Filling Box 7 = Ends with...
+                        <strong>Logic:</strong> Fill Box 1 to Start-Anchor. Fill Box 7 to End-Anchor.<br>
+                        Fill Middle to float. Gaps = Wildcards.
                     </div>
                     
                     <div class="pos-filter-container" id="posFilterContainer">
@@ -446,7 +436,9 @@
                         <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
                     <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">
-                        Refine filters <strong>exclude</strong> characters matched by the Grid.
+                        <strong>AND:</strong> All boxes must be present.<br>
+                        <strong>OR:</strong> At least one box must be present.<br>
+                        (Chars within one box = OR. Grid matches are ignored.)
                     </div>
                 </div>
                 
@@ -465,9 +457,9 @@
     // Fallback data
     function getSampleDictionary() {
         const samples = [
-            ["あい","",1,["愛","合い","藍"],["Plants/Fungi","Color"]],
-            ["あお","",1,["青","粟生"],["Color"]],
-            ["うみ","",1,["海","膿"],["Natural Terrain"]],
+            ["あい","",1,["愛"],["Plants/Fungi","Color"]],
+            ["あお","",1,["青"],["Color"]],
+            ["うみ","",1,["海"],["Natural Terrain"]],
             ["うそう","",1,["雨窓"],[]],
             ["しょうそう","",4,["焦燥"],[]],
             ["うそうかい","",5,["有象海"],[]],
@@ -476,7 +468,11 @@
             ["さいしょう","",5,["最小"],[]],
             ["しょうさ","",4,["勝差"],[]],
             ["しょうさい","",5,["詳細"],[]],
-            ["さんしょう","",5,["参照"],[]]
+            ["さんしょう","",5,["参照"],[]],
+            ["あした","",3,["明日"],[]],
+            ["あいさつ","",4,["挨拶"],[]],
+            ["こう","",2,["甲"],[]],
+            ["こうこう","",4,["高校"],[]]
         ];
         
         return samples.map(entry => ({
@@ -603,14 +599,11 @@
         const sortOrder = document.getElementById('sortSelect').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
 
-        // 1. Collect inputs
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
-        // 2. Collect Refine Inputs 
-        // We want separate constraints per box. 
-        // Box 1 "AB" -> Constraint 1: ['A','B'] (A or B)
+        // Refine Inputs: array of arrays [['A','B'], ['C']]
         const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
             .map(input => input.value.trim().split('')) 
             .filter(arr => arr.length > 0);
@@ -624,41 +617,44 @@
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // B. Grid Filter (Strict Position Anchor)
-        // ^ start anchor
-        // Box 1..n (wildcards if empty)
-        // Box 7 (end anchor if filled, else .*)
+        // B. Grid Filter
         let regexPattern = null;
+        let isAnchoredStart = false;
+        let isAnchoredEnd = false;
+        let corePattern = "";
 
         if (hasActivePosFilter) {
-            let patternStr = "^"; // Start Anchor
-
-            // We iterate strictly 0 to 6
-            // If Box i is filled, we match chars.
-            // If Box i is empty, we match .
-            
-            // Optimization: We only need to generate regex up to the last filled box.
-            // If boxes 5,6,7 are filled: ^....567$
-            // If boxes 1,2 are filled: ^12.*
-            
+            let firstIndex = inputValues.findIndex(v => v.length > 0);
             let lastIndex = 6; 
             while(lastIndex >= 0 && inputValues[lastIndex].length === 0) lastIndex--;
             
-            // Loop from 0 to last filled index
-            for (let i = 0; i <= lastIndex; i++) {
+            // Build Core Pattern (preserved spacing)
+            for (let i = firstIndex; i <= lastIndex; i++) {
                 const val = inputValues[i];
                 if (val.length === 0) {
-                    patternStr += "."; // Exact position placeholder
+                    corePattern += "."; 
                 } else {
-                    patternStr += "[" + val + "]"; // User chars
+                    corePattern += "[" + val + "]"; 
                 }
             }
 
-            // End Anchor Logic
-            if (lastIndex === 6) {
-                patternStr += "$"; // User filled Box 7 -> Strict End
+            // Determine Anchors based on specific boxes
+            let patternStr = "";
+            
+            if (firstIndex === 0) {
+                patternStr += "^"; // Box 1 = Start Anchor
+                isAnchoredStart = true;
             } else {
-                patternStr += ".*"; // Trailing wildcards allowed
+                patternStr += ".*"; // Floating Start
+            }
+
+            patternStr += corePattern;
+
+            if (lastIndex === 6) {
+                patternStr += "$"; // Box 7 = End Anchor
+                isAnchoredEnd = true;
+            } else {
+                patternStr += ".*"; // Floating End
             }
             
             regexPattern = new RegExp(patternStr);
@@ -670,28 +666,45 @@
             results = results.filter(word => {
                 let textToSearch = word.word;
 
-                // ** EXCLUSION LOGIC **
-                // Mask characters that were matched by the Grid Inputs (not wildcards)
-                if (regexPattern) {
-                    const match = regexPattern.exec(word.word);
+                // Exclusion Logic
+                if (hasActivePosFilter) {
+                    // We need to mask the characters that satisfied the Grid Pattern
+                    // Re-match logic to find location
+                    
+                    // Construct a localized regex to find the core match position
+                    let checkRegex;
+                    if (isAnchoredEnd) {
+                        checkRegex = new RegExp(corePattern + "$");
+                    } else if (isAnchoredStart) {
+                        checkRegex = new RegExp("^" + corePattern);
+                    } else {
+                        checkRegex = new RegExp(corePattern);
+                    }
+
+                    const match = checkRegex.exec(word.word);
+                    
                     if (match) {
                         let chars = word.word.split('');
-                        let matchStart = match.index; // usually 0 due to ^ anchor
+                        let matchStart = match.index;
                         
-                        // Mask chars at indices where inputValues had data
-                        for (let i = 0; i < inputValues.length; i++) {
-                            if (inputValues[i].length > 0 && (matchStart + i) < chars.length) {
-                                chars[matchStart + i] = null;
-                            }
+                        // Mask the Explicitly Filled Inputs
+                        let firstGridIndex = inputValues.findIndex(v => v.length > 0);
+                        
+                        // Iterate through the matched core
+                        for (let i = 0; i < match[0].length; i++) {
+                             let relativeGridIdx = firstGridIndex + i; 
+                             // If the grid had input here, remove this char from search pool
+                             if (inputValues[relativeGridIdx] && inputValues[relativeGridIdx].length > 0) {
+                                 chars[matchStart + i] = null; 
+                             }
                         }
-                        
                         textToSearch = chars.filter(c => c !== null).join('');
                     }
                 }
 
-                // ** REFINE LOGIC **
+                // Apply Refine Constraints
                 const checkBox = (constraintChars) => {
-                    // Inside box = OR (contains A or B)
+                    // Inside box = OR
                     return constraintChars.some(char => textToSearch.includes(char));
                 };
 
@@ -742,11 +755,22 @@
                 let refineIndices = new Set();
 
                 // 1. Grid Highlights
-                if (regexPattern) {
-                    const match = regexPattern.exec(word.word);
+                if (hasActivePosFilter) {
+                    let checkRegex;
+                    if (isAnchoredEnd) {
+                        checkRegex = new RegExp(corePattern + "$");
+                    } else if (isAnchoredStart) {
+                        checkRegex = new RegExp("^" + corePattern);
+                    } else {
+                        checkRegex = new RegExp(corePattern);
+                    }
+
+                    const match = checkRegex.exec(word.word);
                     if (match) {
-                        for (let i = 0; i < inputValues.length; i++) {
-                            if (inputValues[i].length > 0) {
+                        let firstGridIndex = inputValues.findIndex(v => v.length > 0);
+                        for (let i = 0; i < match[0].length; i++) {
+                            let relativeGridIdx = firstGridIndex + i; 
+                            if (inputValues[relativeGridIdx] && inputValues[relativeGridIdx].length > 0) {
                                 gridIndices.add(match.index + i);
                             }
                         }
@@ -755,11 +779,10 @@
 
                 // 2. Refine Highlights
                 if (hasRefineFilter) {
-                    // Build local textToSearch map to ensure we don't highlight already used chars
                     chars.forEach((char, i) => {
                         if (gridIndices.has(i)) return; 
 
-                        // Check if char satisfies any refine constraint
+                        // Check if char is in any refine constraint
                         let isRefineChar = refineConstraints.some(constraint => constraint.includes(char));
                         if (isRefineChar) {
                             refineIndices.add(i);

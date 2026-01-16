@@ -1,40 +1,799 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KotoDict</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>ことののみこん - iOS対応版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+        }
+
+```
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow-x: hidden;
+        position: fixed;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+        background: #f5f5f5;
+        -webkit-touch-callout: none;
+        overscroll-behavior: none;
+    }
+    
+    #app {
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 10px;
+    }
+    
+    .container {
+        max-width: 800px;
+        margin: 0 auto 60px;
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    
+    h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+        color: #333;
+        font-weight: 600;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+    
+    .search-section {
+        margin-bottom: 20px;
+    }
+    
+    input[type="text"], input[type="search"] {
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: #fafafa;
+        transition: all 0.2s;
+        -webkit-user-select: text;
+        user-select: text;
+    }
+    
+    input[type="text"]:focus, input[type="search"]:focus {
+        outline: none;
+        border-color: #007AFF;
+        background: white;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 10px;
+        margin: 15px 0;
+        flex-wrap: wrap;
+    }
+    
+    button, .btn {
+        padding: 12px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        background: #007AFF;
+        color: white;
+        font-weight: 500;
+        -webkit-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: all 0.1s;
+    }
+    
+    button:active, .btn:active {
+        background: #0051D5;
+        transform: scale(0.97);
+    }
+    
+    button.secondary {
+        background: #8E8E93;
+    }
+    
+    button.secondary:active {
+        background: #636366;
+    }
+    
+    .kana-keyboard {
+        display: none;
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .kana-keyboard.active {
+        display: block;
+    }
+    
+    .kana-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .kana-btn {
+        padding: 14px 8px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 18px;
+        text-align: center;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: all 0.1s;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    
+    .kana-btn:active {
+        background: #007AFF;
+        color: white;
+        transform: scale(0.95);
+    }
+    
+    .kana-btn.empty {
+        background: transparent;
+        border: none;
+        cursor: default;
+    }
+    
+    .filters {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .filter-row {
+        margin: 12px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-label {
+        font-weight: 600;
+        color: #333;
+        min-width: 80px;
+        font-size: 15px;
+    }
+    
+    .radio-group {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    input[type="radio"], input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        margin: 0;
+        -webkit-appearance: none;
+        appearance: none;
+        border: 2px solid #ccc;
+        border-radius: 3px;
+        position: relative;
+        flex-shrink: 0;
+    }
+    
+    input[type="radio"] {
+        border-radius: 50%;
+    }
+    
+    input[type="radio"]:checked, input[type="checkbox"]:checked {
+        background: #007AFF;
+        border-color: #007AFF;
+    }
+    
+    input[type="radio"]:checked::after, input[type="checkbox"]:checked::after {
+        content: '';
+        position: absolute;
+        width: 6px;
+        height: 11px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+        top: 2px;
+        left: 5px;
+    }
+    
+    input[type="radio"]:checked::after {
+        width: 8px;
+        height: 8px;
+        border: none;
+        border-radius: 50%;
+        background: white;
+        transform: none;
+        top: 4px;
+        left: 4px;
+    }
+    
+    label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        -webkit-user-select: none;
+        user-select: none;
+        font-size: 15px;
+        padding: 4px 0;
+        touch-action: manipulation;
+    }
+    
+    .results {
+        margin-top: 20px;
+    }
+    
+    .result-count {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .result-item {
+        padding: 16px;
+        background: #fafafa;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border-left: 4px solid #007AFF;
+        cursor: pointer;
+        touch-action: manipulation;
+        transition: background 0.1s;
+    }
+    
+    .result-item:active {
+        background: #f0f0f0;
+    }
+    
+    .result-word {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #111;
+    }
+    
+    .result-info {
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .result-themes {
+        color: #007AFF;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999;
+        font-size: 16px;
+    }
+    
+    @supports (-webkit-touch-callout: none) {
+        input[type="text"], input[type="search"] {
+            font-size: 16px !important;
+        }
+    }
+</style>
+```
+
 </head>
 <body>
-    <header>
-        <h1>KotoDict</h1>
-        <nav>
-            <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <section>
-            <h2>Welcome to KotoDict</h2>
-            <p>Your one-stop solution for dictionary needs.</p>
-            <label for="search">Search:</label>
-            <input type="text" id="search" name="search" placeholder="Enter word...">
-            <button type="button" id="search-btn">Search</button>
-        </section>
-        <section>
-            <h2>Dictionary Entries</h2>
-            <ul id="entries">
-                <li>No entries found.</li>
-            </ul>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2026 KotoDict. All rights reserved.</p>
-    </footer>
-    <script src="script.js"></script>
+    <div id="app">
+        <div class="container">
+            <h1>ことののみこん (iOS対応版)</h1>
+            <div class="loading" id="loadingMsg">辞書を読み込み中...</div>
+
+```
+        <div id="mainContent" style="display:none;">
+            <div class="search-section">
+                <input type="search" id="searchInput" placeholder="検索... (例: せ-い---ん or せ い   ん)" 
+                       autocomplete="off" autocorrect="off" 
+                       autocapitalize="off" spellcheck="false">
+                
+                <div class="button-group">
+                    <button id="toggleKana" type="button">かな入力</button>
+                    <button id="clearBtn" type="button" class="secondary">クリア</button>
+                    <button id="searchBtn" type="button">検索</button>
+                </div>
+            </div>
+            
+            <div class="kana-keyboard" id="kanaKeyboard">
+                <div class="kana-grid" id="kanaGrid"></div>
+            </div>
+            
+            <div class="filters">
+                <div class="filter-row">
+                    <span class="filter-label">一致:</span>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="match" value="prefix" checked>
+                            <span>前方</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="match" value="fuzzy">
+                            <span>あいまい</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="match" value="suffix">
+                            <span>後方</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="filter-row">
+                    <span class="filter-label">文字数:</span>
+                    <div class="radio-group">
+                        <label><input type="checkbox" name="chars" value="1"><span>1</span></label>
+                        <label><input type="checkbox" name="chars" value="2"><span>2</span></label>
+                        <label><input type="checkbox" name="chars" value="3"><span>3</span></label>
+                        <label><input type="checkbox" name="chars" value="4"><span>4</span></label>
+                        <label><input type="checkbox" name="chars" value="5"><span>5</span></label>
+                        <label><input type="checkbox" name="chars" value="6"><span>6</span></label>
+                        <label><input type="checkbox" name="chars" value="7"><span>7</span></label>
+                    </div>
+                </div>
+                
+                <div class="filter-row">
+                    <label>
+                        <input type="checkbox" id="distinguishDiacritics">
+                        <span>濁音拗音を区別する</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="results">
+                <div class="result-count" id="resultCount">検索してください</div>
+                <div style="margin-bottom: 15px;">
+                    <input type="search" id="resultFilter" placeholder="結果内で文字検索... (例: あ, い, う)" 
+                           autocomplete="off" autocorrect="off" 
+                           autocapitalize="off" spellcheck="false"
+                           style="width: 100%; padding: 10px; font-size: 14px; border: 1px solid #ddd; border-radius: 6px; -webkit-user-select: text; user-select: text;">
+                </div>
+                <div id="resultList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let dictionary = [];
+    
+    // Fallback sample dictionary
+    function getSampleDictionary() {
+        const samples = [
+            ["あい","",1,["愛","合い","藍"],["植物・キノコ","色"]],
+            ["あお","",1,["青","粟生"],["色"]],
+            ["あか","",1,["赤","緋","朱"],["色"]],
+            ["いぬ","",1,["犬","イヌ"],["哺乳類","いきもの"]],
+            ["うみ","",1,["海","膿"],["自然地形"]],
+            ["えき","",1,["駅","液"],[]],
+            ["おと","",1,["音"],[]],
+            ["かぜ","かせ",1,["風邪","風"],["天気"]],
+            ["きく","",1,["菊","キク"],["植物・キノコ"]],
+            ["くも","",1,["雲","蜘蛛"],["天気","いきもの"]],
+            ["けむり","",2,["煙"],["自然"]],
+            ["こころ","",2,["心"],["感情"]],
+            ["さかな","",2,["魚"],["魚介"]],
+            ["しお","",1,["塩","潮"],[]],
+            ["すいか","",2,["スイカ"],["野菜・果物"]],
+            ["そら","",1,["空"],["自然"]],
+            ["たいよう","",3,["太陽"],["天気"]],
+            ["ちから","",2,["力"],["感情"]],
+            ["つき","",1,["月"],["星"]],
+            ["てんき","",2,["天気"],["天気"]],
+            ["とり","",1,["鳥","酉"],["いきもの","鳥"]],
+            ["なつ","",1,["夏"],[]],
+            ["にじ","にし",1,["虹"],["天気"]],
+            ["ぬま","",1,["沼"],["自然地形"]],
+            ["ねこ","",1,["ネコ","猫"],["哺乳類","いきもの"]],
+            ["のら","",1,["野良"],[]],
+            ["はな","",1,["花","鼻"],["植物・キノコ","身体"]],
+            ["ひかり","",2,["光"],[]],
+            ["ふゆ","",1,["冬"],[]],
+            ["へび","へひ",1,["蛇"],["いきもの"]],
+            ["ほし","",1,["星"],["星"]],
+            ["まち","",1,["街","町"],[]],
+            ["みず","みす",1,["水"],[]],
+            ["むし","",1,["虫","無視"],["いきもの"]],
+            ["め","",0,["目"],["身体"]],
+            ["もり","",1,["森"],["自然地形"]],
+            ["やま","",1,["山"],["自然地形"]],
+            ["ゆき","",1,["雪"],["天気"]],
+            ["よる","",1,["夜"],[]],
+            ["らいおん","",3,["ライオン"],["哺乳類","いきもの"]],
+            ["りんご","",2,["林檎","リンゴ"],["野菜・果物"]],
+            ["るーれっと","",4,["ルーレット"],[]],
+            ["れんあい","",3,["恋愛"],["感情"]],
+            ["ろうそく","",3,["蝋燭"],[]],
+            ["わたし","",2,["私"],[]],
+            ["さくら","",2,["桜"],["植物・キノコ"]],
+            ["たべもの","",3,["食べ物"],[]],
+            ["のみもの","",3,["飲み物"],[]],
+            ["ともだち","",3,["友達"],[]],
+            ["がっこう","かっこう",3,["学校"],["学校の教科"]]
+        ];
+        
+        return samples.map(entry => ({
+            word: entry[0],
+            chars: entry[1] || entry[0],
+            combo: entry[2],
+            displays: entry[3],
+            themes: entry[4] || []
+        }));
+    }
+    
+    // Load dictionary from CDN (using jsdelivr for better CORS support)
+    fetch('https://cdn.jsdelivr.net/npm/@kotodaman-unofficial/dictionary@0.1.1/dist/words.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Transform data: [word, chars, combo, [displays], [themes]]
+            dictionary = data.map(entry => ({
+                word: entry[0],
+                chars: entry[1] || entry[0],
+                combo: entry[2],
+                displays: entry[3],
+                themes: entry[4] || []
+            }));
+            
+            document.getElementById('loadingMsg').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            initializeApp();
+            performSearch(); // Show all results initially
+        })
+        .catch(error => {
+            console.error('Dictionary load error:', error);
+            // Fallback: use embedded sample dictionary
+            console.log('Using fallback dictionary...');
+            dictionary = getSampleDictionary();
+            document.getElementById('loadingMsg').textContent = '辞書の読み込みに失敗しました。サンプル辞書を使用しています。';
+            setTimeout(() => {
+                document.getElementById('loadingMsg').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                initializeApp();
+                performSearch();
+            }, 1500);
+        });
+    
+    // Hiragana characters
+    const kanaChars = [
+        ['あ', 'い', 'う', 'え', 'お'],
+        ['か', 'き', 'く', 'け', 'こ'],
+        ['さ', 'し', 'す', 'せ', 'そ'],
+        ['た', 'ち', 'つ', 'て', 'と'],
+        ['な', 'に', 'ぬ', 'ね', 'の'],
+        ['は', 'ひ', 'ふ', 'へ', 'ほ'],
+        ['ま', 'み', 'む', 'め', 'も'],
+        ['や', '', 'ゆ', '', 'よ'],
+        ['ら', 'り', 'る', 'れ', 'ろ'],
+        ['わ', '', '', '', 'ん']
+    ];
+    
+    function initializeApp() {
+        const searchInput = document.getElementById('searchInput');
+        const toggleKanaBtn = document.getElementById('toggleKana');
+        const kanaKeyboard = document.getElementById('kanaKeyboard');
+        const kanaGrid = document.getElementById('kanaGrid');
+        const clearBtn = document.getElementById('clearBtn');
+        const searchBtn = document.getElementById('searchBtn');
+        
+        // iOS-specific: Prevent double-tap zoom
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+        
+        // Initialize kana keyboard
+        kanaChars.forEach(row => {
+            row.forEach(char => {
+                const btn = document.createElement('div');
+                btn.className = char ? 'kana-btn' : 'kana-btn empty';
+                btn.textContent = char || '';
+                
+                if (char) {
+                    const handleClick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        searchInput.value += char;
+                        searchInput.focus();
+                    };
+                    
+                    btn.addEventListener('touchend', handleClick);
+                    btn.addEventListener('click', handleClick);
+                }
+                
+                kanaGrid.appendChild(btn);
+            });
+        });
+        
+        // Toggle kana keyboard
+        const toggleKana = (e) => {
+            e.preventDefault();
+            kanaKeyboard.classList.toggle('active');
+            toggleKanaBtn.textContent = kanaKeyboard.classList.contains('active') 
+                ? 'かな入力を閉じる' 
+                : 'かな入力';
+        };
+        
+        toggleKanaBtn.addEventListener('touchend', toggleKana);
+        toggleKanaBtn.addEventListener('click', toggleKana);
+        
+        // Clear button
+        const handleClear = (e) => {
+            e.preventDefault();
+            searchInput.value = '';
+            performSearch();
+            searchInput.focus();
+        };
+        
+        clearBtn.addEventListener('touchend', handleClear);
+        clearBtn.addEventListener('click', handleClear);
+        
+        // Search button
+        const handleSearch = (e) => {
+            e.preventDefault();
+            performSearch();
+            searchInput.blur();
+        };
+        
+        searchBtn.addEventListener('touchend', handleSearch);
+        searchBtn.addEventListener('click', handleSearch);
+        
+        // Search on enter
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performSearch();
+                searchInput.blur();
+            }
+        });
+        
+        // Live search
+        let searchTimeout;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch();
+            }, 300);
+        });
+        
+        // iOS Fix: Make labels work with touch
+        document.querySelectorAll('label').forEach(label => {
+            label.addEventListener('touchend', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    const input = this.querySelector('input');
+                    if (input) {
+                        if (input.type === 'radio') {
+                            input.checked = true;
+                        } else if (input.type === 'checkbox') {
+                            input.checked = !input.checked;
+                        }
+                        performSearch();
+                    }
+                }
+            });
+        });
+        
+        // Trigger search when filters change
+        document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
+            input.addEventListener('change', performSearch);
+        });
+        
+        // Result filter functionality
+        const resultFilter = document.getElementById('resultFilter');
+        let resultFilterTimeout;
+        
+        resultFilter.addEventListener('input', () => {
+            clearTimeout(resultFilterTimeout);
+            resultFilterTimeout = setTimeout(() => {
+                filterResults();
+            }, 200);
+        });
+    }
+    
+    let currentResults = [];
+    
+    // Filter displayed results based on hiragana input
+    function filterResults() {
+        const resultFilter = document.getElementById('resultFilter');
+        const resultList = document.getElementById('resultList');
+        const resultCount = document.getElementById('resultCount');
+        const filterQuery = resultFilter.value.trim();
+        
+        let filtered = currentResults;
+        
+        if (filterQuery) {
+            // Split filter query into individual characters
+            const requiredChars = filterQuery.split('');
+            
+            // Filter results to only show words containing ALL required characters
+            filtered = currentResults.filter(word => {
+                return requiredChars.every(char => word.word.includes(char));
+            });
+        }
+        
+        // Update count
+        if (filterQuery) {
+            resultCount.textContent = `${filtered.length}件表示中（${currentResults.length}件から絞り込み）`;
+        } else {
+            resultCount.textContent = `${currentResults.length}件見つかりました`;
+        }
+        
+        // Display filtered results
+        if (filtered.length === 0) {
+            resultList.innerHTML = '<div class="no-results">該当する結果がありません</div>';
+        } else {
+            resultList.innerHTML = filtered.map(word => {
+                const displayText = word.displays[0] || word.word;
+                const themesText = word.themes.length > 0 
+                    ? `<div class="result-themes">テーマ: ${word.themes.join(', ')}</div>`
+                    : '';
+                
+                // Highlight the filtered characters
+                let highlightedWord = word.word;
+                if (filterQuery) {
+                    const chars = filterQuery.split('');
+                    chars.forEach(char => {
+                        highlightedWord = highlightedWord.replace(
+                            new RegExp(char, 'g'), 
+                            `<span style="color: #007AFF; font-weight: bold;">${char}</span>`
+                        );
+                    });
+                }
+                
+                return `
+                    <div class="result-item">
+                        <div class="result-word">${displayText} (${highlightedWord})</div>
+                        <div class="result-info">${word.word.length}文字 | コンボ: ${word.combo}</div>
+                        ${themesText}
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+    
+    // Search function
+    function performSearch() {
+        const searchInput = document.getElementById('searchInput');
+        const resultCount = document.getElementById('resultCount');
+        const resultList = document.getElementById('resultList');
+        
+        const query = searchInput.value.trim();
+        const matchType = document.querySelector('input[name="match"]:checked').value;
+        const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked'))
+            .map(cb => parseInt(cb.value));
+        
+        let results = [...dictionary];
+        
+        // Filter by query
+        if (query) {
+            // Check if query contains wildcards (dashes or spaces)
+            const hasWildcard = query.includes('-') || query.includes(' ');
+            
+            if (hasWildcard) {
+                // Remove trailing wildcards to allow shorter matches
+                const trimmedQuery = query.replace(/-+$| +$/g, '');
+                
+                results = results.filter(word => {
+                    // Check if word matches the pattern up to its length
+                    const patternUpToLength = trimmedQuery.slice(0, word.word.length);
+                    const pattern = patternUpToLength.split('').map(char => 
+                        (char === '-' || char === ' ') ? '.' : char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                    ).join('');
+                    
+                    // Only match if the pattern up to this length has content
+                    if (patternUpToLength.length > 0 && patternUpToLength !== '-'.repeat(patternUpToLength.length)) {
+                        const regex = new RegExp(`^${pattern}$`);
+                        return regex.test(word.word);
+                    }
+                    return false;
+                });
+            } else {
+                // Normal search without wildcards
+                results = results.filter(word => {
+                    if (matchType === 'prefix') {
+                        return word.word.startsWith(query);
+                    } else if (matchType === 'suffix') {
+                        return word.word.endsWith(query);
+                    } else {
+                        return word.word.includes(query);
+                    }
+                });
+            }
+        }
+        
+        // Filter by character count (use actual word length)
+        if (charFilters.length > 0) {
+            results = results.filter(word => charFilters.includes(word.word.length));
+        }
+        
+        // Limit results to prevent performance issues
+        const maxResults = 200;
+        const limited = results.length > maxResults;
+        if (limited) {
+            results = results.slice(0, maxResults);
+        }
+        
+        // Store current results for filtering
+        currentResults = results;
+        
+        // Display results
+        resultCount.textContent = limited 
+            ? `${maxResults}件表示中（${results.length + '+'}件見つかりました）`
+            : `${results.length}件見つかりました`;
+        
+        // Clear result filter when new search is performed
+        const resultFilter = document.getElementById('resultFilter');
+        if (resultFilter) {
+            resultFilter.value = '';
+        }
+        
+        if (results.length === 0) {
+            resultList.innerHTML = '<div class="no-results">結果がありません</div>';
+        } else {
+            resultList.innerHTML = results.map(word => {
+                const displayText = word.displays[0] || word.word;
+                const themesText = word.themes.length > 0 
+                    ? `<div class="result-themes">テーマ: ${word.themes.join(', ')}</div>`
+                    : '';
+                
+                return `
+                    <div class="result-item">
+                        <div class="result-word">${displayText} (${word.word})</div>
+                        <div class="result-info">${word.word.length}文字 | コンボ: ${word.combo}</div>
+                        ${themesText}
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+</script>
+```
+
 </body>
 </html>

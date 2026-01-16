@@ -7,394 +7,75 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Kotono Nomikon - Board Search</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: rgba(0,0,0,0);
-        }
-
-    html, body {
-        width: 100%;
-        height: 100%;
-        overflow-x: hidden;
-        position: fixed;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-        background: #f5f5f5;
-        -webkit-touch-callout: none;
-        overscroll-behavior: none;
-    }
-    
-    #app {
-        width: 100%;
-        height: 100%;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding: 10px;
-    }
-    
-    .container {
-        max-width: 800px;
-        margin: 0 auto 60px;
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    }
-    
-    h1 {
-        font-size: 24px;
-        margin-bottom: 20px;
-        color: #333;
-        font-weight: 600;
-        text-align: center;
-    }
-    
-    .loading {
-        text-align: center;
-        padding: 40px;
-        color: #666;
-    }
-    
-    /* Main Grid Section */
-    .input-section {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 12px;
-        border: 1px solid #e0e0e0;
-        margin-bottom: 15px;
-        position: relative;
-    }
-
-    .pos-filter-container {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 6px;
-        margin-bottom: 5px;
-        position: relative;
-    }
-    
-    .pos-input {
-        width: 100%;
-        aspect-ratio: 1/1;
-        padding: 0;
-        font-size: 18px;
-        font-weight: bold;
-        text-align: center;
-        border: 2px solid #ddd;
-        border-radius: 8px;
-        background: #fff;
-        -webkit-appearance: none;
-        appearance: none;
-        transition: all 0.2s;
-        z-index: 1; 
-        position: relative;
-    }
-
-    .pos-input:focus {
-        border-color: #007AFF;
-        outline: none;
-        background: #fff;
-    }
-
-    .pos-input.filled {
-        background: #f0f8ff;
-        border-color: #007AFF;
-    }
-    
-    .pos-label {
-        font-size: 11px;
-        color: #999;
-        text-align: center;
-        margin-top: 4px;
-        height: 16px;
-    }
-    
-    .instruction-text {
-        font-size: 13px;
-        color: #666;
-        margin-bottom: 15px;
-        text-align: center;
-    }
-
-    .action-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 15px;
-    }
-    
-    .sort-select {
-        padding: 8px 12px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        background: white;
-        font-size: 14px;
-    }
-
-    button {
-        padding: 8px 16px;
-        font-size: 14px;
-        border: none;
-        border-radius: 6px;
-        background: #8E8E93;
-        color: white;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.1s;
-    }
-    
-    button:active {
-        background: #636366;
-        transform: scale(0.97);
-    }
-
-    .filters {
-        margin-bottom: 15px;
-        padding: 0 5px;
-    }
-    
-    .filter-row {
-        margin: 12px 0;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    
-    .filter-label {
-        font-weight: 600;
-        color: #333;
-        min-width: 60px;
-        font-size: 15px;
-    }
-    
-    .radio-group {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-    }
-    
-    input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
-        margin: 0;
-        -webkit-appearance: none;
-        appearance: none;
-        border: 2px solid #ccc;
-        border-radius: 4px;
-        position: relative;
-        flex-shrink: 0;
-    }
-    
-    input[type="checkbox"]:checked {
-        background: #007AFF;
-        border-color: #007AFF;
-    }
-    
-    input[type="checkbox"]:checked::after {
-        content: '';
-        position: absolute;
-        width: 6px;
-        height: 11px;
-        border: solid white;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-        top: 1px;
-        left: 5px;
-    }
-    
-    label {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        cursor: pointer;
-        -webkit-user-select: none;
-        user-select: none;
-        font-size: 15px;
-        padding: 4px 0;
-        touch-action: manipulation;
-    }
-
-    /* Refine Section */
-    .refine-section {
-        background: #fff8f0;
-        border: 1px solid #ffe4cc;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        transition: background 0.2s, border-color 0.2s;
-    }
-    
-    .refine-section.and-mode {
-        background: #f0f7ff;
-        border-color: #cce4ff;
-    }
-
-    .refine-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-    
-    .refine-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #333;
-    }
-
-    /* Toggle Switch */
-    .toggle-switch {
-        display: flex;
-        background: #e0e0e0;
-        border-radius: 6px;
-        padding: 2px;
-    }
-    
-    .toggle-option {
-        padding: 4px 12px;
-        font-size: 12px;
-        font-weight: 600;
-        border-radius: 4px;
-        cursor: pointer;
-        color: #666;
-        user-select: none;
-    }
-    
-    .toggle-option.active {
-        background: white;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-    
-    .toggle-option[data-logic="OR"].active { color: #d67a00; }
-    .toggle-option[data-logic="AND"].active { color: #007AFF; }
-
-    .refine-inputs {
-        display: flex;
-        gap: 10px;
-    }
-
-    .refine-input {
-        flex: 1;
-        max-width: 60px;
-        height: 40px;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        text-align: center;
-        font-size: 18px;
-        background: white;
-    }
-    
-    .refine-input:focus {
-        outline: none;
-        background: #fff;
-    }
-    
-    .refine-section .refine-input:focus { border-color: #d67a00; }
-    .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
-    
-    .refine-input.filled {
-        background: #fffdf5;
-        border-color: #d67a00;
-        font-weight: bold;
-    }
-    .refine-section.and-mode .refine-input.filled {
-        background: #f0f8ff;
-        border-color: #007AFF;
-    }
-
-    .results {
-        margin-top: 10px;
-    }
-    
-    .result-count {
-        font-size: 15px;
-        color: #666;
-        margin-bottom: 15px;
-        padding-left: 10px;
-    }
-    
-    .result-item {
-        padding: 16px;
-        background: #fafafa;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        border-left: 4px solid #007AFF;
-        cursor: pointer;
-        touch-action: manipulation;
-        transition: background 0.1s;
-    }
-    
-    .result-item:active {
-        background: #f0f0f0;
-    }
-    
-    .result-word {
-        font-size: 20px;
-        font-weight: 600;
-        margin-bottom: 6px;
-        color: #111;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .result-info {
-        color: #666;
-        font-size: 14px;
-        margin-top: 4px;
-    }
-    
-    .result-themes {
-        color: #007AFF;
-        font-size: 13px;
-        margin-top: 4px;
-    }
-    
-    .no-results {
-        text-align: center;
-        padding: 40px 20px;
-        color: #999;
-        font-size: 16px;
-    }
-    
-    /* Result Grid Visualization */
-    .mini-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 20px);
-        gap: 2px;
-        margin-left: 10px;
-    }
-    .mini-box {
-        width: 20px;
-        height: 20px;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-        font-size: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #fff;
-        color: #ccc;
-    }
-    .mini-box.matched {
-        background: #007AFF;
-        border-color: #007AFF;
-        color: white;
-        font-weight: bold;
-    }
-    .mini-box.overlap {
-        background: #e0efff;
-        border-color: #007AFF;
-        color: #007AFF;
-    }
-</style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); }
+        html, body { width: 100%; height: 100%; overflow-x: hidden; position: fixed; -webkit-overflow-scrolling: touch; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; background: #f5f5f5; -webkit-touch-callout: none; overscroll-behavior: none; }
+        #app { width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px; }
+        
+        .container { max-width: 800px; margin: 0 auto 60px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        h1 { font-size: 24px; margin-bottom: 20px; color: #333; font-weight: 600; text-align: center; }
+        .loading { text-align: center; padding: 40px; color: #666; }
+        
+        .input-section { background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 15px; }
+        .instruction-text { font-size: 13px; color: #666; margin-bottom: 15px; text-align: center; line-height: 1.4; }
+        
+        .pos-filter-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
+        .pos-labels-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
+        
+        .pos-input { width: 100%; aspect-ratio: 1/1; padding: 0; font-size: 18px; font-weight: bold; text-align: center; border: 2px solid #ddd; border-radius: 8px; background: #fff; -webkit-appearance: none; appearance: none; transition: all 0.2s; }
+        .pos-input:focus { border-color: #007AFF; outline: none; background: #fff; }
+        .pos-input.filled { background: #f0f8ff; border-color: #007AFF; }
+        .pos-label { font-size: 11px; color: #999; text-align: center; margin-top: 4px; height: 16px; }
+        
+        .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        .sort-select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; font-size: 14px; }
+        button { padding: 8px 16px; font-size: 14px; border: none; border-radius: 6px; background: #8E8E93; color: white; font-weight: 500; cursor: pointer; transition: background 0.1s; }
+        button:active { background: #636366; transform: scale(0.97); }
+        
+        .filters { margin-bottom: 15px; padding: 0 5px; }
+        .filter-row { margin: 12px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; }
+        .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; border: 2px solid #ccc; border-radius: 4px; }
+        input[type="checkbox"]:checked { background: #007AFF; border-color: #007AFF; }
+        label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
+        
+        .refine-section { background: #fff8f0; border: 1px solid #ffe4cc; padding: 15px; border-radius: 8px; margin-bottom: 20px; transition: background 0.2s, border-color 0.2s; }
+        .refine-section.and-mode { background: #f0f7ff; border-color: #cce4ff; }
+        
+        .refine-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .refine-title { font-size: 14px; font-weight: 600; color: #333; }
+        
+        .toggle-switch { display: flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
+        .toggle-option { padding: 4px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; }
+        .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .toggle-option[data-logic="OR"].active { color: #d67a00; }
+        .toggle-option[data-logic="AND"].active { color: #007AFF; }
+        
+        .refine-inputs { display: flex; gap: 10px; }
+        .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
+        .refine-input:focus { outline: none; background: #fff; }
+        .refine-section .refine-input:focus { border-color: #d67a00; }
+        .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
+        .refine-input.filled { background: #fffdf5; border-color: #d67a00; font-weight: bold; }
+        .refine-section.and-mode .refine-input.filled { background: #f0f8ff; border-color: #007AFF; }
+        
+        .results { margin-top: 10px; }
+        .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
+        .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #007AFF; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
+        .result-item:active { background: #f0f0f0; }
+        .result-word { font-size: 20px; font-weight: 600; margin-bottom: 6px; color: #111; display:flex; justify-content: space-between; align-items: center;}
+        .result-info { color: #666; font-size: 14px; }
+        .result-themes { color: #007AFF; font-size: 13px; margin-top: 4px; }
+        .no-results { text-align: center; padding: 40px 20px; color: #999; font-size: 16px; }
+        
+        /* Grid Viz */
+        .mini-grid { display: grid; grid-template-columns: repeat(7, 18px); gap: 2px; }
+        .mini-box { width: 18px; height: 18px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px; display: flex; align-items: center; justify-content: center; background: #fff; color: #ccc; }
+        .mini-box.matched { background: #007AFF; border-color: #007AFF; color: white; }
+        .mini-box.overlap { background: #e0efff; border-color: #007AFF; color: #007AFF; }
+    </style>
 </head>
 <body>
     <div id="app">
@@ -404,13 +85,13 @@
 
             <div id="mainContent" style="display:none;">
                 
-                <div class="input-section" id="inputSection">
+                <div class="input-section">
                     <div class="instruction-text">
-                        <strong>Board Placement:</strong> Simulates playing the word on the board.<br>
-                        Word must fit within 7 slots and match any filled boxes it touches.
+                        <strong>Board Placement:</strong> Words must fit on the board.<br>
+                        Gaps can be any character. Overlaps must match.
                     </div>
                     
-                    <div class="pos-filter-container" id="posFilterContainer">
+                    <div class="pos-filter-container">
                         <div><input type="text" class="pos-input" data-index="0" autocomplete="off"></div>
                         <div><input type="text" class="pos-input" data-index="1" autocomplete="off"></div>
                         <div><input type="text" class="pos-input" data-index="2" autocomplete="off"></div>
@@ -420,7 +101,7 @@
                         <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
                     </div>
 
-                    <div class="pos-labels-container" style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px;">
+                    <div class="pos-labels-container">
                         <div class="pos-label">1</div>
                         <div class="pos-label">2</div>
                         <div class="pos-label">3</div>
@@ -470,7 +151,7 @@
                         <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
                     <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">
-                        Refine filters ignore characters already used by the Grid.
+                        Refine filters <strong>exclude</strong> characters matched by the Grid.
                     </div>
                 </div>
                 
@@ -506,7 +187,6 @@
             ["こうこう","",4,["高校"],[]],
             ["こうそ","",3,["酵素"],[]]
         ];
-        
         return samples.map(entry => ({
             word: entry[0],
             chars: entry[1] || entry[0],
@@ -518,12 +198,7 @@
     
     // Load dictionary
     fetch('https://cdn.jsdelivr.net/npm/@kotodaman-unofficial/dictionary@0.1.1/dist/words.json')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
+        .then(response => { if (!response.ok) throw new Error('Network error'); return response.json(); })
         .then(data => {
             dictionary = data.map(entry => ({
                 word: entry[0],
@@ -532,21 +207,19 @@
                 displays: entry[3],
                 themes: entry[4] || []
             }));
-            
             document.getElementById('loadingMsg').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
-            
             initializeApp();
         })
         .catch(error => {
-            console.error('Dictionary load error:', error);
+            console.error('Error:', error);
             dictionary = getSampleDictionary();
-            document.getElementById('loadingMsg').textContent = 'Dictionary load failed. Using sample dictionary.';
+            document.getElementById('loadingMsg').textContent = 'Loaded sample dictionary.';
             setTimeout(() => {
                 document.getElementById('loadingMsg').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
                 initializeApp();
-            }, 1500);
+            }, 1000);
         });
     
     function initializeApp() {
@@ -573,10 +246,7 @@
 
         clearBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            posInputs.forEach(input => {
-                input.value = '';
-                input.classList.remove('filled');
-            });
+            posInputs.forEach(input => { input.value = ''; input.classList.remove('filled'); });
             performSearch();
         });
         
@@ -606,15 +276,13 @@
 
         sortSelect.addEventListener('change', performSearch);
         
+        // Tap label to toggle checkbox
         document.querySelectorAll('label').forEach(label => {
             label.addEventListener('touchend', function(e) {
                 if (e.target.tagName !== 'INPUT') {
                     e.preventDefault();
                     const input = this.querySelector('input');
-                    if (input) {
-                        input.checked = !input.checked;
-                        performSearch();
-                    }
+                    if (input) { input.checked = !input.checked; performSearch(); }
                 }
             });
         });
@@ -628,41 +296,44 @@
         const sortOrder = document.getElementById('sortSelect').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
 
+        // 1. Inputs
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
+        // Refine Inputs
         const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
             .map(input => input.value.trim().split('')) 
             .filter(arr => arr.length > 0);
-        
         const hasRefineFilter = refineConstraints.length > 0;
 
         let results = dictionary;
 
+        // A. Length Filter
         if (charFilters.length > 0) {
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // --- B. Board Placement Search ---
-        // Map word -> Valid Start Offset (0..6)
-        let validOffsets = new Map(); 
+        // --- B. Board Placement Search Calculation ---
+        // For every word, we calculate ALL possible valid start offsets.
+        // We store this in a Map: word.word -> [offset1, offset2, ...]
+        let wordPlacements = new Map();
 
         if (hasActivePosFilter) {
             results = results.filter(word => {
                 const len = word.word.length;
-                let foundFit = false;
+                let validOffsets = [];
 
-                // Try placing the word starting at every possible board index (0 to 7-len)
+                // Try placing the word at every possible board start index
+                // Valid start indices: 0 up to 7-len
                 for (let start = 0; start <= 7 - len; start++) {
                     let fits = true;
                     
-                    // Check overlaps for this specific position
                     for (let i = 0; i < len; i++) {
                         const boardChar = inputValues[start + i];
                         const wordChar = word.word[i];
                         
-                        // If board box is filled, word char must match one of the chars in the box (OR logic)
+                        // Overlap Check
                         if (boardChar && boardChar.length > 0) {
                             if (!boardChar.includes(wordChar)) {
                                 fits = false;
@@ -672,45 +343,64 @@
                     }
                     
                     if (fits) {
-                        foundFit = true;
-                        validOffsets.set(word.word, start); // Store first valid fit for visualization
-                        break; 
+                        validOffsets.push(start);
                     }
                 }
-                return foundFit;
+
+                if (validOffsets.length > 0) {
+                    wordPlacements.set(word.word, validOffsets);
+                    return true;
+                }
+                return false;
             });
         }
 
-        // --- C. Refine Filter ---
+        // --- C. Refine Filter with Smart Exclusion ---
         if (hasRefineFilter) {
             results = results.filter(word => {
-                let textToSearch = word.word;
+                let validRefineFitFound = false;
+                
+                // Determine which placements to check.
+                // If Grid Search is active, only check valid grid placements.
+                // If no Grid Search, consider the word "placed" naturally (no exclusion needed? or exclude nothing).
+                
+                let placementsToCheck = hasActivePosFilter ? wordPlacements.get(word.word) : [-1]; // -1 dummy for "no grid"
 
-                // Exclusion: Mask chars that physically overlapped with Filled Grid Boxes
-                if (hasActivePosFilter && validOffsets.has(word.word)) {
-                    let start = validOffsets.get(word.word);
-                    let chars = word.word.split('');
+                // Check EVERY valid placement. If ANY placement satisfies Refine, the word is valid.
+                for (let offset of placementsToCheck) {
                     
-                    for (let i = 0; i < chars.length; i++) {
-                        // Position on board
-                        let boardIdx = start + i;
-                        // If board has explicit input here, exclude this char from refine search
-                        if (inputValues[boardIdx] && inputValues[boardIdx].length > 0) {
-                            chars[i] = null;
+                    let textToSearch;
+                    
+                    if (offset === -1) {
+                        // No Grid Filter -> Search whole word
+                        textToSearch = word.word;
+                    } else {
+                        // Grid Active -> Construct text excluding overlapped chars
+                        let chars = word.word.split('');
+                        for (let i = 0; i < chars.length; i++) {
+                            let boardIndex = offset + i;
+                            // If this position on board was explicitly filled by user, exclude char
+                            if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
+                                chars[i] = null;
+                            }
                         }
+                        textToSearch = chars.filter(c => c !== null).join('');
                     }
-                    textToSearch = chars.filter(c => c !== null).join('');
-                }
 
-                const checkBox = (constraintChars) => {
-                    return constraintChars.some(char => textToSearch.includes(char));
-                };
+                    // Check Refine Constraints against this specific textToSearch
+                    const checkBox = (constraintChars) => constraintChars.some(char => textToSearch.includes(char));
+                    
+                    let refinePasses = (currentRefineLogic === 'OR') 
+                        ? refineConstraints.some(checkBox)
+                        : refineConstraints.every(checkBox);
 
-                if (currentRefineLogic === 'OR') {
-                    return refineConstraints.some(checkBox);
-                } else {
-                    return refineConstraints.every(checkBox);
+                    if (refinePasses) {
+                        validRefineFitFound = true;
+                        break; // Found a valid configuration!
+                    }
                 }
+                
+                return validRefineFitFound;
             });
         }
 
@@ -745,28 +435,52 @@
                     ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
                     : '';
                 
-                // --- Highlight & Grid Viz ---
-                let offset = hasActivePosFilter ? validOffsets.get(word.word) : -1;
+                // Pick the first valid placement for visualization
+                // (Ideally we visualize the one that passed Refine, but simply picking first valid grid fit is okay for UI)
+                let placementOffset = hasActivePosFilter ? wordPlacements.get(word.word)[0] : -1;
+
+                // Build Highlighted Word
+                let highlightedWordHTML = '';
+                const chars = word.word.split('');
                 
-                // Build Mini Grid HTML
+                // We need to know which chars matched Grid vs Refine for this specific placement
+                // Note: This is purely visual. We recalculate for the chosen offset.
+                let gridIndices = new Set();
+                
+                if (placementOffset !== -1) {
+                    for(let i=0; i<chars.length; i++) {
+                        let boardIndex = placementOffset + i;
+                        if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
+                            gridIndices.add(i);
+                        }
+                    }
+                }
+
+                highlightedWordHTML = chars.map((char, i) => {
+                    let style = '';
+                    if (gridIndices.has(i)) {
+                        style = "font-weight:bold; text-decoration:underline; color:#007AFF;";
+                    } else if (hasRefineFilter) {
+                        // Check if char is a Refine target
+                        let isRefine = refineConstraints.some(c => c.includes(char));
+                        if(isRefine) style = currentRefineLogic === 'AND' 
+                            ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
+                            : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;";
+                    }
+                    return style ? `<span style="${style}">${char}</span>` : char;
+                }).join('');
+
+                // Grid Visualization
                 let gridHtml = '';
-                if (offset !== undefined && offset !== -1) {
+                if (placementOffset !== -1) {
                     gridHtml = '<div class="mini-grid">';
                     for(let b=0; b<7; b++) {
                         let content = '';
                         let className = 'mini-box';
-                        
-                        // Is the word occupying this box?
-                        if (b >= offset && b < offset + word.word.length) {
-                            let wordCharIndex = b - offset;
-                            content = word.word[wordCharIndex];
-                            
-                            // Did this box have input?
-                            if (inputValues[b] && inputValues[b].length > 0) {
-                                className += ' matched';
-                            } else {
-                                className += ' overlap';
-                            }
+                        if (b >= placementOffset && b < placementOffset + word.word.length) {
+                            content = word.word[b - placementOffset];
+                            if (inputValues[b] && inputValues[b].length > 0) className += ' matched';
+                            else className += ' overlap';
                         }
                         gridHtml += `<div class="${className}">${content}</div>`;
                     }
@@ -776,7 +490,7 @@
                 return `
                     <div class="result-item">
                         <div class="result-word">
-                            <span>${displayText}</span>
+                            <span>${displayText} <span style="font-weight:normal; font-size:0.8em; color:#666;">(${highlightedWordHTML})</span></span>
                             ${gridHtml}
                         </div>
                         <div class="result-info">${word.word.length} chars | Combo: ${word.combo}</div>

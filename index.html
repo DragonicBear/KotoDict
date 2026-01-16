@@ -70,7 +70,7 @@
         position: relative;
     }
 
-    /* Grid for Inputs (Line Removed) */
+    /* Grid for Inputs */
     .pos-filter-container {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
@@ -79,8 +79,6 @@
         position: relative;
     }
     
-    /* Removed the ::before pseudo-element that drew the line */
-
     .pos-input {
         width: 100%;
         aspect-ratio: 1/1;
@@ -384,7 +382,8 @@
                 
                 <div class="input-section" id="inputSection">
                     <div class="instruction-text">
-                        <strong>Pattern Search:</strong> Finds the sequence anywhere in the word. Gaps between boxes act as wildcards.
+                        <strong>Positional Search:</strong> The grid matches the exact character position.<br>
+                        Filling Box 1 = Starts with... | Filling Box 7 = Ends with...
                     </div>
                     
                     <div class="pos-filter-container" id="posFilterContainer">
@@ -397,7 +396,7 @@
                         <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
                     </div>
 
-                    <div class="pos-filter-container">
+                    <div class="pos-labels-container" style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px;">
                         <div class="pos-label">1</div>
                         <div class="pos-label">2</div>
                         <div class="pos-label">3</div>
@@ -447,9 +446,7 @@
                         <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
                     <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">
-                        <strong>AND:</strong> All boxes must satisfy (Box 1 AND Box 2...).<br>
-                        <strong>OR:</strong> At least one box must satisfy (Box 1 OR Box 2...).<br>
-                        <em>(Chars within the same box act as "OR")</em>
+                        Refine filters <strong>exclude</strong> characters matched by the Grid.
                     </div>
                 </div>
                 
@@ -470,36 +467,16 @@
         const samples = [
             ["あい","",1,["愛","合い","藍"],["Plants/Fungi","Color"]],
             ["あお","",1,["青","粟生"],["Color"]],
-            ["あか","",1,["赤","緋","朱"],["Color"]],
-            ["いぬ","",1,["犬","イヌ"],["Mammal","Creature"]],
             ["うみ","",1,["海","膿"],["Natural Terrain"]],
-            ["かぜ","かせ",1,["風邪","風"],["Weather"]],
-            ["けむり","",2,["煙"],["Nature"]],
-            ["こころ","",2,["心"],["Emotion"]],
-            ["さかな","",2,["魚"],["Fish/Seafood"]],
-            ["すいか","",2,["スイカ"],["Vegetable/Fruit"]],
-            ["たいよう","",3,["太陽"],["Weather"]],
-            ["ちから","",2,["力"],["Emotion"]],
-            ["てんき","",2,["天気"],["Weather"]],
-            ["にじ","にし",1,["虹"],["Weather"]],
-            ["ねこ","",1,["ネコ","猫"],["Mammal","Creature"]],
-            ["はな","",1,["花","鼻"],["Plants/Fungi","Body"]],
-            ["へび","へひ",1,["蛇"],["Creature"]],
-            ["らいおん","",3,["ライオン"],["Mammal","Creature"]],
-            ["りんご","",2,["林檎","リンゴ"],["Vegetable/Fruit"]],
-            ["るーれっと","",4,["ルーレット"],[]],
-            ["れんあい","",3,["恋愛"],["Emotion"]],
-            ["がっこう","かっこう",3,["学校"],["School Subject"]],
-            ["ん","",1,["ん"],[]],
-            ["かんけい","",4,["関係"],[]],
+            ["うそう","",1,["雨窓"],[]],
+            ["しょうそう","",4,["焦燥"],[]],
+            ["うそうかい","",5,["有象海"],[]],
             ["さいし","",3,["祭祀"],[]],
             ["さいしょ","",4,["最初"],[]],
             ["さいしょう","",5,["最小"],[]],
             ["しょうさ","",4,["勝差"],[]],
             ["しょうさい","",5,["詳細"],[]],
-            ["さんしょう","",5,["参照"],[]],
-            ["あした","",3,["明日"],[]],
-            ["あいさつ","",4,["挨拶"],[]]
+            ["さんしょう","",5,["参照"],[]]
         ];
         
         return samples.map(entry => ({
@@ -634,7 +611,6 @@
         // 2. Collect Refine Inputs 
         // We want separate constraints per box. 
         // Box 1 "AB" -> Constraint 1: ['A','B'] (A or B)
-        // Box 2 "C"  -> Constraint 2: ['C']
         const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
             .map(input => input.value.trim().split('')) 
             .filter(arr => arr.length > 0);
@@ -648,22 +624,41 @@
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // B. Grid Filter (ALWAYS PATTERN)
+        // B. Grid Filter (Strict Position Anchor)
+        // ^ start anchor
+        // Box 1..n (wildcards if empty)
+        // Box 7 (end anchor if filled, else .*)
         let regexPattern = null;
 
         if (hasActivePosFilter) {
-            let firstIndex = inputValues.findIndex(v => v.length > 0);
+            let patternStr = "^"; // Start Anchor
+
+            // We iterate strictly 0 to 6
+            // If Box i is filled, we match chars.
+            // If Box i is empty, we match .
+            
+            // Optimization: We only need to generate regex up to the last filled box.
+            // If boxes 5,6,7 are filled: ^....567$
+            // If boxes 1,2 are filled: ^12.*
+            
             let lastIndex = 6; 
             while(lastIndex >= 0 && inputValues[lastIndex].length === 0) lastIndex--;
             
-            let patternStr = "";
-            for (let i = firstIndex; i <= lastIndex; i++) {
+            // Loop from 0 to last filled index
+            for (let i = 0; i <= lastIndex; i++) {
                 const val = inputValues[i];
                 if (val.length === 0) {
-                    patternStr += "."; // Wildcard
+                    patternStr += "."; // Exact position placeholder
                 } else {
-                    patternStr += "[" + val + "]"; // User chars (e.g. [AB])
+                    patternStr += "[" + val + "]"; // User chars
                 }
+            }
+
+            // End Anchor Logic
+            if (lastIndex === 6) {
+                patternStr += "$"; // User filled Box 7 -> Strict End
+            } else {
+                patternStr += ".*"; // Trailing wildcards allowed
             }
             
             regexPattern = new RegExp(patternStr);
@@ -676,22 +671,18 @@
                 let textToSearch = word.word;
 
                 // ** EXCLUSION LOGIC **
-                // Remove chars that matched the grid pattern so they don't count for refinement
+                // Mask characters that were matched by the Grid Inputs (not wildcards)
                 if (regexPattern) {
                     const match = regexPattern.exec(word.word);
                     if (match) {
                         let chars = word.word.split('');
-                        let matchStart = match.index;
+                        let matchStart = match.index; // usually 0 due to ^ anchor
                         
-                        let firstGridIndex = inputValues.findIndex(v => v.length > 0);
-                        
-                        for (let i = 0; i < match[0].length; i++) {
-                             let relativeGridIdx = firstGridIndex + i; 
-                             
-                             // If the grid had input here, remove this char from search pool
-                             if (inputValues[relativeGridIdx] && inputValues[relativeGridIdx].length > 0) {
-                                 chars[matchStart + i] = null; 
-                             }
+                        // Mask chars at indices where inputValues had data
+                        for (let i = 0; i < inputValues.length; i++) {
+                            if (inputValues[i].length > 0 && (matchStart + i) < chars.length) {
+                                chars[matchStart + i] = null;
+                            }
                         }
                         
                         textToSearch = chars.filter(c => c !== null).join('');
@@ -699,16 +690,16 @@
                 }
 
                 // ** REFINE LOGIC **
-                // Check if textToSearch satisfies the refine constraints
                 const checkBox = (constraintChars) => {
+                    // Inside box = OR (contains A or B)
                     return constraintChars.some(char => textToSearch.includes(char));
                 };
 
                 if (currentRefineLogic === 'OR') {
-                    // Match if ANY box is satisfied
+                    // Between boxes = OR
                     return refineConstraints.some(checkBox);
                 } else {
-                    // Match if ALL boxes are satisfied
+                    // Between boxes = AND
                     return refineConstraints.every(checkBox);
                 }
             });
@@ -750,14 +741,12 @@
                 let gridIndices = new Set();
                 let refineIndices = new Set();
 
-                // 1. Grid Highlights (Pattern)
+                // 1. Grid Highlights
                 if (regexPattern) {
                     const match = regexPattern.exec(word.word);
                     if (match) {
-                        let firstGridIndex = inputValues.findIndex(v => v.length > 0);
-                        for (let i = 0; i < match[0].length; i++) {
-                            let relativeGridIdx = firstGridIndex + i; 
-                            if (inputValues[relativeGridIdx] && inputValues[relativeGridIdx].length > 0) {
+                        for (let i = 0; i < inputValues.length; i++) {
+                            if (inputValues[i].length > 0) {
                                 gridIndices.add(match.index + i);
                             }
                         }
@@ -765,14 +754,13 @@
                 }
 
                 // 2. Refine Highlights
-                // Re-run the exclusion check logic locally to know which chars are valid for highlighting
                 if (hasRefineFilter) {
+                    // Build local textToSearch map to ensure we don't highlight already used chars
                     chars.forEach((char, i) => {
-                        if (gridIndices.has(i)) return; // Don't highlight grid matches as refine matches
+                        if (gridIndices.has(i)) return; 
 
-                        // Check if this char is in any refine constraint
+                        // Check if char satisfies any refine constraint
                         let isRefineChar = refineConstraints.some(constraint => constraint.includes(char));
-                        
                         if (isRefineChar) {
                             refineIndices.add(i);
                         }

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>ことののみこん - iOS対応版</title>
+    <title>Kotono Nomikon - iOS Version</title>
     <style>
         * {
             margin: 0;
@@ -63,7 +63,6 @@
         margin-bottom: 20px;
     }
     
-    /* Main Search Input */
     input[type="text"], input[type="search"] {
         width: 100%;
         padding: 14px;
@@ -251,46 +250,37 @@
         touch-action: manipulation;
     }
 
-    /* --- NEW STYLES FOR SEGMENTED FILTER --- */
-    .pos-section {
-        background: #f0f4f8;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        border: 1px solid #d1d9e6;
-    }
-
+    /* Styles for the new Positional Filter */
     .pos-filter-container {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
-        gap: 8px;
-        margin-top: 5px;
+        gap: 4px;
+        margin-bottom: 10px;
     }
 
-    /* Force specific style for these inputs to ensure they look like boxes */
-    input.pos-input {
-        width: 100% !important;
-        padding: 8px 0 !important;
-        font-size: 16px !important;
-        text-align: center !important;
-        border: 2px solid #ccc !important;
-        border-radius: 6px !important;
-        background: white !important;
-        -webkit-appearance: none;
-        margin: 0;
+    .pos-input {
+        width: 100%;
+        padding: 8px 2px;
+        font-size: 14px;
+        text-align: center;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: #fff;
+        -webkit-user-select: text;
+        user-select: text;
     }
 
-    input.pos-input:focus {
-        border-color: #007AFF !important;
-        background: white !important;
+    .pos-input:focus {
+        border-color: #007AFF;
+        outline: none;
+        background: #f0f8ff;
     }
 
     .pos-label {
-        font-size: 13px;
-        color: #333;
-        font-weight: 600;
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 5px;
         display: block;
-        margin-bottom: 8px;
     }
     
     .results {
@@ -356,20 +346,20 @@
 <body>
     <div id="app">
         <div class="container">
-            <h1>ことののみこん (iOS対応版)</h1>
-            <div class="loading" id="loadingMsg">辞書を読み込み中...</div>
+            <h1>Kotono Nomikon (iOS)</h1>
+            <div class="loading" id="loadingMsg">Loading dictionary...</div>
 
 
         <div id="mainContent" style="display:none;">
             <div class="search-section">
-                <input type="search" id="searchInput" placeholder="検索... (例: せ-い---ん)" 
+                <input type="search" id="searchInput" placeholder="Search... (e.g., せ-い---ん or せ い   ん)" 
                        autocomplete="off" autocorrect="off" 
                        autocapitalize="off" spellcheck="false">
                 
                 <div class="button-group">
-                    <button id="toggleKana" type="button">かな入力</button>
-                    <button id="clearBtn" type="button" class="secondary">クリア</button>
-                    <button id="searchBtn" type="button">検索</button>
+                    <button id="toggleKana" type="button">Kana Input</button>
+                    <button id="clearBtn" type="button" class="secondary">Clear</button>
+                    <button id="searchBtn" type="button">Search</button>
                 </div>
             </div>
             
@@ -379,25 +369,25 @@
             
             <div class="filters">
                 <div class="filter-row">
-                    <span class="filter-label">一致:</span>
+                    <span class="filter-label">Match:</span>
                     <div class="radio-group">
                         <label>
                             <input type="radio" name="match" value="prefix" checked>
-                            <span>前方</span>
+                            <span>Prefix</span>
                         </label>
                         <label>
                             <input type="radio" name="match" value="fuzzy">
-                            <span>あいまい</span>
+                            <span>Fuzzy</span>
                         </label>
                         <label>
                             <input type="radio" name="match" value="suffix">
-                            <span>後方</span>
+                            <span>Suffix</span>
                         </label>
                     </div>
                 </div>
                 
                 <div class="filter-row">
-                    <span class="filter-label">文字数:</span>
+                    <span class="filter-label">Length:</span>
                     <div class="radio-group">
                         <label><input type="checkbox" name="chars" value="1"><span>1</span></label>
                         <label><input type="checkbox" name="chars" value="2"><span>2</span></label>
@@ -412,16 +402,16 @@
                 <div class="filter-row">
                     <label>
                         <input type="checkbox" id="distinguishDiacritics">
-                        <span>濁音拗音を区別する</span>
+                        <span>Distinguish Diacritics (Dakuten/Handakuten)</span>
                     </label>
                 </div>
             </div>
             
             <div class="results">
-                <div class="result-count" id="resultCount">検索してください</div>
+                <div class="result-count" id="resultCount">Please search</div>
                 
-                <div class="pos-section">
-                    <span class="pos-label">結果フィルター (文字位置指定):</span>
+                <div style="margin-bottom: 15px;">
+                    <span class="pos-label">Filter by character position (In-box: OR, Between-box: AND):</span>
                     <div class="pos-filter-container" id="posFilterContainer">
                         <input type="text" class="pos-input" data-index="0" placeholder="1" autocomplete="off">
                         <input type="text" class="pos-input" data-index="1" placeholder="2" autocomplete="off">
@@ -443,58 +433,60 @@
     let dictionary = [];
     
     // Fallback sample dictionary
+    // Note: I have translated the THEMES to English for the UI, but kept the words in Japanese 
+    // because the app logic is built for matching Japanese characters.
     function getSampleDictionary() {
         const samples = [
-            ["あい","",1,["愛","合い","藍"],["植物・キノコ","色"]],
-            ["あお","",1,["青","粟生"],["色"]],
-            ["あか","",1,["赤","緋","朱"],["色"]],
-            ["いぬ","",1,["犬","イヌ"],["哺乳類","いきもの"]],
-            ["うみ","",1,["海","膿"],["自然地形"]],
+            ["あい","",1,["愛","合い","藍"],["Plants/Fungi","Color"]],
+            ["あお","",1,["青","粟生"],["Color"]],
+            ["あか","",1,["赤","緋","朱"],["Color"]],
+            ["いぬ","",1,["犬","イヌ"],["Mammal","Creature"]],
+            ["うみ","",1,["海","膿"],["Natural Terrain"]],
             ["えき","",1,["駅","液"],[]],
             ["おと","",1,["音"],[]],
-            ["かぜ","かせ",1,["風邪","風"],["天気"]],
-            ["きく","",1,["菊","キク"],["植物・キノコ"]],
-            ["くも","",1,["雲","蜘蛛"],["天気","いきもの"]],
-            ["けむり","",2,["煙"],["自然"]],
-            ["こころ","",2,["心"],["感情"]],
-            ["さかな","",2,["魚"],["魚介"]],
+            ["かぜ","かせ",1,["風邪","風"],["Weather"]],
+            ["きく","",1,["菊","キク"],["Plants/Fungi"]],
+            ["くも","",1,["雲","蜘蛛"],["Weather","Creature"]],
+            ["けむり","",2,["煙"],["Nature"]],
+            ["こころ","",2,["心"],["Emotion"]],
+            ["さかな","",2,["魚"],["Fish/Seafood"]],
             ["しお","",1,["塩","潮"],[]],
-            ["すいか","",2,["スイカ"],["野菜・果物"]],
-            ["そら","",1,["空"],["自然"]],
-            ["たいよう","",3,["太陽"],["天気"]],
-            ["ちから","",2,["力"],["感情"]],
-            ["つき","",1,["月"],["星"]],
-            ["てんき","",2,["天気"],["天気"]],
-            ["とり","",1,["鳥","酉"],["いきもの","鳥"]],
+            ["すいか","",2,["スイカ"],["Vegetable/Fruit"]],
+            ["そら","",1,["空"],["Nature"]],
+            ["たいよう","",3,["太陽"],["Weather"]],
+            ["ちから","",2,["力"],["Emotion"]],
+            ["つき","",1,["月"],["Star/Planet"]],
+            ["てんき","",2,["天気"],["Weather"]],
+            ["とり","",1,["鳥","酉"],["Creature","Bird"]],
             ["なつ","",1,["夏"],[]],
-            ["にじ","にし",1,["虹"],["天気"]],
-            ["ぬま","",1,["沼"],["自然地形"]],
-            ["ねこ","",1,["ネコ","猫"],["哺乳類","いきもの"]],
+            ["にじ","にし",1,["虹"],["Weather"]],
+            ["ぬま","",1,["沼"],["Natural Terrain"]],
+            ["ねこ","",1,["ネコ","猫"],["Mammal","Creature"]],
             ["のら","",1,["野良"],[]],
-            ["はな","",1,["花","鼻"],["植物・キノコ","身体"]],
+            ["はな","",1,["花","鼻"],["Plants/Fungi","Body"]],
             ["ひかり","",2,["光"],[]],
             ["ふゆ","",1,["冬"],[]],
-            ["へび","へひ",1,["蛇"],["いきもの"]],
-            ["ほし","",1,["星"],["星"]],
+            ["へび","へひ",1,["蛇"],["Creature"]],
+            ["ほし","",1,["星"],["Star/Planet"]],
             ["まち","",1,["街","町"],[]],
             ["みず","みす",1,["水"],[]],
-            ["むし","",1,["虫","無視"],["いきもの"]],
-            ["め","",0,["目"],["身体"]],
-            ["もり","",1,["森"],["自然地形"]],
-            ["やま","",1,["山"],["自然地形"]],
-            ["ゆき","",1,["雪"],["天気"]],
+            ["むし","",1,["虫","無視"],["Creature"]],
+            ["め","",0,["目"],["Body"]],
+            ["もり","",1,["森"],["Natural Terrain"]],
+            ["やま","",1,["山"],["Natural Terrain"]],
+            ["ゆき","",1,["雪"],["Weather"]],
             ["よる","",1,["夜"],[]],
-            ["らいおん","",3,["ライオン"],["哺乳類","いきもの"]],
-            ["りんご","",2,["林檎","リンゴ"],["野菜・果物"]],
+            ["らいおん","",3,["ライオン"],["Mammal","Creature"]],
+            ["りんご","",2,["林檎","リンゴ"],["Vegetable/Fruit"]],
             ["るーれっと","",4,["ルーレット"],[]],
-            ["れんあい","",3,["恋愛"],["感情"]],
+            ["れんあい","",3,["恋愛"],["Emotion"]],
             ["ろうそく","",3,["蝋燭"],[]],
             ["わたし","",2,["私"],[]],
-            ["さくら","",2,["桜"],["植物・キノコ"]],
+            ["さくら","",2,["桜"],["Plants/Fungi"]],
             ["たべもの","",3,["食べ物"],[]],
             ["のみもの","",3,["飲み物"],[]],
             ["ともだち","",3,["友達"],[]],
-            ["がっこう","かっこう",3,["学校"],["学校の教科"]]
+            ["がっこう","かっこう",3,["学校"],["School Subject"]]
         ];
         
         return samples.map(entry => ({
@@ -533,7 +525,8 @@
             console.error('Dictionary load error:', error);
             console.log('Using fallback dictionary...');
             dictionary = getSampleDictionary();
-            document.getElementById('loadingMsg').textContent = '辞書の読み込みに失敗しました。サンプル辞書を使用しています。';
+            // Translated error message
+            document.getElementById('loadingMsg').textContent = 'Dictionary load failed. Using sample dictionary.';
             setTimeout(() => {
                 document.getElementById('loadingMsg').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
@@ -599,9 +592,10 @@
         const toggleKana = (e) => {
             e.preventDefault();
             kanaKeyboard.classList.toggle('active');
+            // Translated button toggle state
             toggleKanaBtn.textContent = kanaKeyboard.classList.contains('active') 
-                ? 'かな入力を閉じる' 
-                : 'かな入力';
+                ? 'Close Kana Input' 
+                : 'Kana Input';
         };
         
         toggleKanaBtn.addEventListener('touchend', toggleKana);
@@ -663,7 +657,7 @@
             input.addEventListener('change', performSearch);
         });
         
-        // Initialize POSITIONAL INPUTS (Safe listeners)
+        // Initialize POSITIONAL INPUTS
         const posInputs = document.querySelectorAll('.pos-input');
         let posFilterTimeout;
         
@@ -686,7 +680,7 @@
         
         // Get constraints from the 7 input boxes
         const posInputs = document.querySelectorAll('.pos-input');
-        const constraints = [];
+        const constraints = []; // array of { index: number, chars: string[] }
         let hasActiveFilter = false;
         
         posInputs.forEach(input => {
@@ -719,21 +713,21 @@
             });
         }
         
-        // Update count
+        // Update count (Translated)
         if (hasActiveFilter) {
-            resultCount.textContent = `${filtered.length}件表示中（${currentResults.length}件から絞り込み）`;
+            resultCount.textContent = `Showing ${filtered.length} (Filtered from ${currentResults.length})`;
         } else {
-            resultCount.textContent = `${currentResults.length}件見つかりました`;
+            resultCount.textContent = `Found ${currentResults.length} results`;
         }
         
         // Display
         if (filtered.length === 0) {
-            resultList.innerHTML = '<div class="no-results">該当する結果がありません</div>';
+            resultList.innerHTML = '<div class="no-results">No matching results found</div>';
         } else {
             resultList.innerHTML = filtered.map(word => {
                 const displayText = word.displays[0] || word.word;
                 const themesText = word.themes.length > 0 
-                    ? `<div class="result-themes">テーマ: ${word.themes.join(', ')}</div>`
+                    ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
                     : '';
                 
                 // Construct highlighting HTML
@@ -742,8 +736,10 @@
                     highlightedWord = '';
                     const chars = word.word.split('');
                     
+                    // Rebuild word char by char, highlighting those that matched a filter
                     for (let i = 0; i < chars.length; i++) {
                         const char = chars[i];
+                        // Is there a constraint for this index?
                         const constraint = constraints.find(c => c.index === i);
                         
                         if (constraint && constraint.chars.includes(char)) {
@@ -757,7 +753,7 @@
                 return `
                     <div class="result-item">
                         <div class="result-word">${displayText} (${highlightedWord})</div>
-                        <div class="result-info">${word.word.length}文字 | コンボ: ${word.combo}</div>
+                        <div class="result-info">${word.word.length} chars | Combo: ${word.combo}</div>
                         ${themesText}
                     </div>
                 `;
@@ -828,23 +824,24 @@
         // Clear the positional filters when a NEW main search is done
         document.querySelectorAll('.pos-input').forEach(input => input.value = '');
 
+        // Translated Result Count Logic
         resultCount.textContent = limited 
-            ? `${maxResults}件表示中（${results.length + '+'}件見つかりました）`
-            : `${results.length}件見つかりました`;
+            ? `Showing ${maxResults} (Found ${results.length}+ results)`
+            : `Found ${results.length} results`;
         
         if (displayResults.length === 0) {
-            resultList.innerHTML = '<div class="no-results">結果がありません</div>';
+            resultList.innerHTML = '<div class="no-results">No results</div>';
         } else {
             resultList.innerHTML = displayResults.map(word => {
                 const displayText = word.displays[0] || word.word;
                 const themesText = word.themes.length > 0 
-                    ? `<div class="result-themes">テーマ: ${word.themes.join(', ')}</div>`
+                    ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
                     : '';
                 
                 return `
                     <div class="result-item">
                         <div class="result-word">${displayText} (${word.word})</div>
-                        <div class="result-info">${word.word.length}文字 | コンボ: ${word.combo}</div>
+                        <div class="result-info">${word.word.length} chars | Combo: ${word.combo}</div>
                         ${themesText}
                     </div>
                 `;

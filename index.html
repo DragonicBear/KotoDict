@@ -1,11 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>ことののみこん</title>
-
 <style>
 * {
     margin: 0;
@@ -16,18 +15,18 @@
 
 html, body {
     width: 100%;
-    height: 100%;
-    position: fixed;
-    overflow: hidden;
 }
 
 body {
+    min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", Meiryo, sans-serif;
     background: #f5f5f5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 #app {
-    height: 100%;
+    min-height: 100vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding: 10px;
@@ -70,6 +69,7 @@ button {
     border-radius: 8px;
     background: #007AFF;
     color: #fff;
+    cursor: pointer;
 }
 
 button.secondary {
@@ -81,6 +81,9 @@ button.secondary {
     padding: 15px;
     border-radius: 8px;
     margin: 15px 0;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 label {
@@ -88,6 +91,7 @@ label {
     align-items: center;
     gap: 6px;
     cursor: pointer;
+    font-size: 14px;
 }
 
 .results {
@@ -117,39 +121,48 @@ label {
     padding: 40px;
     color: #999;
 }
+
+/* simple visually-hidden helper for the label */
+.visually-hidden {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+}
 </style>
 </head>
-
 <body>
 <div id="app">
-<div class="container">
-<h1>ことののみこん</h1>
+  <div class="container">
+    <h1>ことののみこん</h1>
 
-<input
-    type="search"
-    id="searchInput"
-    placeholder="検索... (例: せ-い---ん)"
-    lang="ja"
-    inputmode="kana"
-    autocomplete="off"
->
+    <label for="searchInput" class="visually-hidden">検索</label>
+    <input
+        type="search"
+        id="searchInput"
+        placeholder="検索... (例: せ-い---ん)"
+        lang="ja"
+        inputmode="kana"
+        autocomplete="off"
+    >
 
-<div class="button-group">
-    <button id="clearBtn" class="secondary">クリア</button>
-    <button id="searchBtn">検索</button>
-</div>
+    <div class="button-group">
+        <button id="clearBtn" class="secondary" type="button">クリア</button>
+        <button id="searchBtn" type="button">検索</button>
+    </div>
 
-<div class="filters">
-    <label><input type="radio" name="match" value="prefix" checked> 前方一致</label>
-    <label><input type="radio" name="match" value="fuzzy"> あいまい</label>
-    <label><input type="radio" name="match" value="suffix"> 後方一致</label>
-</div>
+    <div class="filters" role="radiogroup" aria-label="検索モード">
+        <label><input type="radio" name="match" value="prefix" checked> 前方一致</label>
+        <label><input type="radio" name="match" value="fuzzy"> あいまい</label>
+        <label><input type="radio" name="match" value="suffix"> 後方一致</label>
+    </div>
 
-<div class="results">
-    <div id="resultCount">検索してください</div>
-    <div id="resultList"></div>
-</div>
-</div>
+    <div class="results">
+        <div id="resultCount" aria-live="polite">検索してください</div>
+        <div id="resultList" role="list"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -163,6 +176,10 @@ fetch('https://cdn.jsdelivr.net/npm/@kotodaman-unofficial/dictionary@0.1.1/dist/
         displays: e[3] || []
     }));
     performSearch();
+})
+.catch(err => {
+    document.getElementById('resultCount').textContent = '辞書の読み込みに失敗しました';
+    console.error(err);
 });
 
 const searchInput = document.getElementById('searchInput');
@@ -175,10 +192,17 @@ document.getElementById('clearBtn').onclick = () => {
 };
 
 document.getElementById('searchBtn').onclick = performSearch;
-searchInput.addEventListener('input', () => {
+srchInpu.addEventListener('input', () => {
     clearTimeout(window._t);
     window._t = setTimeout(performSearch, 300);
 });
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+}
 
 function performSearch() {
     const q = searchInput.value.trim();
@@ -198,13 +222,14 @@ function performSearch() {
         return;
     }
 
+    resultList.setAttribute('role', 'list');
     resultList.innerHTML = results.slice(0, 200).map(w => `
-        <div class="result-item">
-            <div class="result-word">${w.displays[0] || w.word}</div>
-            <div class="result-info">${w.word}</div>
+        <div class="result-item" role="listitem">
+            <div class="result-word">${escapeHtml(w.displays[0] || w.word)}</div>
+            <div class="result-info">${escapeHtml(w.word)}</div>
         </div>
     `).join('');
-}
+} 
 </script>
 </body>
 </html>

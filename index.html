@@ -695,7 +695,7 @@
         }
     }
     
-    // Search function with right-aligned wildcard support
+    // Search function with Sliding Window Permutation logic
     function performSearch() {
         const searchInput = document.getElementById('searchInput');
         const resultCount = document.getElementById('resultCount');
@@ -705,6 +705,7 @@
         const matchType = document.querySelector('input[name="match"]:checked').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked'))
             .map(cb => parseInt(cb.value));
+        const distinguishDiacritics = document.getElementById('distinguishDiacritics').checked;
         
         let results = [...dictionary];
         
@@ -712,26 +713,47 @@
             const hasWildcard = query.includes('-') || query.includes(' ');
             
             if (hasWildcard) {
-                // Wildcard Logic: Right-Alignment
+                // WILDCARD LOGIC: SLIDING WINDOW
+                // Finds any word that fits anywhere inside the query pattern
                 const standardizedQuery = query.replace(/ /g, '-');
                 const queryLen = standardizedQuery.length;
 
                 results = results.filter(word => {
                     const wordLen = word.word.length;
                     
-                    // Logic: Right-Alignment (Suffix Match)
-                    // Matches words that fit at the END of the query pattern
-                    if (wordLen <= queryLen) {
-                        const patternSegment = standardizedQuery.slice(queryLen - wordLen);
-                        const regexStr = patternSegment.replace(/-/g, '.');
-                        const regex = new RegExp(`^${regexStr}$`);
+                    // Word cannot be longer than the pattern
+                    if (wordLen > queryLen) return false;
+                    
+                    // Sliding Window:
+                    // Try to align the word at every possible start index (i)
+                    // Query: A B C D E
+                    // Word:  X Y (len 2)
+                    // Valid start indices: 0, 1, 2, 3
+                    
+                    for (let i = 0; i <= queryLen - wordLen; i++) {
+                        let match = true;
                         
-                        return regex.test(word.word);
+                        // Check every character for this alignment
+                        for (let j = 0; j < wordLen; j++) {
+                            const qChar = standardizedQuery[i + j];
+                            const wChar = word.word[j];
+                            
+                            // If query char is a dash, it matches anything.
+                            // Otherwise, it must match the word char.
+                            if (qChar !== '-' && qChar !== wChar) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        
+                        // If we found a valid alignment, the word is a match
+                        if (match) return true;
                     }
+                    
                     return false;
                 });
             } else {
-                // Standard Logic
+                // Standard Logic (Prefix/Suffix/Fuzzy)
                 results = results.filter(word => {
                     if (matchType === 'prefix') return word.word.startsWith(query);
                     if (matchType === 'suffix') return word.word.endsWith(query);
@@ -751,8 +773,6 @@
         // Limit results
         const maxResults = 200;
         const limited = results.length > maxResults;
-        
-        // Slice AFTER sorting but BEFORE storing in currentResults to ensure consistency
         const displayResults = limited ? results.slice(0, maxResults) : results;
         
         // Store current results for filtering
@@ -761,7 +781,7 @@
         // Update UI
         const resultFilter = document.getElementById('resultFilter');
         if (resultFilter && resultFilter.value !== '') {
-             resultFilter.value = ''; // Reset the inner filter
+             resultFilter.value = ''; 
         }
 
         resultCount.textContent = limited 

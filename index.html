@@ -70,7 +70,7 @@
         position: relative;
     }
 
-    /* Connector line for Pattern Mode */
+    /* Grid for Inputs (With Line) */
     .pos-filter-container {
         display: grid;
         grid-template-columns: repeat(7, 1fr);
@@ -79,6 +79,7 @@
         position: relative;
     }
     
+    /* The Connector Line */
     .pos-filter-container::before {
         content: '';
         position: absolute;
@@ -89,6 +90,15 @@
         background: #e0e0e0;
         z-index: 0;
         transform: translateY(-50%);
+    }
+
+    /* Grid for Labels (NO Line) */
+    .pos-labels-container {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+        margin-bottom: 5px;
+        /* No position relative or pseudo-element here */
     }
 
     .pos-input {
@@ -407,7 +417,7 @@
                         <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
                     </div>
 
-                    <div class="pos-filter-container">
+                    <div class="pos-labels-container">
                         <div class="pos-label">1</div>
                         <div class="pos-label">2</div>
                         <div class="pos-label">3</div>
@@ -457,9 +467,9 @@
                         <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
                     <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">
-                        <strong>AND:</strong> All boxes must satisfy (Box 1 AND Box 2...).<br>
-                        <strong>OR:</strong> At least one box must satisfy (Box 1 OR Box 2...).<br>
-                        <em>Note: Characters used in the Grid are ignored here.</em>
+                        <strong>AND:</strong> Must satisfy ALL boxes.<br>
+                        <strong>OR:</strong> Must satisfy AT LEAST ONE box.<br>
+                        <em>(Chars within the same box act as "OR")</em>
                     </div>
                 </div>
                 
@@ -686,36 +696,21 @@
                 let textToSearch = word.word;
 
                 // ** EXCLUSION LOGIC **
-                // If a pattern matched, we must "remove" the matched characters 
-                // so they don't count towards the Refine check.
+                // Remove chars that matched the grid pattern so they don't count for refinement
                 if (regexPattern) {
                     const match = regexPattern.exec(word.word);
                     if (match) {
-                        // We construct a "remaining" string.
-                        // The regex pattern might contain wildcards (.).
-                        // We only want to remove the characters that satisfied EXPLICIT grid inputs.
-                        // However, simply removing the whole match range is safer if we consider 
-                        // the pattern "consumes" that part of the word.
-                        // But the prompt said "original pattern search hiragana should not be considered".
-                        // This implies SPECIFICALLY the letters typed in the grid.
-                        
-                        // Let's go with the simpler, more robust method:
-                        // Mask ONLY the indices corresponding to NON-WILDCARD matches.
-                        
                         let chars = word.word.split('');
                         let matchStart = match.index;
                         
-                        // We need to map grid indices to match indices.
                         let firstGridIndex = inputValues.findIndex(v => v.length > 0);
                         
-                        // Iterate through the pattern length
                         for (let i = 0; i < match[0].length; i++) {
-                             // Corresponding grid index relative to pattern start
                              let relativeGridIdx = firstGridIndex + i; 
                              
-                             // If the grid had input at this relative index, exclude this char
+                             // If the grid had input here, remove this char from search pool
                              if (inputValues[relativeGridIdx] && inputValues[relativeGridIdx].length > 0) {
-                                 chars[matchStart + i] = null; // Mask it
+                                 chars[matchStart + i] = null; 
                              }
                         }
                         
@@ -724,7 +719,7 @@
                 }
 
                 // ** REFINE LOGIC **
-                // constraint is e.g. ['A', 'B'] -> word must contain A or B
+                // Check if textToSearch satisfies the refine constraints
                 const checkBox = (constraintChars) => {
                     return constraintChars.some(char => textToSearch.includes(char));
                 };
@@ -773,44 +768,30 @@
                 // --- Highlight Logic ---
                 const chars = word.word.split('');
                 let gridIndices = new Set();
-                let refineIndices = new Set(); // indices matched by refine
+                let refineIndices = new Set();
 
                 // 1. Grid Highlights (Pattern)
-                let firstGridIndex = -1;
-                let matchStart = -1;
-                
                 if (regexPattern) {
                     const match = regexPattern.exec(word.word);
                     if (match) {
-                        firstGridIndex = inputValues.findIndex(v => v.length > 0);
-                        matchStart = match.index;
-                        
-                        // Highlight Grid Matches
+                        let firstGridIndex = inputValues.findIndex(v => v.length > 0);
                         for (let i = 0; i < match[0].length; i++) {
-                            // Only highlight if it corresponds to an actual input, NOT a wildcard gap
                             let relativeGridIdx = firstGridIndex + i; 
                             if (inputValues[relativeGridIdx] && inputValues[relativeGridIdx].length > 0) {
-                                gridIndices.add(matchStart + i);
+                                gridIndices.add(match.index + i);
                             }
                         }
                     }
                 }
 
-                // 2. Refine Highlights (Only on non-grid characters)
+                // 2. Refine Highlights
+                // Re-run the exclusion check logic locally to know which chars are valid for highlighting
                 if (hasRefineFilter) {
                     chars.forEach((char, i) => {
-                        // Skip if already used by grid
-                        if (gridIndices.has(i)) return;
+                        if (gridIndices.has(i)) return; // Don't highlight grid matches as refine matches
 
-                        // Check if this char helps satisfy constraints
-                        // We need to know WHICH constraint this char satisfies to be precise,
-                        // but generally highlighting the char if it exists in any refine box is helpful enough
-                        // provided the word passed the filter.
-                        
-                        let isRefineChar = false;
-                        refineConstraints.forEach(constraint => {
-                            if (constraint.includes(char)) isRefineChar = true;
-                        });
+                        // Check if this char is in any refine constraint
+                        let isRefineChar = refineConstraints.some(constraint => constraint.includes(char));
                         
                         if (isRefineChar) {
                             refineIndices.add(i);
@@ -825,7 +806,6 @@
                         styles.push("font-weight:bold; text-decoration:underline; color:#007AFF;");
                     }
                     else if (refineIndices.has(i)) {
-                        // Refine Highlight
                         styles.push(currentRefineLogic === 'AND' 
                             ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
                             : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;");

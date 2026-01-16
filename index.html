@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Kotono Nomikon - Advanced</title>
+    <title>Kotono Nomikon - Pattern Search</title>
     <style>
         * {
             margin: 0;
@@ -73,21 +73,25 @@
     .controls-row {
         display: flex;
         justify-content: space-between;
-        align-items: flex-end;
+        align-items: center;
         margin-bottom: 15px;
-        gap: 10px;
     }
     
-    .control-group {
+    .instruction-text {
+        font-size: 13px;
+        color: #666;
+        line-height: 1.4;
         flex: 1;
+        margin-right: 15px;
     }
 
     .control-label {
-        font-size: 13px; 
-        color: #555; 
-        margin-bottom: 6px; 
+        font-size: 12px; 
+        color: #888; 
+        margin-bottom: 4px; 
         display: block;
         font-weight: 600;
+        text-align: center;
     }
 
     /* Segmented Controls */
@@ -96,12 +100,13 @@
         background: #e0e0e0;
         border-radius: 8px;
         padding: 2px;
+        width: 120px;
     }
 
     .segment-option {
         flex: 1;
         text-align: center;
-        padding: 8px 4px;
+        padding: 6px 4px;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
@@ -117,7 +122,6 @@
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
-    /* Logic Toggle Specifics */
     .logic-toggle .segment-option.active[data-logic="AND"] { color: #007AFF; }
     .logic-toggle .segment-option.active[data-logic="OR"] { color: #ff9500; }
 
@@ -125,7 +129,7 @@
         display: grid;
         grid-template-columns: repeat(7, 1fr);
         gap: 6px;
-        margin-bottom: 5px;
+        margin-bottom: 10px;
     }
 
     .pos-input {
@@ -154,14 +158,11 @@
         border-color: #007AFF;
     }
     
-    .pos-label {
-        font-size: 11px;
-        color: #999;
-        text-align: center;
-        margin-top: 4px;
-        height: 16px;
-        white-space: nowrap;
-        overflow: hidden;
+    /* Logic specific styles */
+    .logic-or-mode .pos-input.filled {
+        background: #fff8eb;
+        border-color: #ff9500;
+        border-style: dashed;
     }
 
     .action-row {
@@ -359,27 +360,16 @@
         font-size: 16px;
     }
     
-    /* Mode Specific Styling */
-    .align-right-mode .pos-input { border-color: #34c759; }
-    .align-right-mode .pos-input.filled { background: #f0fff4; border-color: #34c759; }
-    
-    .align-free-mode .pos-input { border-color: #ff9500; }
-    .align-free-mode .pos-input.filled { background: #fff8eb; border-color: #ff9500; }
-
-    /* OR Logic Styling */
-    .logic-or-mode .pos-input.filled {
-        border-style: dashed;
-        border-width: 2px;
-    }
-    
     /* Highlights */
     .match-highlight {
         color: #007AFF;
         font-weight: bold;
         text-decoration: underline;
     }
-    .align-right-mode .match-highlight { color: #248a3d; }
-    .align-free-mode .match-highlight { color: #d67a00; }
+    
+    .logic-or-mode .match-highlight {
+        color: #ff9500;
+    }
     
     /* Refine match highlight */
     .refine-highlight {
@@ -393,7 +383,7 @@
 <body>
     <div id="app">
         <div class="container">
-            <h1>Word Pattern Search</h1>
+            <h1>Positional Pattern Search</h1>
             <div class="loading" id="loadingMsg">Loading dictionary...</div>
 
             <div id="mainContent" style="display:none;">
@@ -401,17 +391,16 @@
                 <div class="input-section" id="inputSection">
                     
                     <div class="controls-row">
-                        <div class="control-group" style="flex: 3;">
-                            <span class="control-label">Search Mode:</span>
-                            <div class="segmented-control align-toggle">
-                                <div class="segment-option active" data-align="left">Start</div>
-                                <div class="segment-option" data-align="free">Free</div>
-                                <div class="segment-option" data-align="right">End</div>
-                            </div>
+                        <div class="instruction-text">
+                            <strong>Logic:</strong>
+                            <br>
+                            AND = Matches relative spacing (pattern can float).
+                            <br>
+                            OR = Matches any box anywhere.
                         </div>
 
-                        <div class="control-group" style="flex: 2;">
-                            <span class="control-label">Box Logic:</span>
+                        <div class="control-group">
+                            <span class="control-label">Box Logic</span>
                             <div class="segmented-control logic-toggle">
                                 <div class="segment-option active" data-logic="AND">AND</div>
                                 <div class="segment-option" data-logic="OR">OR</div>
@@ -427,16 +416,6 @@
                         <div><input type="text" class="pos-input" data-index="4" autocomplete="off"></div>
                         <div><input type="text" class="pos-input" data-index="5" autocomplete="off"></div>
                         <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
-                    </div>
-                    
-                    <div class="pos-filter-container" id="labelsRow">
-                        <div class="pos-label">1</div>
-                        <div class="pos-label">2</div>
-                        <div class="pos-label">3</div>
-                        <div class="pos-label">4</div>
-                        <div class="pos-label">5</div>
-                        <div class="pos-label">6</div>
-                        <div class="pos-label">7</div>
                     </div>
 
                     <div class="action-row">
@@ -489,7 +468,6 @@
 
 <script>
     let dictionary = [];
-    let currentAlign = 'left'; 
     let currentLogic = 'AND';
 
     // Fallback data
@@ -568,24 +546,7 @@
         const posInputs = document.querySelectorAll('.pos-input');
         const refineInputs = document.querySelectorAll('.refine-input');
         const sortSelect = document.getElementById('sortSelect');
-        const alignOptions = document.querySelectorAll('.align-toggle .segment-option');
         const logicOptions = document.querySelectorAll('.logic-toggle .segment-option');
-        
-        // Alignment Toggle
-        alignOptions.forEach(opt => {
-            opt.addEventListener('click', () => {
-                alignOptions.forEach(o => o.classList.remove('active'));
-                opt.classList.add('active');
-                currentAlign = opt.getAttribute('data-align');
-                
-                // If switching to Free, force logic to AND for regex matching?
-                // Or leave as is but handle logic carefully.
-                // For simplicity, let's allow user to keep setting.
-                
-                updateAlignmentUI();
-                performSearch();
-            });
-        });
 
         // Logic Toggle
         logicOptions.forEach(opt => {
@@ -594,7 +555,6 @@
                 opt.classList.add('active');
                 currentLogic = opt.getAttribute('data-logic');
                 
-                // Visual cue for OR mode
                 const inputSection = document.getElementById('inputSection');
                 if (currentLogic === 'OR') {
                     inputSection.classList.add('logic-or-mode');
@@ -654,32 +614,7 @@
             });
         });
 
-        updateAlignmentUI(); 
         performSearch();
-    }
-
-    function updateAlignmentUI() {
-        const inputSection = document.getElementById('inputSection');
-        const labels = document.getElementById('labelsRow').children;
-        
-        inputSection.classList.remove('align-right-mode', 'align-free-mode');
-        
-        if (currentAlign === 'right') {
-            inputSection.classList.add('align-right-mode');
-            for(let i=0; i<7; i++) {
-                labels[i].textContent = (i - 7).toString(); 
-            }
-            labels[6].textContent = "End";
-        } else if (currentAlign === 'free') {
-            inputSection.classList.add('align-free-mode');
-            for(let i=0; i<7; i++) {
-                labels[i].textContent = "•"; 
-            }
-        } else {
-            for(let i=0; i<7; i++) {
-                labels[i].textContent = (i + 1).toString();
-            }
-        }
     }
     
     function performSearch() {
@@ -705,27 +640,23 @@
         }
 
         // B. Grid Filter
-        let validConstraints = [];
         let regexPattern = null;
+        let orConstraints = []; // For OR logic highlighting
 
         if (hasActivePosFilter) {
             
-            // Build Constraints Array
-            // Note: val.split('') implicitly handles "Multiple Hiragana in one box = OR"
-            inputValues.forEach((val, idx) => {
-                if (val.length > 0) {
-                    validConstraints.push({ uiIndex: idx, chars: val.split('') });
-                }
-            });
-
-            if (currentAlign === 'free' && currentLogic === 'AND') {
-                // SPECIAL OPTIMIZED CASE: "Pattern Matching"
-                // If Free + AND, we essentially look for the sequence pattern
-                // We use Regex for this as it's cleaner for "A...B...C"
+            if (currentLogic === 'AND') {
+                // --- AND LOGIC: RELATIVE POSITIONING + FLOATING ---
+                // We construct a Regex based on the grid spacing.
+                
+                // 1. Find the bounds of the user input in the grid (e.g., Box 2 to Box 5)
                 let firstIndex = inputValues.findIndex(v => v.length > 0);
                 let lastIndex = 6; 
                 while(lastIndex >= 0 && inputValues[lastIndex].length === 0) lastIndex--;
                 
+                // 2. Build Regex Pattern
+                // If a box has multiple chars (e.g. "AB"), regex is [AB]
+                // Empty boxes between first and last index become "." (any char)
                 let patternStr = "";
                 for (let i = firstIndex; i <= lastIndex; i++) {
                     const val = inputValues[i];
@@ -735,45 +666,31 @@
                         patternStr += "[" + val + "]"; 
                     }
                 }
+                
+                // The regex allows this pattern to appear anywhere in the string
                 regexPattern = new RegExp(patternStr);
                 results = results.filter(word => regexPattern.test(word.word));
 
             } else {
-                // Positional Logic (Left/Right) OR Free+OR
-                results = results.filter(word => {
-                    const len = word.word.length;
-
-                    // Define check function
-                    const checkConstraint = (constraint) => {
-                        let targetIndex;
-
-                        if (currentAlign === 'left') {
-                            targetIndex = constraint.uiIndex;
-                        } else if (currentAlign === 'right') {
-                            targetIndex = len - (7 - constraint.uiIndex);
-                        } else {
-                            // Free Mode + OR logic (or Free + AND fallthrough if not using regex)
-                            // "Free" implies finding a match *anywhere*.
-                            // But individual boxes in Free mode usually imply relative structure.
-                            // If logic is OR, structure is broken. We treat them as independent "Contains" checks.
-                            // i.e. Does the word contain Chars from Box 1? OR Chars from Box 2?
-                            return constraint.chars.some(c => word.word.includes(c));
-                        }
-
-                        // Bounds check for positional
-                        if (currentAlign !== 'free') {
-                            if (targetIndex < 0 || targetIndex >= len) return false;
-                            return constraint.chars.includes(word.word[targetIndex]);
-                        }
-                        return false;
-                    };
-
-                    if (currentLogic === 'AND') {
-                        return validConstraints.every(checkConstraint);
-                    } else {
-                        // OR Logic
-                        return validConstraints.some(checkConstraint);
+                // --- OR LOGIC: MATCH ANYWHERE INDEPENDENTLY ---
+                // Collect all valid inputs as separate constraints
+                inputValues.forEach((val, idx) => {
+                    if (val.length > 0) {
+                        // Split ensures multiple chars in one box are treated as options
+                        orConstraints.push(val.split('')); 
                     }
+                });
+
+                results = results.filter(word => {
+                    // Check if word contains AT LEAST ONE of the characters from ANY of the filled boxes
+                    // Flatten constraints to a single list of allowed chars? 
+                    // No, usually "OR" in this grid context implies: Does it match criteria of Box 1? OR criteria of Box 2?
+                    // Since specific box position implies nothing in "OR" mode (no spacing), 
+                    // it effectively becomes: Does the word contain any of the letters typed in the grid?
+                    
+                    return orConstraints.some(chars => {
+                        return chars.some(char => word.word.includes(char));
+                    });
                 });
             }
         }
@@ -816,43 +733,30 @@
                     ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
                     : '';
                 
-                // Highlight Logic
+                // --- Highlight Logic ---
                 let highlightedWord = '';
                 const chars = word.word.split('');
-                const len = word.word.length;
                 let gridIndices = new Set();
 
                 // Calculate Grid Highlights
-                if (currentAlign === 'free' && currentLogic === 'AND' && regexPattern) {
-                    const match = regexPattern.exec(word.word);
-                    if (match) {
-                        for(let i=match.index; i < match.index + match[0].length; i++) gridIndices.add(i);
-                    }
-                } else if (hasActivePosFilter) {
-                    // Logic for highlighting based on constraints
-                    if (currentAlign === 'free') {
-                        // Free + OR: Highlight all occurrences of matching chars
-                        validConstraints.forEach(c => {
-                             c.chars.forEach(char => {
-                                 if (word.word.includes(char)) {
-                                     // Find all indices of this char
-                                     for(let i=0; i<len; i++) {
-                                         if(word.word[i] === char) gridIndices.add(i);
-                                     }
-                                 }
-                             });
-                        });
-                    } else {
-                        // Positional Highlight
-                        // If AND: All valid constraints match. Highlight their positions.
-                        // If OR: Only SOME constraints match. We must check which ones actually matched this specific word.
-                        validConstraints.forEach(c => {
-                            let mappedIndex = currentAlign === 'left' ? c.uiIndex : len - (7 - c.uiIndex);
-                            if (mappedIndex >= 0 && mappedIndex < len) {
-                                if (c.chars.includes(word.word[mappedIndex])) {
-                                    gridIndices.add(mappedIndex);
-                                }
+                if (hasActivePosFilter) {
+                    if (currentLogic === 'AND' && regexPattern) {
+                        // Highlight the SEQUENCE found by Regex
+                        // Note: Regex.exec only finds the first occurrence. 
+                        // To highlight correctly if pattern appears multiple times is complex, 
+                        // but usually first match is enough for visual cue.
+                        const match = regexPattern.exec(word.word);
+                        if (match) {
+                            for(let i=match.index; i < match.index + match[0].length; i++) {
+                                gridIndices.add(i);
                             }
+                        }
+                    } else if (currentLogic === 'OR') {
+                        // Highlight ANY char that matched ANY constraint
+                        chars.forEach((char, i) => {
+                            // Check if this char exists in any of our OR constraints
+                            const isMatch = orConstraints.some(allowedChars => allowedChars.includes(char));
+                            if (isMatch) gridIndices.add(i);
                         });
                     }
                 }

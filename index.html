@@ -68,7 +68,6 @@
         border: 1px solid #e0e0e0;
         margin-bottom: 15px;
         transition: border-color 0.3s;
-        /* Always show connector line now since it's always Pattern mode */
         position: relative;
     }
 
@@ -396,7 +395,7 @@
                 
                 <div class="input-section" id="inputSection">
                     <div class="instruction-text">
-                        <strong>Pattern Search:</strong> Words matching the sequence. <br>Gaps between boxes act as wildcards.
+                        <strong>Pattern Search:</strong> Gaps between boxes act as wildcards.<br>Multiple chars in one box = OR.
                     </div>
                     
                     <div class="pos-filter-container" id="posFilterContainer">
@@ -464,6 +463,7 @@
                         <input type="text" class="refine-input" placeholder="C" autocomplete="off">
                         <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
+                    <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">Multiple chars in one box are treated as "OR"</div>
                 </div>
                 
                 <div class="results">
@@ -636,14 +636,18 @@
         const sortOrder = document.getElementById('sortSelect').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
 
-        // 1. Collect inputs
+        // 1. Collect Main Grid Inputs
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
-        const refineInputs = Array.from(document.querySelectorAll('.refine-input'));
-        const refineValues = refineInputs.map(i => i.value.trim()).filter(v => v.length > 0);
-        const hasRefineFilter = refineValues.length > 0;
+        // 2. Collect Refine Inputs (Split strings into chars)
+        // returns array of arrays: [['a','b'], ['c']]
+        const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
+            .map(input => input.value.trim().split('')) 
+            .filter(arr => arr.length > 0);
+        
+        const hasRefineFilter = refineConstraints.length > 0;
 
         let results = dictionary;
 
@@ -656,19 +660,17 @@
         let regexPattern = null;
 
         if (hasActivePosFilter) {
-            // 1. Find the bounds of the user input
             let firstIndex = inputValues.findIndex(v => v.length > 0);
             let lastIndex = 6; 
             while(lastIndex >= 0 && inputValues[lastIndex].length === 0) lastIndex--;
             
-            // 2. Build Regex Pattern
             let patternStr = "";
             for (let i = firstIndex; i <= lastIndex; i++) {
                 const val = inputValues[i];
                 if (val.length === 0) {
-                    patternStr += "."; // Wildcard for gap
+                    patternStr += "."; // Wildcard
                 } else {
-                    patternStr += "[" + val + "]"; // User chars
+                    patternStr += "[" + val + "]"; // User chars (e.g. [AB])
                 }
             }
             
@@ -676,15 +678,19 @@
             results = results.filter(word => regexPattern.test(word.word));
         }
 
-        // C. Refine Filter (AND / OR)
+        // C. Refine Filter (AND / OR) + Inner Box Logic (OR)
         if (hasRefineFilter) {
             results = results.filter(word => {
+                
+                // Logic for a single box: Does word contain ANY char from this box?
+                const checkBox = (chars) => chars.some(c => word.word.includes(c));
+
                 if (currentRefineLogic === 'OR') {
-                    // Contains ANY
-                    return refineValues.some(val => word.word.includes(val));
+                    // Word matches if ANY box constraint is satisfied
+                    return refineConstraints.some(checkBox);
                 } else {
-                    // Contains ALL
-                    return refineValues.every(val => word.word.includes(val));
+                    // Word matches if ALL box constraints are satisfied
+                    return refineConstraints.every(checkBox);
                 }
             });
         }
@@ -714,6 +720,9 @@
             const suffix = totalFound > maxResults ? ` (Showing first ${maxResults})` : '';
             resultCount.textContent = `Found ${totalFound} words${suffix}`;
             
+            // Flatten all allowed highlight chars for Refine Highlight
+            const allRefineChars = refineConstraints.flat();
+
             resultList.innerHTML = displayResults.map(word => {
                 const displayText = word.displays[0] || word.word;
                 const themesText = word.themes.length > 0 
@@ -721,7 +730,6 @@
                     : '';
                 
                 // --- Highlight Logic ---
-                let highlightedWord = '';
                 const chars = word.word.split('');
                 let gridIndices = new Set();
 
@@ -735,7 +743,7 @@
                     }
                 }
 
-                highlightedWord = chars.map((char, i) => {
+                const highlightedWord = chars.map((char, i) => {
                     let styles = [];
                     
                     // Grid Highlight Style
@@ -744,22 +752,11 @@
                     }
 
                     // Refine Highlight Style
-                    // Check if char is in refine inputs
-                    if (hasRefineFilter && refineValues.includes(char)) {
-                        let isMatch = false;
-                        if (currentRefineLogic === 'OR') {
-                            isMatch = true;
-                        } else {
-                            // In AND mode, we know the word has all of them.
-                            // We can highlight all occurrences.
-                            isMatch = true; 
-                        }
-                        
-                        if(isMatch) {
-                            styles.push(currentRefineLogic === 'AND' 
-                                ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
-                                : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;");
-                        }
+                    // If this char is one of the requested refine chars
+                    if (hasRefineFilter && allRefineChars.includes(char)) {
+                         styles.push(currentRefineLogic === 'AND' 
+                            ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
+                            : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;");
                     }
 
                     if (styles.length > 0) {

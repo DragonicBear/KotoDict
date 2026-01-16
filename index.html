@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>ことののみこん - iOS対応版</title>
+    <title>Koto no Nomikon - iOS Friendly</title>
     <style>
         * {
             margin: 0;
@@ -313,19 +313,19 @@
 <body>
     <div id="app">
         <div class="container">
-            <h1>ことののみこん (iOS対応版)</h1>
-            <div class="loading" id="loadingMsg">辞書を読み込み中...</div>
+            <h1>Koto no Nomikon (iOS Friendly)</h1>
+            <div class="loading" id="loadingMsg">Loading dictionary...</div>
 
         <div id="mainContent" style="display:none;">
             <div class="search-section">
-                <input type="search" id="searchInput" placeholder="検索... (例: せ-い---ん or せ い   ん)" 
+                <input type="search" id="searchInput" placeholder="Search... (e.g., せ-い---ん or せ い   ん)" 
                        autocomplete="off" autocorrect="off" 
                        autocapitalize="off" spellcheck="false">
                 
                 <div class="button-group">
-                    <button id="toggleKana" type="button">かな入力</button>
-                    <button id="clearBtn" type="button" class="secondary">クリア</button>
-                    <button id="searchBtn" type="button">検索</button>
+                    <button id="toggleKana" type="button">Kana Input</button>
+                    <button id="clearBtn" type="button" class="secondary">Clear</button>
+                    <button id="searchBtn" type="button">Search</button>
                 </div>
             </div>
             
@@ -335,25 +335,25 @@
             
             <div class="filters">
                 <div class="filter-row">
-                    <span class="filter-label">一致:</span>
+                    <span class="filter-label">Match:</span>
                     <div class="radio-group">
                         <label>
                             <input type="radio" name="match" value="prefix" checked>
-                            <span>前方</span>
+                            <span>Prefix</span>
                         </label>
                         <label>
                             <input type="radio" name="match" value="fuzzy">
-                            <span>あいまい</span>
+                            <span>Fuzzy</span>
                         </label>
                         <label>
                             <input type="radio" name="match" value="suffix">
-                            <span>後方</span>
+                            <span>Suffix</span>
                         </label>
                     </div>
                 </div>
                 
                 <div class="filter-row">
-                    <span class="filter-label">文字数:</span>
+                    <span class="filter-label">Length:</span>
                     <div class="radio-group">
                         <label><input type="checkbox" name="chars" value="1"><span>1</span></label>
                         <label><input type="checkbox" name="chars" value="2"><span>2</span></label>
@@ -368,15 +368,15 @@
                 <div class="filter-row">
                     <label>
                         <input type="checkbox" id="distinguishDiacritics">
-                        <span>濁音拗音を区別する</span>
+                        <span>Distinguish diacritics/contracted sounds</span>
                     </label>
                 </div>
             </div>
             
             <div class="results">
-                <div class="result-count" id="resultCount">検索してください</div>
+                <div class="result-count" id="resultCount">Please search</div>
                 <div style="margin-bottom: 15px;">
-                    <input type="search" id="resultFilter" placeholder="結果内で文字検索... (例: あ, い, う)" 
+                    <input type="search" id="resultFilter" placeholder="Filter inside results... (e.g., あ, い, う)" 
                            autocomplete="off" autocorrect="off" 
                            autocapitalize="off" spellcheck="false"
                            style="width: 100%; padding: 10px; font-size: 14px; border: 1px solid #ddd; border-radius: 6px; -webkit-user-select: text; user-select: text;">
@@ -483,7 +483,7 @@
             // Fallback: use embedded sample dictionary
             console.log('Using fallback dictionary...');
             dictionary = getSampleDictionary();
-            document.getElementById('loadingMsg').textContent = '辞書の読み込みに失敗しました。サンプル辞書を使用しています。';
+            document.getElementById('loadingMsg').textContent = 'Failed to load dictionary; using sample data.';
             setTimeout(() => {
                 document.getElementById('loadingMsg').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
@@ -552,8 +552,8 @@
             e.preventDefault();
             kanaKeyboard.classList.toggle('active');
             toggleKanaBtn.textContent = kanaKeyboard.classList.contains('active') 
-                ? 'かな入力を閉じる' 
-                : 'かな入力';
+                ? 'Close Kana Input' 
+                : 'Kana Input';
         };
         
         toggleKanaBtn.addEventListener('touchend', toggleKana);
@@ -656,19 +656,19 @@
         
         // Update count
         if (filterQuery) {
-            resultCount.textContent = `${filtered.length}件表示中（${currentResults.length}件から絞り込み）`;
+            resultCount.textContent = `${filtered.length} shown (filtered from ${currentResults.length})`;
         } else {
-            resultCount.textContent = `${currentResults.length}件見つかりました`;
+            resultCount.textContent = `${currentResults.length} results found`;
         }
         
         // Display filtered results
         if (filtered.length === 0) {
-            resultList.innerHTML = '<div class="no-results">該当する結果がありません</div>';
+            resultList.innerHTML = '<div class="no-results">No matching results</div>';
         } else {
             resultList.innerHTML = filtered.map(word => {
                 const displayText = word.displays[0] || word.word;
                 const themesText = word.themes.length > 0 
-                    ? `<div class="result-themes">テーマ: ${word.themes.join(', ')}</div>`
+                    ? `<div class="result-themes">Themes: ${word.themes.join(', ')}</div>`
                     : '';
                 
                 // Highlight the filtered characters
@@ -686,7 +686,7 @@
                 return `
                     <div class="result-item">
                         <div class="result-word">${displayText} (${highlightedWord})</div>
-                        <div class="result-info">${word.word.length}文字 | コンボ: ${word.combo}</div>
+                        <div class="result-info">${word.word.length} characters | Combo: ${word.combo}</div>
                         ${themesText}
                     </div>
                 `;
@@ -713,47 +713,23 @@
             const hasWildcard = query.includes('-') || query.includes(' ');
             
             if (hasWildcard) {
-                // Get positions of known characters
-                const queryChars = query.split('');
-                const knownPositions = [];
-                queryChars.forEach((char, index) => {
-                    if (char !== '-' && char !== ' ') {
-                        knownPositions.push({ char, index });
-                    }
-                });
+                // Remove trailing wildcards to allow shorter matches
+                const trimmedQuery = query.replace(/-+$| +$/g, '');
                 
-                // If we have known characters, find matching words
-                if (knownPositions.length > 0) {
-                    results = results.filter(word => {
-                        // For each possible starting position in the query
-                        for (let startOffset = 0; startOffset < queryChars.length; startOffset++) {
-                            // Check if word matches when aligned at this offset
-                            let matches = true;
-                            
-                            for (let pos of knownPositions) {
-                                const wordIndex = pos.index - startOffset;
-                                
-                                // If this character position falls within the word
-                                if (wordIndex >= 0 && wordIndex < word.word.length) {
-                                    if (word.word[wordIndex] !== pos.char) {
-                                        matches = false;
-                                        break;
-                                    }
-                                } else if (wordIndex >= 0) {
-                                    // Character should exist but word is too short
-                                    matches = false;
-                                    break;
-                                }
-                                // If wordIndex < 0, character is before word start (ok, we're checking suffix)
-                            }
-                            
-                            if (matches) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    });
-                }
+                results = results.filter(word => {
+                    // Check if word matches the pattern up to its length
+                    const patternUpToLength = trimmedQuery.slice(0, word.word.length);
+                    const pattern = patternUpToLength.split('').map(char => 
+                        (char === '-' || char === ' ') ? '.' : char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                    ).join('');
+                    
+                    // Only match if the pattern up to this length has content
+                    if (patternUpToLength.length > 0 && patternUpToLength !== '-'.repeat(patternUpToLength.length)) {
+                        const regex = new RegExp(`^${pattern}$`);
+                        return regex.test(word.word);
+                    }
+                    return false;
+                });
             } else {
                 // Normal search without wildcards
                 results = results.filter(word => {
@@ -775,7 +751,8 @@
         
         // Limit results to prevent performance issues
         const maxResults = 200;
-        const limited = results.length > maxResults;
+        const totalMatches = results.length;
+        const limited = totalMatches > maxResults;
         if (limited) {
             results = results.slice(0, maxResults);
         }
@@ -785,8 +762,8 @@
         
         // Display results
         resultCount.textContent = limited 
-            ? `${maxResults}件表示中（${results.length + '+'}件見つかりました）`
-            : `${results.length}件見つかりました`;
+            ? `${maxResults} shown (more than ${totalMatches} matches)`
+            : `${results.length} results found`;
         
         // Clear result filter when new search is performed
         const resultFilter = document.getElementById('resultFilter');
@@ -795,18 +772,18 @@
         }
         
         if (results.length === 0) {
-            resultList.innerHTML = '<div class="no-results">結果がありません</div>';
+            resultList.innerHTML = '<div class="no-results">No results</div>';
         } else {
             resultList.innerHTML = results.map(word => {
                 const displayText = word.displays[0] || word.word;
                 const themesText = word.themes.length > 0 
-                    ? `<div class="result-themes">テーマ: ${word.themes.join(', ')}</div>`
+                    ? `<div class="result-themes">Themes: ${word.themes.join(', ')}</div>`
                     : '';
                 
                 return `
                     <div class="result-item">
                         <div class="result-word">${displayText} (${word.word})</div>
-                        <div class="result-info">${word.word.length}文字 | コンボ: ${word.combo}</div>
+                        <div class="result-info">${word.word.length} characters | Combo: ${word.combo}</div>
                         ${themesText}
                     </div>
                 `;

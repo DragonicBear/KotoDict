@@ -166,7 +166,7 @@
                 
                 <div class="text-filter-container">
                     <span class="text-filter-label">Contains:</span>
-                    <input type="text" id="textSearch" class="text-filter-input" placeholder="e.g. あい (Exact match)" autocomplete="off">
+                    <input type="text" id="textSearch" class="text-filter-input" placeholder="e.g. あ-い (- is wildcard)" autocomplete="off">
                 </div>
 
                 <div class="results">
@@ -366,14 +366,11 @@
         // C. Refine Filter
         if (hasRefineFilter) {
             results = results.filter(word => {
-                // If scope is always "Whole Word", we don't really need to loop through placements for validity,
-                // but we keep the structure for compatibility with highlighting logic.
                 let placementsToCheck = hasActivePosFilter ? wordPlacements.get(word.word) : [-1];
                 let foundValidPlacement = false;
 
                 for (let offset of placementsToCheck) {
                     const chars = word.word.split('');
-                    // Default to checking whole word
                     let charsToSearch = [...chars];
 
                     let placementPasses = false;
@@ -406,7 +403,6 @@
 
                     if (placementPasses) {
                         foundValidPlacement = true;
-                        // Map update is already done or not needed for simple check
                         if (hasActivePosFilter) wordPlacements.set(word.word, [offset]);
                         break; 
                     }
@@ -415,9 +411,14 @@
             });
         }
 
-        // D. Text Filter (Exact substring match)
+        // D. Text Filter (Wildcard support)
         if (textFilterValue.length > 0) {
-            results = results.filter(word => word.word.includes(textFilterValue));
+            // Escape special regex chars, then replace - with wildcard .
+            const escaped = textFilterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = escaped.replace(/-/g, '.');
+            const regex = new RegExp(pattern);
+            
+            results = results.filter(word => regex.test(word.word));
         }
 
         // 3. Sorting
@@ -468,7 +469,6 @@
                 if (hasRefineFilter) {
                     let availIndices = [];
                     chars.forEach((_, i) => { 
-                        // Always include all indices (Whole Word behavior)
                         availIndices.push(i); 
                     });
                     

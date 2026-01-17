@@ -16,6 +16,7 @@
         h1 { font-size: 24px; margin-bottom: 20px; color: #333; font-weight: 600; text-align: center; }
         .loading { text-align: center; padding: 40px; color: #666; }
         
+        /* Grid Input Section */
         .input-section { background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 15px; }
         .instruction-text { font-size: 13px; color: #666; margin-bottom: 15px; text-align: center; line-height: 1.4; }
         
@@ -32,35 +33,53 @@
         button { padding: 8px 16px; font-size: 14px; border: none; border-radius: 6px; background: #8E8E93; color: white; font-weight: 500; cursor: pointer; transition: background 0.1s; }
         button:active { background: #636366; transform: scale(0.97); }
         
+        /* Checkbox Filters */
         .filters { margin-bottom: 15px; padding: 0 5px; }
         .filter-row { margin: 12px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; }
         .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
-        
         input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; border: 2px solid #ccc; border-radius: 4px; }
         input[type="checkbox"]:checked { background: #007AFF; border-color: #007AFF; }
         label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
         
-        .refine-section { background: #fff8f0; border: 1px solid #ffe4cc; padding: 15px; border-radius: 8px; margin-bottom: 20px; transition: background 0.2s, border-color 0.2s; }
+        /* Refine Section */
+        .refine-section { background: #fff8f0; border: 1px solid #ffe4cc; padding: 15px; border-radius: 8px; margin-bottom: 20px; transition: background 0.2s, border-color 0.2s; position: relative; }
         .refine-section.and-mode { background: #f0f7ff; border-color: #cce4ff; }
         
-        .refine-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .refine-title { font-size: 14px; font-weight: 600; color: #333; }
+        .refine-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 10px; flex-wrap: wrap; }
+        .refine-title { font-size: 14px; font-weight: 600; color: #333; margin-top: 4px; }
         
-        .toggle-switch { display: flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
-        .toggle-option { padding: 4px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; }
-        .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .toggle-option[data-logic="OR"].active { color: #d67a00; }
-        .toggle-option[data-logic="AND"].active { color: #007AFF; }
+        /* Control Groups */
+        .refine-controls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; flex: 1; }
         
-        .refine-inputs { display: flex; gap: 10px; }
+        .control-group { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        .control-label { font-size: 10px; color: #666; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .toggle-switch { display: flex; background: #e0e0e0; border-radius: 6px; padding: 2px; height: 28px; }
+        .toggle-option { padding: 0 10px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; display: flex; align-items: center; justify-content: center; }
+        .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); color: #333; }
+        
+        /* Specific Colors for Toggles */
+        .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
+        .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
+        
+        .refine-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
         .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
         .refine-input:focus { outline: none; background: #fff; }
         .refine-section .refine-input:focus { border-color: #d67a00; }
         .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
         .refine-input.filled { background: #fffdf5; border-color: #d67a00; font-weight: bold; }
         .refine-section.and-mode .refine-input.filled { background: #f0f8ff; border-color: #007AFF; }
+
+        /* Clear Button for Refine */
+        .refine-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
+        .btn-refine-clear {
+            background: transparent; border: 1px solid #ff3b30; color: #ff3b30; 
+            font-size: 12px; padding: 4px 12px; border-radius: 14px; font-weight: 600;
+        }
+        .btn-refine-clear:active { background: #ff3b30; color: white; }
         
+        /* Results */
         .results { margin-top: 10px; }
         .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
         .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #007AFF; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
@@ -88,7 +107,7 @@
                 <div class="input-section">
                     <div class="instruction-text">
                         <strong>Board Placement:</strong> Words must fit on the board.<br>
-                        Overlaps must match exactly. Empty spaces are wildcards.
+                        Overlaps must match exactly.
                     </div>
                     
                     <div class="pos-filter-container">
@@ -135,11 +154,25 @@
                 </div>
 
                 <div class="refine-section" id="refineSection">
-                    <div class="refine-header">
+                    <div class="refine-header-row">
                         <span class="refine-title">Refine Results:</span>
-                        <div class="toggle-switch refine-toggle">
-                            <div class="toggle-option active" data-logic="OR">Any (OR)</div>
-                            <div class="toggle-option" data-logic="AND">All (AND)</div>
+                        
+                        <div class="refine-controls">
+                            <div class="control-group">
+                                <span class="control-label">Logic</span>
+                                <div class="toggle-switch logic-toggle refine-logic-toggle">
+                                    <div class="toggle-option active" data-logic="OR">Any</div>
+                                    <div class="toggle-option" data-logic="AND">All</div>
+                                </div>
+                            </div>
+
+                            <div class="control-group">
+                                <span class="control-label">Search Scope</span>
+                                <div class="toggle-switch scope-toggle refine-scope-toggle">
+                                    <div class="toggle-option active" data-scope="wildcard">Wildcards</div>
+                                    <div class="toggle-option" data-scope="full">Whole Word</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -149,9 +182,9 @@
                         <input type="text" class="refine-input" placeholder="C" autocomplete="off">
                         <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
-                    <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">
-                        Refine filters search the <strong>unused</strong> characters of the word.<br>
-                        Duplicate inputs (e.g. A, A) require multiple distinct instances.
+
+                    <div class="refine-footer">
+                        <button id="refineClearBtn" class="btn-refine-clear">✕ Clear Filters</button>
                     </div>
                 </div>
                 
@@ -166,6 +199,7 @@
 <script>
     let dictionary = [];
     let currentRefineLogic = 'OR';
+    let currentRefineScope = 'wildcard'; // 'wildcard' or 'full'
 
     function getSampleDictionary() {
         const samples = [
@@ -174,6 +208,7 @@
             ["うみ","",1,["海"],[]],
             ["うそう","",1,["雨窓"],[]],
             ["しょうそう","",4,["焦燥"],[]],
+            ["しょうがっこう","",6,["小学校"],[]],
             ["うそうかい","",5,["有象海"],[]],
             ["さいし","",3,["祭祀"],[]],
             ["さいしょ","",4,["最初"],[]],
@@ -224,12 +259,17 @@
     
     function initializeApp() {
         const clearBtn = document.getElementById('clearBtn');
+        const refineClearBtn = document.getElementById('refineClearBtn');
         const posInputs = document.querySelectorAll('.pos-input');
         const refineInputs = document.querySelectorAll('.refine-input');
         const sortSelect = document.getElementById('sortSelect');
-        const refineLogicOptions = document.querySelectorAll('.refine-toggle .toggle-option');
         const refineSection = document.getElementById('refineSection');
+        
+        // Toggles
+        const refineLogicOptions = document.querySelectorAll('.refine-logic-toggle .toggle-option');
+        const refineScopeOptions = document.querySelectorAll('.refine-scope-toggle .toggle-option');
 
+        // Logic Toggle (AND/OR)
         refineLogicOptions.forEach(opt => {
             opt.addEventListener('click', () => {
                 refineLogicOptions.forEach(o => o.classList.remove('active'));
@@ -244,9 +284,27 @@
             });
         });
 
+        // Scope Toggle (Wildcard/Full)
+        refineScopeOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                refineScopeOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                currentRefineScope = opt.getAttribute('data-scope');
+                performSearch();
+            });
+        });
+
+        // Main Grid Clear
         clearBtn.addEventListener('click', (e) => {
             e.preventDefault();
             posInputs.forEach(input => { input.value = ''; input.classList.remove('filled'); });
+            performSearch();
+        });
+
+        // Refine Clear
+        refineClearBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            refineInputs.forEach(input => { input.value = ''; input.classList.remove('filled'); });
             performSearch();
         });
         
@@ -312,7 +370,6 @@
         }
 
         // B. Board Placement Calculation
-        // Map word -> Array of valid start offsets [0, 2, ...]
         let wordPlacements = new Map();
 
         if (hasActivePosFilter) {
@@ -344,47 +401,46 @@
         }
 
         // C. Refine Filter
-        // For each word, check if *any* valid placement allows the Refine constraints to pass
         if (hasRefineFilter) {
             results = results.filter(word => {
                 let placementsToCheck = hasActivePosFilter ? wordPlacements.get(word.word) : [-1];
                 let foundValidPlacement = false;
 
-                // We need to store the *best* placement that made it pass, for visualization logic
-                // But filter just needs boolean true/false.
-                
                 for (let offset of placementsToCheck) {
-                    // 1. Identify Available Characters (Consumption Logic)
-                    let availableIndices = []; // Indices of chars in word that are NOT used by grid
                     const chars = word.word.split('');
-                    
-                    for (let i = 0; i < chars.length; i++) {
-                        let isUsedByGrid = false;
-                        if (offset !== -1) {
-                            let boardIndex = offset + i;
-                            if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
-                                isUsedByGrid = true;
+                    let availableIndices = []; 
+
+                    // --- SCOPE LOGIC HERE ---
+                    if (currentRefineScope === 'full') {
+                        // All characters are available for checking
+                        availableIndices = chars.map((_, i) => i);
+                    } else {
+                        // 'wildcard' mode: Only check characters NOT covered by the grid
+                        for (let i = 0; i < chars.length; i++) {
+                            let isUsedByGrid = false;
+                            if (offset !== -1) {
+                                let boardIndex = offset + i;
+                                if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
+                                    isUsedByGrid = true;
+                                }
                             }
+                            if (!isUsedByGrid) availableIndices.push(i);
                         }
-                        if (!isUsedByGrid) availableIndices.push(i);
                     }
 
-                    // 2. Check Constraints
+                    // Check Constraints (Same as before)
                     let placementPasses = false;
 
                     if (currentRefineLogic === 'OR') {
-                        // Any constraint must match any available char
-                        // We don't strictly need consumption for OR, just existence
                         placementPasses = refineConstraints.some(constraint => {
                             return availableIndices.some(idx => constraint.includes(chars[idx]));
                         });
                     } else {
-                        // AND Logic with Strict Consumption
-                        let currentIndices = [...availableIndices]; // Copy for consumption
+                        // AND Logic with strict consumption
+                        let currentIndices = [...availableIndices]; 
                         let allConstraintsMet = true;
 
                         for (let constraint of refineConstraints) {
-                            // Find an available char that matches this constraint
                             let matchFoundIndex = -1;
                             for (let k = 0; k < currentIndices.length; k++) {
                                 let idx = currentIndices[k];
@@ -395,7 +451,6 @@
                             }
 
                             if (matchFoundIndex !== -1) {
-                                // Consume it
                                 currentIndices.splice(matchFoundIndex, 1); 
                             } else {
                                 allConstraintsMet = false;
@@ -407,14 +462,10 @@
 
                     if (placementPasses) {
                         foundValidPlacement = true;
-                        // Optimization: We could update wordPlacements to only contain this valid one
-                        // so visualization is correct?
-                        // Let's replace the map entry with just this "winning" offset for display simplicity
                         if (hasActivePosFilter) wordPlacements.set(word.word, [offset]);
                         break; 
                     }
                 }
-                
                 return foundValidPlacement;
             });
         }
@@ -449,11 +500,7 @@
                     ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
                     : '';
                 
-                // Visualization Logic
-                // If filtered, wordPlacements has the specific winning offset (or first valid one)
                 let placementOffset = hasActivePosFilter ? wordPlacements.get(word.word)[0] : -1;
-                
-                // Recalculate which indices correspond to what for highlighting
                 const chars = word.word.split('');
                 let gridIndices = new Set();
                 let refineIndices = new Set();
@@ -468,20 +515,22 @@
                     }
                 }
 
-                // Mark Refine Indices (Greedy match for viz)
+                // Mark Refine Indices (Visuals)
                 if (hasRefineFilter) {
                     let availIndices = [];
-                    chars.forEach((_, i) => { if(!gridIndices.has(i)) availIndices.push(i); });
+                    // Update Visualization availability based on Scope
+                    if (currentRefineScope === 'full') {
+                        availIndices = chars.map((_, i) => i);
+                    } else {
+                        chars.forEach((_, i) => { if(!gridIndices.has(i)) availIndices.push(i); });
+                    }
                     
-                    // Simple greedy consumption for highlighting visualization
                     let vizConsumed = new Set();
                     for(let constraint of refineConstraints) {
                         for(let idx of availIndices) {
                             if(!vizConsumed.has(idx) && constraint.includes(chars[idx])) {
                                 refineIndices.add(idx);
                                 vizConsumed.add(idx);
-                                // If AND mode, we consume one per constraint.
-                                // If OR mode, technically highlighting all matches is fine.
                                 if(currentRefineLogic === 'AND') break; 
                             }
                         }
@@ -490,13 +539,24 @@
 
                 let highlightedWordHTML = chars.map((char, i) => {
                     let style = '';
-                    if (gridIndices.has(i)) {
+                    
+                    // Priority logic for styling overlapping matches
+                    let isGrid = gridIndices.has(i);
+                    let isRefine = refineIndices.has(i);
+
+                    if (isGrid && !isRefine) {
                         style = "font-weight:bold; text-decoration:underline; color:#007AFF;";
-                    } else if (refineIndices.has(i)) {
-                        style = currentRefineLogic === 'AND' 
+                    } 
+                    else if (!isGrid && isRefine) {
+                         style = currentRefineLogic === 'AND' 
                             ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
                             : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;";
                     }
+                    else if (isGrid && isRefine) {
+                        // Overlap (possible in Full Scope mode)
+                         style = "background:#cce4ff; font-weight:bold; text-decoration:underline; color:#0051d5;";
+                    }
+
                     return style ? `<span style="${style}">${char}</span>` : char;
                 }).join('');
 

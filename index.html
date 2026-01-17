@@ -51,12 +51,17 @@
         .refine-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
         
         .toggle-switch { display: inline-flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
-        .toggle-option { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; white-space: nowrap; }
+        .toggle-option { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; white-space: nowrap; transition: all 0.2s; }
+        
         .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         
+        /* Logic Toggle Colors */
         .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
         .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
-        .scope-toggle .toggle-option.active { color: #333; font-weight: 700; }
+        
+        /* Scope Toggle Colors - Made more obvious */
+        .scope-toggle .toggle-option[data-scope="WHOLE"].active { color: #28a745; background: #e8f5e9; }
+        .scope-toggle .toggle-option[data-scope="UNUSED"].active { color: #007AFF; background: #e0f0ff; }
         
         .refine-inputs { display: flex; gap: 10px; }
         .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
@@ -66,7 +71,6 @@
         .refine-input.filled { background: #fffdf5; border-color: #d67a00; font-weight: bold; }
         .refine-section.and-mode .refine-input.filled { background: #f0f8ff; border-color: #007AFF; }
         
-        /* New Text Filter */
         .text-filter-container { background: #fff; border: 2px solid #eee; border-radius: 8px; padding: 10px 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .text-filter-label { font-weight: 600; font-size: 14px; color: #333; white-space: nowrap; }
         .text-filter-input { flex: 1; border: none; font-size: 16px; padding: 5px; outline: none; color: #333; background: transparent; }
@@ -148,7 +152,7 @@
 
                 <div class="refine-section" id="refineSection">
                     <div class="refine-header">
-                        <span class="refine-title">Refine (Deck Check):</span>
+                        <span class="refine-title">Refine Results (Hand Filter):</span>
                         <div class="refine-controls">
                             <div class="toggle-switch logic-toggle">
                                 <div class="toggle-option active" data-logic="OR">Any (OR)</div>
@@ -253,10 +257,10 @@
         // Logic Toggles
         const logicOptions = document.querySelectorAll('.logic-toggle .toggle-option');
         logicOptions.forEach(opt => {
-            opt.addEventListener('click', () => {
+            opt.addEventListener('click', (e) => {
                 logicOptions.forEach(o => o.classList.remove('active'));
-                opt.classList.add('active');
-                currentRefineLogic = opt.getAttribute('data-logic');
+                e.target.classList.add('active');
+                currentRefineLogic = e.target.getAttribute('data-logic');
                 if (currentRefineLogic === 'AND') {
                     refineSection.classList.add('and-mode');
                 } else {
@@ -269,10 +273,10 @@
         // Scope Toggles
         const scopeOptions = document.querySelectorAll('.scope-toggle .toggle-option');
         scopeOptions.forEach(opt => {
-            opt.addEventListener('click', () => {
+            opt.addEventListener('click', (e) => {
                 scopeOptions.forEach(o => o.classList.remove('active'));
-                opt.classList.add('active');
-                currentRefineScope = opt.getAttribute('data-scope');
+                e.target.classList.add('active');
+                currentRefineScope = e.target.getAttribute('data-scope');
                 performSearch();
             });
         });
@@ -304,7 +308,6 @@
             });
         });
         
-        // New Text Search Listener
         textSearch.addEventListener('input', debouncedSearch);
         
         document.querySelectorAll('input[type="checkbox"]').forEach(input => {
@@ -383,18 +386,23 @@
         // C. Refine Filter
         if (hasRefineFilter) {
             results = results.filter(word => {
+                // If there's no grid filter, we assume valid placement is just a dummy [-1]
                 let placementsToCheck = hasActivePosFilter ? wordPlacements.get(word.word) : [-1];
                 let foundValidPlacement = false;
+                let winningOffset = -1;
 
                 for (let offset of placementsToCheck) {
                     const chars = word.word.split('');
                     let charsToSearch = [];
 
+                    // 1. Determine Scope
                     if (currentRefineScope === 'UNUSED') {
+                        // UNUSED: Subtract chars that align with filled grid spots
                         for (let i = 0; i < chars.length; i++) {
                             let isUsedByGrid = false;
                             if (offset !== -1) {
                                 let boardIndex = offset + i;
+                                // If board has a letter at this index, this char is "Used"
                                 if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
                                     isUsedByGrid = true;
                                 }
@@ -402,16 +410,20 @@
                             if (!isUsedByGrid) charsToSearch.push(chars[i]);
                         }
                     } else {
+                        // WHOLE: Use all characters
                         charsToSearch = [...chars];
                     }
 
+                    // 2. Check Constraints against charsToSearch
                     let placementPasses = false;
 
                     if (currentRefineLogic === 'OR') {
+                        // Match ANY constraint
                         placementPasses = refineConstraints.some(constraint => {
                             return charsToSearch.some(char => constraint.includes(char));
                         });
                     } else {
+                        // Match ALL constraints (greedy consumption)
                         let currentPool = [...charsToSearch];
                         let allConstraintsMet = true;
 
@@ -423,6 +435,7 @@
                                     break;
                                 }
                             }
+
                             if (matchIndex !== -1) {
                                 currentPool.splice(matchIndex, 1);
                             } else {
@@ -435,10 +448,17 @@
 
                     if (placementPasses) {
                         foundValidPlacement = true;
-                        if (hasActivePosFilter) wordPlacements.set(word.word, [offset]);
-                        break; 
+                        winningOffset = offset;
+                        break; // Stop checking other offsets for this word
                     }
                 }
+
+                if (foundValidPlacement && hasActivePosFilter) {
+                    // Update the placement to the one that satisfied the Refine filter
+                    // This ensures visualization highlights the correct alignment
+                    wordPlacements.set(word.word, [winningOffset]);
+                }
+                
                 return foundValidPlacement;
             });
         }
@@ -495,7 +515,10 @@
 
                 if (hasRefineFilter) {
                     let availIndices = [];
+                    // Visualization Scope Logic
                     chars.forEach((_, i) => { 
+                        // If WHOLE, we can highlight anything. 
+                        // If UNUSED, we only highlight things NOT in gridIndices.
                         if (currentRefineScope === 'WHOLE' || !gridIndices.has(i)) {
                             availIndices.push(i); 
                         }

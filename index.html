@@ -64,15 +64,15 @@
         .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
         
         .refine-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
-        .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
+        .refine-input { flex: 1; max-width: 100%; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 16px; background: white; }
         .refine-input:focus { outline: none; background: #fff; }
         .refine-section .refine-input:focus { border-color: #d67a00; }
         .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
         .refine-input.filled { background: #fffdf5; border-color: #d67a00; font-weight: bold; }
         .refine-section.and-mode .refine-input.filled { background: #f0f8ff; border-color: #007AFF; }
 
-        /* Clear Button for Refine */
-        .refine-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
+        .refine-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .refine-hint { font-size: 11px; color:#999; }
         .btn-refine-clear {
             background: transparent; border: 1px solid #ff3b30; color: #ff3b30; 
             font-size: 12px; padding: 4px 12px; border-radius: 14px; font-weight: 600;
@@ -153,7 +153,7 @@
                     </div>
                 </div>
 
-                <div class="refine-section" id="refineSection">
+                <div class="refine-section and-mode" id="refineSection">
                     <div class="refine-header-row">
                         <span class="refine-title">Refine Results:</span>
                         
@@ -161,29 +161,29 @@
                             <div class="control-group">
                                 <span class="control-label">Logic</span>
                                 <div class="toggle-switch logic-toggle refine-logic-toggle">
-                                    <div class="toggle-option active" data-logic="OR">Any</div>
-                                    <div class="toggle-option" data-logic="AND">All</div>
+                                    <div class="toggle-option" data-logic="OR">Any</div>
+                                    <div class="toggle-option active" data-logic="AND">All</div>
                                 </div>
                             </div>
 
                             <div class="control-group">
                                 <span class="control-label">Search Scope</span>
                                 <div class="toggle-switch scope-toggle refine-scope-toggle">
-                                    <div class="toggle-option active" data-scope="wildcard">Wildcards</div>
-                                    <div class="toggle-option" data-scope="full">Whole Word</div>
+                                    <div class="toggle-option" data-scope="wildcard">Wildcards</div>
+                                    <div class="toggle-option active" data-scope="full">Whole Word</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
                     <div class="refine-inputs">
-                        <input type="text" class="refine-input" placeholder="A" autocomplete="off">
-                        <input type="text" class="refine-input" placeholder="B" autocomplete="off">
-                        <input type="text" class="refine-input" placeholder="C" autocomplete="off">
-                        <input type="text" class="refine-input" placeholder="D" autocomplete="off">
+                        <input type="text" class="refine-input" placeholder="Type..." autocomplete="off">
+                        <input type="text" class="refine-input" placeholder="" autocomplete="off">
+                        <input type="text" class="refine-input" placeholder="" autocomplete="off">
                     </div>
 
                     <div class="refine-footer">
+                        <div class="refine-hint">Logic: <strong>ALL</strong> inputs must match</div>
                         <button id="refineClearBtn" class="btn-refine-clear">✕ Clear Filters</button>
                     </div>
                 </div>
@@ -198,8 +198,8 @@
 
 <script>
     let dictionary = [];
-    let currentRefineLogic = 'OR';
-    let currentRefineScope = 'wildcard'; // 'wildcard' or 'full'
+    let currentRefineLogic = 'AND'; // Default changed to AND
+    let currentRefineScope = 'full'; // Default changed to FULL (Whole Word)
 
     function getSampleDictionary() {
         const samples = [
@@ -218,10 +218,12 @@
             ["さんしょう","",5,["参照"],[]],
             ["あした","",3,["明日"],[]],
             ["あいさつ","",4,["挨拶"],[]],
+            ["かいさつ","",4,["改札"],[]],
             ["こう","",2,["甲"],[]],
             ["こうこう","",4,["高校"],[]],
             ["こうそ","",3,["酵素"],[]],
-            ["たいいく","",4,["体育"],[]]
+            ["たいいく","",4,["体育"],[]],
+            ["ああがす","",4,["アーガス"],[]]
         ];
         return samples.map(entry => ({
             word: entry[0],
@@ -264,6 +266,7 @@
         const refineInputs = document.querySelectorAll('.refine-input');
         const sortSelect = document.getElementById('sortSelect');
         const refineSection = document.getElementById('refineSection');
+        const refineHint = document.querySelector('.refine-hint');
         
         // Toggles
         const refineLogicOptions = document.querySelectorAll('.refine-logic-toggle .toggle-option');
@@ -277,8 +280,10 @@
                 currentRefineLogic = opt.getAttribute('data-logic');
                 if (currentRefineLogic === 'AND') {
                     refineSection.classList.add('and-mode');
+                    refineHint.innerHTML = "Logic: <strong>ALL</strong> inputs must match";
                 } else {
                     refineSection.classList.remove('and-mode');
+                    refineHint.innerHTML = "Logic: <strong>ANY</strong> input matches";
                 }
                 performSearch();
             });
@@ -357,9 +362,10 @@
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
+        // Treat inputs as strings, not split chars
         const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
-            .map(input => input.value.trim().split('')) 
-            .filter(arr => arr.length > 0);
+            .map(input => input.value.trim()) 
+            .filter(val => val.length > 0);
         const hasRefineFilter = refineConstraints.length > 0;
 
         let results = dictionary;
@@ -407,65 +413,71 @@
                 let foundValidPlacement = false;
 
                 for (let offset of placementsToCheck) {
-                    const chars = word.word.split('');
-                    let availableIndices = []; 
+                    const wordStr = word.word;
+                    let matchesAll = true;
+                    let matchesAny = false;
 
-                    // --- SCOPE LOGIC HERE ---
-                    if (currentRefineScope === 'full') {
-                        // All characters are available for checking
-                        availableIndices = chars.map((_, i) => i);
-                    } else {
-                        // 'wildcard' mode: Only check characters NOT covered by the grid
-                        for (let i = 0; i < chars.length; i++) {
-                            let isUsedByGrid = false;
-                            if (offset !== -1) {
-                                let boardIndex = offset + i;
-                                if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
-                                    isUsedByGrid = true;
+                    // Check all constraints
+                    for (let constraint of refineConstraints) {
+                        let isMatch = false;
+
+                        if (currentRefineScope === 'full') {
+                            // Simple substring match
+                            if (wordStr.includes(constraint)) {
+                                isMatch = true;
+                            }
+                        } else {
+                            // Wildcard Scope: Bag of characters logic
+                            // "Does the bag of wildcards contain these characters?"
+                            
+                            // 1. Get available wildcards for this specific placement
+                            let availableChars = [];
+                            if (offset === -1) {
+                                // If no board filter, all chars are wildcards (unlikely usage but handle it)
+                                availableChars = wordStr.split('');
+                            } else {
+                                for(let i=0; i<wordStr.length; i++) {
+                                    let boardIdx = offset + i;
+                                    // If board is empty at this index, it's a wildcard
+                                    if (!inputValues[boardIdx] || inputValues[boardIdx].length === 0) {
+                                        availableChars.push(wordStr[i]);
+                                    }
                                 }
                             }
-                            if (!isUsedByGrid) availableIndices.push(i);
-                        }
-                    }
-
-                    // Check Constraints (Same as before)
-                    let placementPasses = false;
-
-                    if (currentRefineLogic === 'OR') {
-                        placementPasses = refineConstraints.some(constraint => {
-                            return availableIndices.some(idx => constraint.includes(chars[idx]));
-                        });
-                    } else {
-                        // AND Logic with strict consumption
-                        let currentIndices = [...availableIndices]; 
-                        let allConstraintsMet = true;
-
-                        for (let constraint of refineConstraints) {
-                            let matchFoundIndex = -1;
-                            for (let k = 0; k < currentIndices.length; k++) {
-                                let idx = currentIndices[k];
-                                if (constraint.includes(chars[idx])) {
-                                    matchFoundIndex = k;
+                            
+                            // 2. Check if availableChars contains all chars in constraint
+                            let needed = constraint.split('');
+                            let tempAvailable = [...availableChars];
+                            let subsetFound = true;
+                            
+                            for(let char of needed) {
+                                let idx = tempAvailable.indexOf(char);
+                                if (idx !== -1) {
+                                    tempAvailable.splice(idx, 1);
+                                } else {
+                                    subsetFound = false;
                                     break;
                                 }
                             }
-
-                            if (matchFoundIndex !== -1) {
-                                currentIndices.splice(matchFoundIndex, 1); 
-                            } else {
-                                allConstraintsMet = false;
-                                break;
-                            }
+                            isMatch = subsetFound;
                         }
-                        placementPasses = allConstraintsMet;
+
+                        if (isMatch) matchesAny = true;
+                        else matchesAll = false;
                     }
 
-                    if (placementPasses) {
-                        foundValidPlacement = true;
-                        if (hasActivePosFilter) wordPlacements.set(word.word, [offset]);
-                        break; 
+                    if (currentRefineLogic === 'AND') {
+                        if (matchesAll) { foundValidPlacement = true; break; }
+                    } else {
+                        if (matchesAny) { foundValidPlacement = true; break; }
                     }
                 }
+                
+                if (foundValidPlacement && hasActivePosFilter) {
+                    // Update placements to just the winning one could be an optimization
+                    // but keeping it simple
+                }
+                
                 return foundValidPlacement;
             });
         }
@@ -503,7 +515,7 @@
                 let placementOffset = hasActivePosFilter ? wordPlacements.get(word.word)[0] : -1;
                 const chars = word.word.split('');
                 let gridIndices = new Set();
-                let refineIndices = new Set();
+                let highlightIndices = new Set();
                 
                 // Mark Grid Indices
                 if (placementOffset !== -1) {
@@ -515,48 +527,47 @@
                     }
                 }
 
-                // Mark Refine Indices (Visuals)
-                if (hasRefineFilter) {
-                    let availIndices = [];
-                    // Update Visualization availability based on Scope
-                    if (currentRefineScope === 'full') {
-                        availIndices = chars.map((_, i) => i);
-                    } else {
-                        chars.forEach((_, i) => { if(!gridIndices.has(i)) availIndices.push(i); });
-                    }
-                    
-                    let vizConsumed = new Set();
-                    for(let constraint of refineConstraints) {
-                        for(let idx of availIndices) {
-                            if(!vizConsumed.has(idx) && constraint.includes(chars[idx])) {
-                                refineIndices.add(idx);
-                                vizConsumed.add(idx);
-                                if(currentRefineLogic === 'AND') break; 
-                            }
+                // Highlighting Logic for Refine
+                if (hasRefineFilter && currentRefineScope === 'full') {
+                    // Simple highlighting for Full Scope: Just find the substring
+                    // Note: This is purely visual and might not handle overlapping constraints perfectly
+                    refineConstraints.forEach(cstr => {
+                        let startIdx = word.word.indexOf(cstr);
+                        if(startIdx !== -1) {
+                            for(let k=0; k<cstr.length; k++) highlightIndices.add(startIdx+k);
                         }
-                    }
+                    });
+                } else if (hasRefineFilter && currentRefineScope === 'wildcard') {
+                    // Highlight Wildcard matches (greedy)
+                    let availableIndices = [];
+                    chars.forEach((_, i) => { if(!gridIndices.has(i)) availableIndices.push(i); });
+                    let vizConsumed = new Set();
+                    
+                    refineConstraints.forEach(cstr => {
+                        let needed = cstr.split('');
+                        for(let char of needed) {
+                             for(let idx of availableIndices) {
+                                if (!vizConsumed.has(idx) && chars[idx] === char) {
+                                    highlightIndices.add(idx);
+                                    vizConsumed.add(idx);
+                                    break;
+                                }
+                             }
+                        }
+                    });
                 }
 
                 let highlightedWordHTML = chars.map((char, i) => {
                     let style = '';
-                    
-                    // Priority logic for styling overlapping matches
                     let isGrid = gridIndices.has(i);
-                    let isRefine = refineIndices.has(i);
+                    let isHigh = highlightIndices.has(i);
 
-                    if (isGrid && !isRefine) {
-                        style = "font-weight:bold; text-decoration:underline; color:#007AFF;";
-                    } 
-                    else if (!isGrid && isRefine) {
-                         style = currentRefineLogic === 'AND' 
-                            ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
-                            : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;";
+                    if (isGrid) {
+                         style = "font-weight:bold; text-decoration:underline; color:#007AFF;";
+                         if(isHigh) style += " background:#cce4ff; padding:0 1px;"; 
+                    } else if (isHigh) {
+                         style = "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;";
                     }
-                    else if (isGrid && isRefine) {
-                        // Overlap (possible in Full Scope mode)
-                         style = "background:#cce4ff; font-weight:bold; text-decoration:underline; color:#0051d5;";
-                    }
-
                     return style ? `<span style="${style}">${char}</span>` : char;
                 }).join('');
 

@@ -41,17 +41,25 @@
         input[type="checkbox"]:checked { background: #007AFF; border-color: #007AFF; }
         label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
         
+        /* Refine Section Styles */
         .refine-section { background: #fff8f0; border: 1px solid #ffe4cc; padding: 15px; border-radius: 8px; margin-bottom: 20px; transition: background 0.2s, border-color 0.2s; }
         .refine-section.and-mode { background: #f0f7ff; border-color: #cce4ff; }
         
-        .refine-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .refine-title { font-size: 14px; font-weight: 600; color: #333; }
+        .refine-header { margin-bottom: 12px; }
+        .refine-title { font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 8px; }
         
-        .toggle-switch { display: flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
-        .toggle-option { padding: 4px 12px; font-size: 12px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; }
+        .refine-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        
+        .toggle-switch { display: inline-flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
+        .toggle-option { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; white-space: nowrap; }
         .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .toggle-option[data-logic="OR"].active { color: #d67a00; }
-        .toggle-option[data-logic="AND"].active { color: #007AFF; }
+        
+        /* Logic Toggle Colors */
+        .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
+        .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
+        
+        /* Scope Toggle Colors */
+        .scope-toggle .toggle-option.active { color: #333; font-weight: 700; }
         
         .refine-inputs { display: flex; gap: 10px; }
         .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
@@ -137,10 +145,16 @@
 
                 <div class="refine-section" id="refineSection">
                     <div class="refine-header">
-                        <span class="refine-title">Refine Results:</span>
-                        <div class="toggle-switch refine-toggle">
-                            <div class="toggle-option active" data-logic="OR">Any (OR)</div>
-                            <div class="toggle-option" data-logic="AND">All (AND)</div>
+                        <span class="refine-title">Refine Results (Secondary Filter):</span>
+                        <div class="refine-controls">
+                            <div class="toggle-switch logic-toggle">
+                                <div class="toggle-option active" data-logic="OR">Any (OR)</div>
+                                <div class="toggle-option" data-logic="AND">All (AND)</div>
+                            </div>
+                            <div class="toggle-switch scope-toggle">
+                                <div class="toggle-option active" data-scope="WHOLE">Whole Word</div>
+                                <div class="toggle-option" data-scope="UNUSED">Unused Only</div>
+                            </div>
                         </div>
                     </div>
                     
@@ -151,8 +165,8 @@
                         <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
                     <div style="font-size:11px; color:#666; margin-top:5px; text-align:center;">
-                        Refine filters search the <strong>unused</strong> characters of the word.<br>
-                        Duplicate inputs (e.g. A, A) require multiple distinct instances.
+                        <strong>Whole Word:</strong> Checks if word contains these characters.<br>
+                        <strong>Unused:</strong> Checks only characters not used by the board.
                     </div>
                 </div>
                 
@@ -167,6 +181,7 @@
 <script>
     let dictionary = [];
     let currentRefineLogic = 'OR';
+    let currentRefineScope = 'WHOLE'; // 'WHOLE' or 'UNUSED'
 
     function getSampleDictionary() {
         const samples = [
@@ -228,12 +243,13 @@
         const posInputs = document.querySelectorAll('.pos-input');
         const refineInputs = document.querySelectorAll('.refine-input');
         const sortSelect = document.getElementById('sortSelect');
-        const refineLogicOptions = document.querySelectorAll('.refine-toggle .toggle-option');
         const refineSection = document.getElementById('refineSection');
-
-        refineLogicOptions.forEach(opt => {
+        
+        // Logic Toggles (AND/OR)
+        const logicOptions = document.querySelectorAll('.logic-toggle .toggle-option');
+        logicOptions.forEach(opt => {
             opt.addEventListener('click', () => {
-                refineLogicOptions.forEach(o => o.classList.remove('active'));
+                logicOptions.forEach(o => o.classList.remove('active'));
                 opt.classList.add('active');
                 currentRefineLogic = opt.getAttribute('data-logic');
                 if (currentRefineLogic === 'AND') {
@@ -241,6 +257,17 @@
                 } else {
                     refineSection.classList.remove('and-mode');
                 }
+                performSearch();
+            });
+        });
+
+        // Scope Toggles (WHOLE/UNUSED)
+        const scopeOptions = document.querySelectorAll('.scope-toggle .toggle-option');
+        scopeOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                scopeOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                currentRefineScope = opt.getAttribute('data-scope');
                 performSearch();
             });
         });
@@ -313,7 +340,6 @@
         }
 
         // B. Board Placement Calculation
-        // Map word -> Array of valid start offsets [0, 2, ...]
         let wordPlacements = new Map();
 
         if (hasActivePosFilter) {
@@ -345,59 +371,58 @@
         }
 
         // C. Refine Filter
-        // For each word, check if *any* valid placement allows the Refine constraints to pass
         if (hasRefineFilter) {
             results = results.filter(word => {
                 let placementsToCheck = hasActivePosFilter ? wordPlacements.get(word.word) : [-1];
                 let foundValidPlacement = false;
 
-                // We need to store the *best* placement that made it pass, for visualization logic
-                // But filter just needs boolean true/false.
-                
                 for (let offset of placementsToCheck) {
-                    // 1. Identify Available Characters (Consumption Logic)
-                    let availableIndices = []; // Indices of chars in word that are NOT used by grid
                     const chars = word.word.split('');
-                    
-                    for (let i = 0; i < chars.length; i++) {
-                        let isUsedByGrid = false;
-                        if (offset !== -1) {
-                            let boardIndex = offset + i;
-                            if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
-                                isUsedByGrid = true;
+                    let charsToSearch = [];
+
+                    // 1. Determine Scope (Whole Word vs Unused)
+                    if (currentRefineScope === 'UNUSED') {
+                        // Subtract Grid Characters
+                        for (let i = 0; i < chars.length; i++) {
+                            let isUsedByGrid = false;
+                            if (offset !== -1) {
+                                let boardIndex = offset + i;
+                                if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
+                                    isUsedByGrid = true;
+                                }
                             }
+                            if (!isUsedByGrid) charsToSearch.push(chars[i]);
                         }
-                        if (!isUsedByGrid) availableIndices.push(i);
+                    } else {
+                        // Scope = WHOLE: Search everything
+                        charsToSearch = [...chars];
                     }
 
-                    // 2. Check Constraints
+                    // 2. Check Constraints against charsToSearch
                     let placementPasses = false;
 
                     if (currentRefineLogic === 'OR') {
-                        // Any constraint must match any available char
-                        // We don't strictly need consumption for OR, just existence
+                        // ANY constraint must match ANY available char
                         placementPasses = refineConstraints.some(constraint => {
-                            return availableIndices.some(idx => constraint.includes(chars[idx]));
+                            return charsToSearch.some(char => constraint.includes(char));
                         });
                     } else {
-                        // AND Logic with Strict Consumption
-                        let currentIndices = [...availableIndices]; // Copy for consumption
+                        // AND Logic with Greedy Consumption
+                        let currentPool = [...charsToSearch];
                         let allConstraintsMet = true;
 
                         for (let constraint of refineConstraints) {
-                            // Find an available char that matches this constraint
-                            let matchFoundIndex = -1;
-                            for (let k = 0; k < currentIndices.length; k++) {
-                                let idx = currentIndices[k];
-                                if (constraint.includes(chars[idx])) {
-                                    matchFoundIndex = k;
+                            let matchIndex = -1;
+                            // Find match in current pool
+                            for (let k = 0; k < currentPool.length; k++) {
+                                if (constraint.includes(currentPool[k])) {
+                                    matchIndex = k;
                                     break;
                                 }
                             }
 
-                            if (matchFoundIndex !== -1) {
-                                // Consume it
-                                currentIndices.splice(matchFoundIndex, 1); 
+                            if (matchIndex !== -1) {
+                                currentPool.splice(matchIndex, 1); // Consume
                             } else {
                                 allConstraintsMet = false;
                                 break;
@@ -408,9 +433,7 @@
 
                     if (placementPasses) {
                         foundValidPlacement = true;
-                        // Optimization: We could update wordPlacements to only contain this valid one
-                        // so visualization is correct?
-                        // Let's replace the map entry with just this "winning" offset for display simplicity
+                        // For visualization, lock this offset
                         if (hasActivePosFilter) wordPlacements.set(word.word, [offset]);
                         break; 
                     }
@@ -451,11 +474,9 @@
                     : '';
                 
                 // Visualization Logic
-                // If filtered, wordPlacements has the specific winning offset (or first valid one)
                 let placementOffset = hasActivePosFilter ? wordPlacements.get(word.word)[0] : -1;
-                
-                // Recalculate which indices correspond to what for highlighting
                 const chars = word.word.split('');
+                
                 let gridIndices = new Set();
                 let refineIndices = new Set();
                 
@@ -469,20 +490,22 @@
                     }
                 }
 
-                // Mark Refine Indices (Greedy match for viz)
+                // Mark Refine Indices for Viz
                 if (hasRefineFilter) {
                     let availIndices = [];
-                    chars.forEach((_, i) => { if(!gridIndices.has(i)) availIndices.push(i); });
+                    // In WHOLE mode, available is everything. In UNUSED, it's non-grid.
+                    chars.forEach((_, i) => { 
+                        if (currentRefineScope === 'WHOLE' || !gridIndices.has(i)) {
+                            availIndices.push(i); 
+                        }
+                    });
                     
-                    // Simple greedy consumption for highlighting visualization
                     let vizConsumed = new Set();
                     for(let constraint of refineConstraints) {
                         for(let idx of availIndices) {
                             if(!vizConsumed.has(idx) && constraint.includes(chars[idx])) {
                                 refineIndices.add(idx);
                                 vizConsumed.add(idx);
-                                // If AND mode, we consume one per constraint.
-                                // If OR mode, technically highlighting all matches is fine.
                                 if(currentRefineLogic === 'AND') break; 
                             }
                         }
@@ -491,9 +514,16 @@
 
                 let highlightedWordHTML = chars.map((char, i) => {
                     let style = '';
-                    if (gridIndices.has(i)) {
+                    let isGrid = gridIndices.has(i);
+                    let isRefine = refineIndices.has(i);
+
+                    // Logic for combined styles
+                    if (isGrid && isRefine) {
+                        // It's on the board AND matched a "Whole Word" filter
+                        style = "font-weight:bold; text-decoration:underline; color:#007AFF; background:#e6f0ff;";
+                    } else if (isGrid) {
                         style = "font-weight:bold; text-decoration:underline; color:#007AFF;";
-                    } else if (refineIndices.has(i)) {
+                    } else if (isRefine) {
                         style = currentRefineLogic === 'AND' 
                             ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
                             : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;";

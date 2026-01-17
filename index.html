@@ -56,7 +56,6 @@
         
         .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
         .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
-        .scope-toggle .toggle-option.active { color: #333; font-weight: 700; }
         
         .refine-inputs { display: flex; gap: 10px; }
         .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
@@ -154,10 +153,6 @@
                                 <div class="toggle-option active" data-logic="OR">Any (OR)</div>
                                 <div class="toggle-option" data-logic="AND">All (AND)</div>
                             </div>
-                            <div class="toggle-switch scope-toggle">
-                                <div class="toggle-option active" data-scope="WHOLE">Whole Word</div>
-                                <div class="toggle-option" data-scope="UNUSED">Unused Only</div>
-                            </div>
                         </div>
                     </div>
                     
@@ -185,7 +180,6 @@
 <script>
     let dictionary = [];
     let currentRefineLogic = 'OR';
-    let currentRefineScope = 'WHOLE';
 
     function getSampleDictionary() {
         const samples = [
@@ -262,17 +256,6 @@
                 } else {
                     refineSection.classList.remove('and-mode');
                 }
-                performSearch();
-            });
-        });
-
-        // Scope Toggles
-        const scopeOptions = document.querySelectorAll('.scope-toggle .toggle-option');
-        scopeOptions.forEach(opt => {
-            opt.addEventListener('click', () => {
-                scopeOptions.forEach(o => o.classList.remove('active'));
-                opt.classList.add('active');
-                currentRefineScope = opt.getAttribute('data-scope');
                 performSearch();
             });
         });
@@ -383,27 +366,15 @@
         // C. Refine Filter
         if (hasRefineFilter) {
             results = results.filter(word => {
+                // If scope is always "Whole Word", we don't really need to loop through placements for validity,
+                // but we keep the structure for compatibility with highlighting logic.
                 let placementsToCheck = hasActivePosFilter ? wordPlacements.get(word.word) : [-1];
                 let foundValidPlacement = false;
 
                 for (let offset of placementsToCheck) {
                     const chars = word.word.split('');
-                    let charsToSearch = [];
-
-                    if (currentRefineScope === 'UNUSED') {
-                        for (let i = 0; i < chars.length; i++) {
-                            let isUsedByGrid = false;
-                            if (offset !== -1) {
-                                let boardIndex = offset + i;
-                                if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
-                                    isUsedByGrid = true;
-                                }
-                            }
-                            if (!isUsedByGrid) charsToSearch.push(chars[i]);
-                        }
-                    } else {
-                        charsToSearch = [...chars];
-                    }
+                    // Default to checking whole word
+                    let charsToSearch = [...chars];
 
                     let placementPasses = false;
 
@@ -435,6 +406,7 @@
 
                     if (placementPasses) {
                         foundValidPlacement = true;
+                        // Map update is already done or not needed for simple check
                         if (hasActivePosFilter) wordPlacements.set(word.word, [offset]);
                         break; 
                     }
@@ -496,9 +468,8 @@
                 if (hasRefineFilter) {
                     let availIndices = [];
                     chars.forEach((_, i) => { 
-                        if (currentRefineScope === 'WHOLE' || !gridIndices.has(i)) {
-                            availIndices.push(i); 
-                        }
+                        // Always include all indices (Whole Word behavior)
+                        availIndices.push(i); 
                     });
                     
                     let vizConsumed = new Set();

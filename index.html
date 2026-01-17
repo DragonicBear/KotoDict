@@ -142,7 +142,7 @@
 
                 <div class="refine-section" id="refineSection">
                     <div class="refine-header">
-                        <span class="refine-title">Refine Results (Secondary Filter):</span>
+                        <span class="refine-title">Refine Results (Contains):</span>
                         <div class="refine-controls">
                             <div class="toggle-switch logic-toggle">
                                 <div class="toggle-option active" data-logic="OR">Any (OR)</div>
@@ -355,7 +355,7 @@
 
                 for (let offset of placementsToCheck) {
                     const chars = word.word.split('');
-                    let charsToSearch = [...chars];
+                    let charsToSearch = [...chars]; // Search Whole Word always
 
                     // 2. Check Constraints against charsToSearch
                     let placementPasses = false;
@@ -452,7 +452,7 @@
                 // Mark Refine Indices for Viz
                 if (hasRefineFilter) {
                     let availIndices = [];
-                    // Available is everything now since 'UNUSED' logic is gone
+                    // Available is everything now
                     chars.forEach((_, i) => availIndices.push(i));
                     
                     let vizConsumed = new Set();

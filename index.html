@@ -42,7 +42,7 @@
         label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
         
         /* Refine Section Styles */
-        .refine-section { background: #fff8f0; border: 1px solid #ffe4cc; padding: 15px; border-radius: 8px; margin-bottom: 15px; transition: background 0.2s, border-color 0.2s; }
+        .refine-section { background: #fff8f0; border: 1px solid #ffe4cc; padding: 15px; border-radius: 8px; margin-bottom: 20px; transition: background 0.2s, border-color 0.2s; }
         .refine-section.and-mode { background: #f0f7ff; border-color: #cce4ff; }
         
         .refine-header { margin-bottom: 12px; }
@@ -54,9 +54,9 @@
         .toggle-option { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; white-space: nowrap; }
         .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         
+        /* Logic Toggle Colors */
         .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
         .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
-        .scope-toggle .toggle-option.active { color: #333; font-weight: 700; }
         
         .refine-inputs { display: flex; gap: 10px; }
         .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
@@ -65,12 +65,6 @@
         .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
         .refine-input.filled { background: #fffdf5; border-color: #d67a00; font-weight: bold; }
         .refine-section.and-mode .refine-input.filled { background: #f0f8ff; border-color: #007AFF; }
-        
-        /* New Text Filter */
-        .text-filter-container { background: #fff; border: 2px solid #eee; border-radius: 8px; padding: 10px 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .text-filter-label { font-weight: 600; font-size: 14px; color: #333; white-space: nowrap; }
-        .text-filter-input { flex: 1; border: none; font-size: 16px; padding: 5px; outline: none; color: #333; background: transparent; }
-        .text-filter-input::placeholder { color: #ccc; }
         
         .results { margin-top: 10px; }
         .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
@@ -148,15 +142,11 @@
 
                 <div class="refine-section" id="refineSection">
                     <div class="refine-header">
-                        <span class="refine-title">Refine (Deck Check):</span>
+                        <span class="refine-title">Refine Results (Secondary Filter):</span>
                         <div class="refine-controls">
                             <div class="toggle-switch logic-toggle">
                                 <div class="toggle-option active" data-logic="OR">Any (OR)</div>
                                 <div class="toggle-option" data-logic="AND">All (AND)</div>
-                            </div>
-                            <div class="toggle-switch scope-toggle">
-                                <div class="toggle-option active" data-scope="WHOLE">Whole Word</div>
-                                <div class="toggle-option" data-scope="UNUSED">Unused Only</div>
                             </div>
                         </div>
                     </div>
@@ -169,11 +159,6 @@
                     </div>
                 </div>
                 
-                <div class="text-filter-container">
-                    <span class="text-filter-label">Contains:</span>
-                    <input type="text" id="textSearch" class="text-filter-input" placeholder="e.g. あい (Exact match)" autocomplete="off">
-                </div>
-
                 <div class="results">
                     <div class="result-count" id="resultCount">Enter characters to search</div>
                     <div id="resultList"></div>
@@ -185,7 +170,6 @@
 <script>
     let dictionary = [];
     let currentRefineLogic = 'OR';
-    let currentRefineScope = 'WHOLE';
 
     function getSampleDictionary() {
         const samples = [
@@ -248,9 +232,8 @@
         const refineInputs = document.querySelectorAll('.refine-input');
         const sortSelect = document.getElementById('sortSelect');
         const refineSection = document.getElementById('refineSection');
-        const textSearch = document.getElementById('textSearch');
         
-        // Logic Toggles
+        // Logic Toggles (AND/OR)
         const logicOptions = document.querySelectorAll('.logic-toggle .toggle-option');
         logicOptions.forEach(opt => {
             opt.addEventListener('click', () => {
@@ -266,21 +249,9 @@
             });
         });
 
-        // Scope Toggles
-        const scopeOptions = document.querySelectorAll('.scope-toggle .toggle-option');
-        scopeOptions.forEach(opt => {
-            opt.addEventListener('click', () => {
-                scopeOptions.forEach(o => o.classList.remove('active'));
-                opt.classList.add('active');
-                currentRefineScope = opt.getAttribute('data-scope');
-                performSearch();
-            });
-        });
-
         clearBtn.addEventListener('click', (e) => {
             e.preventDefault();
             posInputs.forEach(input => { input.value = ''; input.classList.remove('filled'); });
-            textSearch.value = '';
             performSearch();
         });
         
@@ -303,9 +274,6 @@
                 debouncedSearch();
             });
         });
-        
-        // New Text Search Listener
-        textSearch.addEventListener('input', debouncedSearch);
         
         document.querySelectorAll('input[type="checkbox"]').forEach(input => {
             input.addEventListener('change', performSearch);
@@ -331,7 +299,6 @@
         const resultList = document.getElementById('resultList');
         const sortOrder = document.getElementById('sortSelect').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
-        const textFilterValue = document.getElementById('textSearch').value.trim();
 
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
         const inputValues = posInputs.map(i => i.value.trim());
@@ -388,43 +355,33 @@
 
                 for (let offset of placementsToCheck) {
                     const chars = word.word.split('');
-                    let charsToSearch = [];
+                    let charsToSearch = [...chars];
 
-                    if (currentRefineScope === 'UNUSED') {
-                        for (let i = 0; i < chars.length; i++) {
-                            let isUsedByGrid = false;
-                            if (offset !== -1) {
-                                let boardIndex = offset + i;
-                                if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
-                                    isUsedByGrid = true;
-                                }
-                            }
-                            if (!isUsedByGrid) charsToSearch.push(chars[i]);
-                        }
-                    } else {
-                        charsToSearch = [...chars];
-                    }
-
+                    // 2. Check Constraints against charsToSearch
                     let placementPasses = false;
 
                     if (currentRefineLogic === 'OR') {
+                        // ANY constraint must match ANY available char
                         placementPasses = refineConstraints.some(constraint => {
                             return charsToSearch.some(char => constraint.includes(char));
                         });
                     } else {
+                        // AND Logic with Greedy Consumption
                         let currentPool = [...charsToSearch];
                         let allConstraintsMet = true;
 
                         for (let constraint of refineConstraints) {
                             let matchIndex = -1;
+                            // Find match in current pool
                             for (let k = 0; k < currentPool.length; k++) {
                                 if (constraint.includes(currentPool[k])) {
                                     matchIndex = k;
                                     break;
                                 }
                             }
+
                             if (matchIndex !== -1) {
-                                currentPool.splice(matchIndex, 1);
+                                currentPool.splice(matchIndex, 1); // Consume
                             } else {
                                 allConstraintsMet = false;
                                 break;
@@ -435,17 +392,14 @@
 
                     if (placementPasses) {
                         foundValidPlacement = true;
+                        // For visualization, lock this offset
                         if (hasActivePosFilter) wordPlacements.set(word.word, [offset]);
                         break; 
                     }
                 }
+                
                 return foundValidPlacement;
             });
-        }
-
-        // D. Text Filter (Exact substring match)
-        if (textFilterValue.length > 0) {
-            results = results.filter(word => word.word.includes(textFilterValue));
         }
 
         // 3. Sorting
@@ -459,7 +413,7 @@
         const displayResults = results.slice(0, maxResults);
         
         // 4. Update UI
-        if (!hasActivePosFilter && !hasRefineFilter && charFilters.length === 0 && textFilterValue.length === 0) {
+        if (!hasActivePosFilter && !hasRefineFilter && charFilters.length === 0) {
             resultCount.textContent = `Waiting for input... (${dictionary.length} words)`;
             resultList.innerHTML = '';
             return;
@@ -478,12 +432,14 @@
                     ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
                     : '';
                 
+                // Visualization Logic
                 let placementOffset = hasActivePosFilter ? wordPlacements.get(word.word)[0] : -1;
                 const chars = word.word.split('');
                 
                 let gridIndices = new Set();
                 let refineIndices = new Set();
                 
+                // Mark Grid Indices
                 if (placementOffset !== -1) {
                     for(let i=0; i<chars.length; i++) {
                         let boardIndex = placementOffset + i;
@@ -493,13 +449,11 @@
                     }
                 }
 
+                // Mark Refine Indices for Viz
                 if (hasRefineFilter) {
                     let availIndices = [];
-                    chars.forEach((_, i) => { 
-                        if (currentRefineScope === 'WHOLE' || !gridIndices.has(i)) {
-                            availIndices.push(i); 
-                        }
-                    });
+                    // Available is everything now since 'UNUSED' logic is gone
+                    chars.forEach((_, i) => availIndices.push(i));
                     
                     let vizConsumed = new Set();
                     for(let constraint of refineConstraints) {
@@ -518,7 +472,9 @@
                     let isGrid = gridIndices.has(i);
                     let isRefine = refineIndices.has(i);
 
+                    // Logic for combined styles
                     if (isGrid && isRefine) {
+                        // It's on the board AND matched a Refine filter
                         style = "font-weight:bold; text-decoration:underline; color:#007AFF; background:#e6f0ff;";
                     } else if (isGrid) {
                         style = "font-weight:bold; text-decoration:underline; color:#007AFF;";

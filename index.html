@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Kotono Nomikon - Board Search</title>
+    <title>Kotodaman Board Solver</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); }
         html, body { width: 100%; height: 100%; overflow-x: hidden; position: fixed; -webkit-overflow-scrolling: touch; }
@@ -48,7 +48,11 @@
         .refine-header { margin-bottom: 12px; }
         .refine-title { font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 8px; }
         
-        .refine-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .refine-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
+        
+        /* New Mini Button Style */
+        .mini-btn { padding: 4px 10px; font-size: 11px; background: #fff; border: 1px solid #ccc; border-radius: 6px; color: #666; margin-right: 8px; font-weight: 600; }
+        .mini-btn:active { background: #eee; }
         
         .toggle-switch { display: inline-flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
         .toggle-option { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; white-space: nowrap; }
@@ -56,7 +60,6 @@
         
         .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
         .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
-        .scope-toggle .toggle-option.active { color: #333; font-weight: 700; }
         
         .refine-inputs { display: flex; gap: 10px; }
         .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
@@ -91,15 +94,15 @@
 <body>
     <div id="app">
         <div class="container">
-            <h1>Board Search</h1>
+            <h1>Kotodaman Board Solver</h1>
             <div class="loading" id="loadingMsg">Loading dictionary...</div>
 
             <div id="mainContent" style="display:none;">
                 
                 <div class="input-section">
                     <div class="instruction-text">
-                        <strong>Board Placement:</strong> Words must fit on the board.<br>
-                        Overlaps must match exactly. Empty spaces are wildcards.
+                         Insert hiragana in the same position as the game.<br>
+                         Multiple hiragana can be placed in the same box. Empty spaces are wildcards.
                     </div>
                     
                     <div class="pos-filter-container">
@@ -150,13 +153,11 @@
                     <div class="refine-header">
                         <span class="refine-title">Refine (Deck Check):</span>
                         <div class="refine-controls">
+                            <button id="clearRefineBtn" class="mini-btn" type="button">Clear</button>
+                            
                             <div class="toggle-switch logic-toggle">
                                 <div class="toggle-option active" data-logic="OR">Any (OR)</div>
                                 <div class="toggle-option" data-logic="AND">All (AND)</div>
-                            </div>
-                            <div class="toggle-switch scope-toggle">
-                                <div class="toggle-option active" data-scope="WHOLE">Whole Word</div>
-                                <div class="toggle-option" data-scope="UNUSED">Unused Only</div>
                             </div>
                         </div>
                     </div>
@@ -171,7 +172,7 @@
                 
                 <div class="text-filter-container">
                     <span class="text-filter-label">Contains:</span>
-                    <input type="text" id="textSearch" class="text-filter-input" placeholder="e.g. あい (Exact match)" autocomplete="off">
+                    <input type="text" id="textSearch" class="text-filter-input" placeholder="e.g. あ-い (- is wildcard)" autocomplete="off">
                 </div>
 
                 <div class="results">
@@ -185,7 +186,6 @@
 <script>
     let dictionary = [];
     let currentRefineLogic = 'OR';
-    let currentRefineScope = 'WHOLE';
 
     function getSampleDictionary() {
         const samples = [
@@ -244,6 +244,7 @@
     
     function initializeApp() {
         const clearBtn = document.getElementById('clearBtn');
+        const clearRefineBtn = document.getElementById('clearRefineBtn'); // Select new button
         const posInputs = document.querySelectorAll('.pos-input');
         const refineInputs = document.querySelectorAll('.refine-input');
         const sortSelect = document.getElementById('sortSelect');
@@ -266,21 +267,20 @@
             });
         });
 
-        // Scope Toggles
-        const scopeOptions = document.querySelectorAll('.scope-toggle .toggle-option');
-        scopeOptions.forEach(opt => {
-            opt.addEventListener('click', () => {
-                scopeOptions.forEach(o => o.classList.remove('active'));
-                opt.classList.add('active');
-                currentRefineScope = opt.getAttribute('data-scope');
-                performSearch();
-            });
-        });
-
         clearBtn.addEventListener('click', (e) => {
             e.preventDefault();
             posInputs.forEach(input => { input.value = ''; input.classList.remove('filled'); });
             textSearch.value = '';
+            performSearch();
+        });
+
+        // NEW: Event listener for Refine Clear Button
+        clearRefineBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            refineInputs.forEach(input => { 
+                input.value = ''; 
+                input.classList.remove('filled'); 
+            });
             performSearch();
         });
         
@@ -388,22 +388,7 @@
 
                 for (let offset of placementsToCheck) {
                     const chars = word.word.split('');
-                    let charsToSearch = [];
-
-                    if (currentRefineScope === 'UNUSED') {
-                        for (let i = 0; i < chars.length; i++) {
-                            let isUsedByGrid = false;
-                            if (offset !== -1) {
-                                let boardIndex = offset + i;
-                                if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
-                                    isUsedByGrid = true;
-                                }
-                            }
-                            if (!isUsedByGrid) charsToSearch.push(chars[i]);
-                        }
-                    } else {
-                        charsToSearch = [...chars];
-                    }
+                    let charsToSearch = [...chars];
 
                     let placementPasses = false;
 
@@ -443,9 +428,14 @@
             });
         }
 
-        // D. Text Filter (Exact substring match)
+        // D. Text Filter (Wildcard support)
         if (textFilterValue.length > 0) {
-            results = results.filter(word => word.word.includes(textFilterValue));
+            // Escape special regex chars, then replace - with wildcard .
+            const escaped = textFilterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = escaped.replace(/-/g, '.');
+            const regex = new RegExp(pattern);
+            
+            results = results.filter(word => regex.test(word.word));
         }
 
         // 3. Sorting
@@ -496,9 +486,7 @@
                 if (hasRefineFilter) {
                     let availIndices = [];
                     chars.forEach((_, i) => { 
-                        if (currentRefineScope === 'WHOLE' || !gridIndices.has(i)) {
-                            availIndices.push(i); 
-                        }
+                        availIndices.push(i); 
                     });
                     
                     let vizConsumed = new Set();

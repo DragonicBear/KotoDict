@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Kotono Nomikon - Board Search</title>
+    <title>Kotodaman Board Solver</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); }
         html, body { width: 100%; height: 100%; overflow-x: hidden; position: fixed; -webkit-overflow-scrolling: touch; }
@@ -94,15 +94,15 @@
 <body>
     <div id="app">
         <div class="container">
-            <h1>Board Search</h1>
+            <h1>Kotodaman Board Solver</h1>
             <div class="loading" id="loadingMsg">Loading dictionary...</div>
 
             <div id="mainContent" style="display:none;">
                 
                 <div class="input-section">
                     <div class="instruction-text">
-                        <strong>Board Placement:</strong> Words must fit on the board.<br>
-                        Overlaps must match exactly. Empty spaces are wildcards.
+                        <strong>Board Placement:</strong> Insert hiragana in the same position as the game.<br>
+                         Multiple hiragana can be placed in the same box. Empty spaces are wildcards.
                     </div>
                     
                     <div class="pos-filter-container">

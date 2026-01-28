@@ -204,8 +204,10 @@
             ["あいさつ","",4,["挨拶"],[]],
             ["こう","",2,["甲"],[]],
             ["こうこう","",4,["高校"],[]],
+            ["こうこうしゃ","",5,["高校社"],[]],
             ["こうそ","",3,["酵素"],[]],
-            ["たいいく","",4,["体育"],[]]
+            ["たいいく","",4,["体育"],[]],
+            ["あとこうしゃく","",7,["後講釈"],[]]
         ];
         return samples.map(entry => ({
             word: entry[0],
@@ -243,7 +245,7 @@
     
     function initializeApp() {
         const clearBtn = document.getElementById('clearBtn');
-        const clearRefineBtn = document.getElementById('clearRefineBtn'); // Select new button
+        const clearRefineBtn = document.getElementById('clearRefineBtn');
         const posInputs = document.querySelectorAll('.pos-input');
         const refineInputs = document.querySelectorAll('.refine-input');
         const sortSelect = document.getElementById('sortSelect');
@@ -273,7 +275,6 @@
             performSearch();
         });
 
-        // NEW: Event listener for Refine Clear Button
         clearRefineBtn.addEventListener('click', (e) => {
             e.preventDefault();
             refineInputs.forEach(input => { 
@@ -303,7 +304,6 @@
             });
         });
         
-        // New Text Search Listener
         textSearch.addEventListener('input', debouncedSearch);
         
         document.querySelectorAll('input[type="checkbox"]').forEach(input => {
@@ -351,6 +351,7 @@
         // B. Board Placement Calculation
         let wordPlacements = new Map();
 
+        // Always calculate placements if there is a board filter OR refine filter (needed for refine logic now)
         if (hasActivePosFilter) {
             results = results.filter(word => {
                 const len = word.word.length;
@@ -382,20 +383,58 @@
         // C. Refine Filter
         if (hasRefineFilter) {
             results = results.filter(word => {
-                let placementsToCheck = hasActivePosFilter ? wordPlacements.get(word.word) : [-1];
+                // If we have board positions calculated, use them. If not (no board filter), assume offset 0 (or try all?)
+                // Actually if no board filter is active, we can't really subtract board chars.
+                // But generally users use Refine WITH board.
+                
+                let placementsToCheck = [-1];
+                if (hasActivePosFilter) {
+                    placementsToCheck = wordPlacements.get(word.word);
+                } else {
+                    // If no board filter, we must assume the word could be anywhere, 
+                    // but "Board subtraction" implies checking against specific slots. 
+                    // Without board input, standard behavior applies (check whole word).
+                    // So we treat -1 as "Check whole word".
+                }
+
                 let foundValidPlacement = false;
 
                 for (let offset of placementsToCheck) {
                     const chars = word.word.split('');
-                    let charsToSearch = [...chars];
+                    
+                    // Identify which characters are NOT covered by the board input
+                    let charsToSearch = [];
+                    
+                    if (offset === -1) {
+                        charsToSearch = [...chars];
+                    } else {
+                        // Only add characters to search if the corresponding board slot is EMPTY
+                        for (let i = 0; i < chars.length; i++) {
+                            let boardIndex = offset + i;
+                            // If input at boardIndex is empty, we need this char from Refine/Deck
+                            if (!inputValues[boardIndex] || inputValues[boardIndex].length === 0) {
+                                charsToSearch.push(chars[i]);
+                            }
+                        }
+                    }
 
+                    // Perform standard Refine Logic on charsToSearch
                     let placementPasses = false;
 
                     if (currentRefineLogic === 'OR') {
-                        placementPasses = refineConstraints.some(constraint => {
-                            return charsToSearch.some(char => constraint.includes(char));
-                        });
+                        // Pass if ANY char in charsToSearch exists in ANY constraint
+                        // (If charsToSearch is empty, it means all chars are on board. It technically "fits" the criteria if we assume Refine filters what you HAVE, 
+                        // but usually if you filter by "Have A", you want to USE A. 
+                        // However, logic: "Can I make this word with Deck [A]?" -> If word is [U] and board has [U], yes you can. 
+                        // But typically users want to filter for words using the refined char.
+                        // Let's assume if charsToSearch is empty, it fails OR because it uses NONE of the refine chars.)
+                        if (charsToSearch.length > 0) {
+                            placementPasses = refineConstraints.some(constraint => {
+                                return charsToSearch.some(char => constraint.includes(char));
+                            });
+                        }
                     } else {
+                        // AND Logic
                         let currentPool = [...charsToSearch];
                         let allConstraintsMet = true;
 
@@ -419,6 +458,8 @@
 
                     if (placementPasses) {
                         foundValidPlacement = true;
+                        // Update placement to this specific one if it's the one that validated the refine logic
+                        // (Small optimization for display, though simple overwrite works)
                         if (hasActivePosFilter) wordPlacements.set(word.word, [offset]);
                         break; 
                     }
@@ -429,7 +470,6 @@
 
         // D. Text Filter (Wildcard support)
         if (textFilterValue.length > 0) {
-            // Escape special regex chars, then replace - with wildcard .
             const escaped = textFilterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const pattern = escaped.replace(/-/g, '.');
             const regex = new RegExp(pattern);
@@ -473,6 +513,7 @@
                 let gridIndices = new Set();
                 let refineIndices = new Set();
                 
+                // 1. Identify Grid Matches (Board)
                 if (placementOffset !== -1) {
                     for(let i=0; i<chars.length; i++) {
                         let boardIndex = placementOffset + i;
@@ -482,10 +523,15 @@
                     }
                 }
 
+                // 2. Identify Refine Matches (Deck) - EXCLUDING Grid Matches
                 if (hasRefineFilter) {
                     let availIndices = [];
                     chars.forEach((_, i) => { 
-                        availIndices.push(i); 
+                        // IMPORTANT: Only consider index available for Refine highlighting 
+                        // if it is NOT already claimed by the Grid
+                        if (!gridIndices.has(i)) {
+                            availIndices.push(i); 
+                        }
                     });
                     
                     let vizConsumed = new Set();
@@ -505,9 +551,9 @@
                     let isGrid = gridIndices.has(i);
                     let isRefine = refineIndices.has(i);
 
-                    if (isGrid && isRefine) {
-                        style = "font-weight:bold; text-decoration:underline; color:#007AFF; background:#e6f0ff;";
-                    } else if (isGrid) {
+                    // Note: isGrid and isRefine should now be mutually exclusive based on logic above,
+                    // but we keep the precedence style just in case.
+                    if (isGrid) {
                         style = "font-weight:bold; text-decoration:underline; color:#007AFF;";
                     } else if (isRefine) {
                         style = currentRefineLogic === 'AND' 

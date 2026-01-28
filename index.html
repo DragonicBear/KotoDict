@@ -66,8 +66,7 @@
         .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
         .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
         
-        .refine-filter-check { font-size: 12px; color: #555; font-weight: 600; margin-left: 8px; display: inline-flex; align-items: center; }
-        .refine-filter-check input { width: 16px; height: 16px; margin-right: 4px; }
+        /* Removed .refine-filter-check styles since element is deleted */
 
         .refine-inputs { display: flex; gap: 10px; }
         .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
@@ -113,8 +112,8 @@
                 
                 <div class="input-section">
                     <div class="instruction-text">
-                         Insert hiragana in the same position as the game.<br>
-                         Multiple hiragana can be placed in the same box. Empty spaces are wildcards.
+                          Insert hiragana in the same position as the game.<br>
+                          Multiple hiragana can be placed in the same box. Empty spaces are wildcards.
                     </div>
                     
                     <div class="pos-filter-container">
@@ -175,11 +174,8 @@
                                 <div class="toggle-option active" data-logic="OR">Any (OR)</div>
                                 <div class="toggle-option" data-logic="AND">All (AND)</div>
                             </div>
-
-                            <label class="refine-filter-check">
-                                <input type="checkbox" id="strictRefine" checked> Filter Results
-                            </label>
-                        </div>
+                            
+                            </div>
                     </div>
                     
                     <div class="refine-inputs">
@@ -272,7 +268,7 @@
         const sortSelect = document.getElementById('sortSelect');
         const refineSection = document.getElementById('refineSection');
         const textSearch = document.getElementById('textSearch');
-        const strictRefineCheck = document.getElementById('strictRefine');
+        // const strictRefineCheck removed
         const requireAllBoardCheck = document.getElementById('requireAllBoard');
         
         // Logic Toggles
@@ -334,7 +330,7 @@
         });
 
         sortSelect.addEventListener('change', performSearch);
-        strictRefineCheck.addEventListener('change', performSearch);
+        // strictRefineCheck listener removed
         requireAllBoardCheck.addEventListener('change', performSearch);
         
         document.querySelectorAll('label').forEach(label => {
@@ -356,7 +352,7 @@
         const sortOrder = document.getElementById('sortSelect').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
         const textFilterValue = document.getElementById('textSearch').value.trim();
-        const strictRefine = document.getElementById('strictRefine').checked;
+        const strictRefine = true; // Always strict mode
         const requireAllBoard = document.getElementById('requireAllBoard').checked;
 
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
@@ -495,7 +491,8 @@
             wordMeta.set(word.word, { validOffsets, isRefineMatch });
             
             // 4. Strict Filter Check
-            if (hasRefineFilter && strictRefine && !isRefineMatch) {
+            // Since strictRefine is now always TRUE, this simply checks if refine filter exists and word doesn't match
+            if (hasRefineFilter && !isRefineMatch) {
                 return; // Skip
             }
 

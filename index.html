@@ -50,8 +50,8 @@
         
         .refine-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
         
-        /* New Mini Button Style */
-        .mini-btn { padding: 4px 10px; font-size: 11px; background: #fff; border: 1px solid #ccc; border-radius: 6px; color: #666; margin-right: 8px; font-weight: 600; }
+        /* Mini Button Style */
+        .mini-btn { padding: 4px 10px; font-size: 11px; background: #fff; border: 1px solid #ccc; border-radius: 6px; color: #666; margin-right: 4px; font-weight: 600; }
         .mini-btn:active { background: #eee; }
         
         .toggle-switch { display: inline-flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
@@ -61,6 +61,9 @@
         .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
         .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
         
+        .refine-filter-check { font-size: 12px; color: #555; font-weight: 600; margin-left: 8px; display: inline-flex; align-items: center; }
+        .refine-filter-check input { width: 16px; height: 16px; margin-right: 4px; }
+
         .refine-inputs { display: flex; gap: 10px; }
         .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
         .refine-input:focus { outline: none; background: #fff; }
@@ -77,7 +80,12 @@
         
         .results { margin-top: 10px; }
         .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
-        .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #007AFF; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
+        .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
+        
+        /* Visual cue for Refine Matches when Filter is OFF */
+        .result-item.refine-match { border-left-color: #d67a00; background: #fffcf5; }
+        .and-mode .result-item.refine-match { border-left-color: #007AFF; background: #f2f8ff; }
+
         .result-item:active { background: #f0f0f0; }
         .result-word { font-size: 20px; font-weight: 600; margin-bottom: 6px; color: #111; display:flex; justify-content: space-between; align-items: center;}
         .result-info { color: #666; font-size: 14px; }
@@ -158,6 +166,10 @@
                                 <div class="toggle-option active" data-logic="OR">Any (OR)</div>
                                 <div class="toggle-option" data-logic="AND">All (AND)</div>
                             </div>
+
+                            <label class="refine-filter-check">
+                                <input type="checkbox" id="strictRefine" checked> Filter Results
+                            </label>
                         </div>
                     </div>
                     
@@ -251,6 +263,7 @@
         const sortSelect = document.getElementById('sortSelect');
         const refineSection = document.getElementById('refineSection');
         const textSearch = document.getElementById('textSearch');
+        const strictRefineCheck = document.getElementById('strictRefine');
         
         // Logic Toggles
         const logicOptions = document.querySelectorAll('.logic-toggle .toggle-option');
@@ -311,6 +324,7 @@
         });
 
         sortSelect.addEventListener('change', performSearch);
+        strictRefineCheck.addEventListener('change', performSearch);
         
         document.querySelectorAll('label').forEach(label => {
             label.addEventListener('touchend', function(e) {
@@ -331,6 +345,7 @@
         const sortOrder = document.getElementById('sortSelect').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
         const textFilterValue = document.getElementById('textSearch').value.trim();
+        const strictRefine = document.getElementById('strictRefine').checked;
 
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
         const inputValues = posInputs.map(i => i.value.trim());
@@ -348,15 +363,25 @@
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // B. Board Placement Calculation
-        let wordPlacements = new Map();
+        // B. Text Filter (Wildcard support)
+        if (textFilterValue.length > 0) {
+            const escaped = textFilterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = escaped.replace(/-/g, '.');
+            const regex = new RegExp(pattern);
+            results = results.filter(word => regex.test(word.word));
+        }
 
-        // Always calculate placements if there is a board filter OR refine filter (needed for refine logic now)
-        if (hasActivePosFilter) {
-            results = results.filter(word => {
-                const len = word.word.length;
-                let validOffsets = [];
+        // C. Board Placement AND Refine Calculation
+        // We do this in one pass to calculate metadata for all potential words
+        let wordMeta = new Map(); // Stores { validOffsets: [], refineMatch: bool }
+        let validBoardWords = [];
 
+        results.forEach(word => {
+            // 1. Calculate Board Placement
+            const len = word.word.length;
+            let validOffsets = [];
+            
+            if (hasActivePosFilter) {
                 for (let start = 0; start <= 7 - len; start++) {
                     let fits = true;
                     for (let i = 0; i < len; i++) {
@@ -371,63 +396,36 @@
                     }
                     if (fits) validOffsets.push(start);
                 }
+                if (validOffsets.length === 0) return; // Word doesn't fit board
+            } else {
+                // If no board filter, standard "offset" is -1 (or treat as valid)
+                validOffsets = [-1]; 
+            }
 
-                if (validOffsets.length > 0) {
-                    wordPlacements.set(word.word, validOffsets);
-                    return true;
-                }
-                return false;
-            });
-        }
-
-        // C. Refine Filter
-        if (hasRefineFilter) {
-            results = results.filter(word => {
-                // If we have board positions calculated, use them. If not (no board filter), assume offset 0 (or try all?)
-                // Actually if no board filter is active, we can't really subtract board chars.
-                // But generally users use Refine WITH board.
-                
-                let placementsToCheck = [-1];
-                if (hasActivePosFilter) {
-                    placementsToCheck = wordPlacements.get(word.word);
-                } else {
-                    // If no board filter, we must assume the word could be anywhere, 
-                    // but "Board subtraction" implies checking against specific slots. 
-                    // Without board input, standard behavior applies (check whole word).
-                    // So we treat -1 as "Check whole word".
-                }
-
-                let foundValidPlacement = false;
-
-                for (let offset of placementsToCheck) {
+            // 2. Calculate Refine Match (Deck) - Subtractive Logic
+            let isRefineMatch = false;
+            
+            if (hasRefineFilter) {
+                // Try every valid placement to see if ONE satisfies the deck
+                for (let offset of validOffsets) {
                     const chars = word.word.split('');
-                    
-                    // Identify which characters are NOT covered by the board input
                     let charsToSearch = [];
                     
                     if (offset === -1) {
                         charsToSearch = [...chars];
                     } else {
-                        // Only add characters to search if the corresponding board slot is EMPTY
+                        // Only check characters that fall into EMPTY board slots
                         for (let i = 0; i < chars.length; i++) {
                             let boardIndex = offset + i;
-                            // If input at boardIndex is empty, we need this char from Refine/Deck
                             if (!inputValues[boardIndex] || inputValues[boardIndex].length === 0) {
                                 charsToSearch.push(chars[i]);
                             }
                         }
                     }
 
-                    // Perform standard Refine Logic on charsToSearch
                     let placementPasses = false;
 
                     if (currentRefineLogic === 'OR') {
-                        // Pass if ANY char in charsToSearch exists in ANY constraint
-                        // (If charsToSearch is empty, it means all chars are on board. It technically "fits" the criteria if we assume Refine filters what you HAVE, 
-                        // but usually if you filter by "Have A", you want to USE A. 
-                        // However, logic: "Can I make this word with Deck [A]?" -> If word is [U] and board has [U], yes you can. 
-                        // But typically users want to filter for words using the refined char.
-                        // Let's assume if charsToSearch is empty, it fails OR because it uses NONE of the refine chars.)
                         if (charsToSearch.length > 0) {
                             placementPasses = refineConstraints.some(constraint => {
                                 return charsToSearch.some(char => constraint.includes(char));
@@ -457,37 +455,55 @@
                     }
 
                     if (placementPasses) {
-                        foundValidPlacement = true;
-                        // Update placement to this specific one if it's the one that validated the refine logic
-                        // (Small optimization for display, though simple overwrite works)
-                        if (hasActivePosFilter) wordPlacements.set(word.word, [offset]);
+                        isRefineMatch = true;
+                        // Optimization: If strict filter is on, we might want to restrict the validOffsets
+                        // to ONLY the one that matched. For now, we keep all valid placements 
+                        // but mark the word as a "Refine Match".
+                        // If we wanted to show specific placement highlighting, we'd pick this offset.
+                        // Let's store this specific offset as preferred if we found one.
+                        validOffsets = [offset]; 
                         break; 
                     }
                 }
-                return foundValidPlacement;
-            });
-        }
+            }
 
-        // D. Text Filter (Wildcard support)
-        if (textFilterValue.length > 0) {
-            const escaped = textFilterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const pattern = escaped.replace(/-/g, '.');
-            const regex = new RegExp(pattern);
+            // 3. Store Meta
+            wordMeta.set(word.word, { validOffsets, isRefineMatch });
             
-            results = results.filter(word => regex.test(word.word));
-        }
+            // 4. Strict Filter Check
+            if (hasRefineFilter && strictRefine && !isRefineMatch) {
+                return; // Skip this word
+            }
 
-        // 3. Sorting
-        if (sortOrder === 'asc') {
-            results.sort((a, b) => a.word.length - b.word.length);
-        } else {
-            results.sort((a, b) => b.word.length - a.word.length);
-        }
+            validBoardWords.push(word);
+        });
+
+        results = validBoardWords;
+
+        // D. Sort
+        results.sort((a, b) => {
+            const metaA = wordMeta.get(a.word);
+            const metaB = wordMeta.get(b.word);
+            
+            // Primary Sort: Refine Match (if Refine is active)
+            if (hasRefineFilter) {
+                if (metaA.isRefineMatch !== metaB.isRefineMatch) {
+                    return metaA.isRefineMatch ? -1 : 1; // True comes first
+                }
+            }
+
+            // Secondary Sort: Length
+            if (sortOrder === 'asc') {
+                return a.word.length - b.word.length;
+            } else {
+                return b.word.length - a.word.length;
+            }
+        });
         
         const maxResults = 300; 
         const displayResults = results.slice(0, maxResults);
         
-        // 4. Update UI
+        // E. Update UI
         if (!hasActivePosFilter && !hasRefineFilter && charFilters.length === 0 && textFilterValue.length === 0) {
             resultCount.textContent = `Waiting for input... (${dictionary.length} words)`;
             resultList.innerHTML = '';
@@ -502,12 +518,13 @@
             resultCount.textContent = `Found ${results.length} words${suffix}`;
 
             resultList.innerHTML = displayResults.map(word => {
+                const meta = wordMeta.get(word.word);
                 const displayText = word.displays[0] || word.word;
                 const themesText = word.themes.length > 0 
                     ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
                     : '';
                 
-                let placementOffset = hasActivePosFilter ? wordPlacements.get(word.word)[0] : -1;
+                let placementOffset = meta.validOffsets[0]; // Use the calculated offset
                 const chars = word.word.split('');
                 
                 let gridIndices = new Set();
@@ -523,12 +540,11 @@
                     }
                 }
 
-                // 2. Identify Refine Matches (Deck) - EXCLUDING Grid Matches
-                if (hasRefineFilter) {
+                // 2. Identify Refine Matches (Deck)
+                // Only if this word actually PASSED the refine check do we highlight it
+                if (hasRefineFilter && meta.isRefineMatch) {
                     let availIndices = [];
                     chars.forEach((_, i) => { 
-                        // IMPORTANT: Only consider index available for Refine highlighting 
-                        // if it is NOT already claimed by the Grid
                         if (!gridIndices.has(i)) {
                             availIndices.push(i); 
                         }
@@ -551,8 +567,6 @@
                     let isGrid = gridIndices.has(i);
                     let isRefine = refineIndices.has(i);
 
-                    // Note: isGrid and isRefine should now be mutually exclusive based on logic above,
-                    // but we keep the precedence style just in case.
                     if (isGrid) {
                         style = "font-weight:bold; text-decoration:underline; color:#007AFF;";
                     } else if (isRefine) {
@@ -579,8 +593,12 @@
                     gridHtml += '</div>';
                 }
 
+                // Add class for styling if it matches refine
+                let itemClass = 'result-item';
+                if (meta.isRefineMatch) itemClass += ' refine-match';
+
                 return `
-                    <div class="result-item">
+                    <div class="${itemClass}">
                         <div class="result-word">
                             <span>${displayText} <span style="font-weight:normal; font-size:0.8em; color:#666;">(${highlightedWordHTML})</span></span>
                             ${gridHtml}

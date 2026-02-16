@@ -20,9 +20,10 @@
         .instruction-text { font-size: 13px; color: #666; margin-bottom: 15px; text-align: center; line-height: 1.4; }
         
         .pos-filter-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
+        .pos-filter-container > div { min-width: 0; }
         .pos-labels-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
         
-        .pos-input { width: 100%; aspect-ratio: 1/1; padding: 0; font-size: 18px; font-weight: bold; text-align: center; border: 2px solid #ddd; border-radius: 8px; background: #fff; -webkit-appearance: none; appearance: none; transition: all 0.2s; }
+        .pos-input { width: 100%; min-width: 0; aspect-ratio: 1/1; padding: 0; font-size: 18px; font-weight: bold; text-align: center; border: 2px solid #ddd; border-radius: 8px; background: #fff; -webkit-appearance: none; appearance: none; transition: all 0.2s; }
         .pos-input:focus { border-color: #007AFF; outline: none; background: #fff; }
         .pos-input.filled { background: #f0f8ff; border-color: #007AFF; }
         .pos-label { font-size: 11px; color: #999; text-align: center; margin-top: 4px; height: 16px; }
@@ -66,10 +67,8 @@
         .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
         .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
         
-        /* Removed .refine-filter-check styles since element is deleted */
-
         .refine-inputs { display: flex; gap: 10px; }
-        .refine-input { flex: 1; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
+        .refine-input { flex: 1; min-width: 0; max-width: 60px; height: 40px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
         .refine-input:focus { outline: none; background: #fff; }
         .refine-section .refine-input:focus { border-color: #d67a00; }
         .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
@@ -112,8 +111,8 @@
                 
                 <div class="input-section">
                     <div class="instruction-text">
-                          Insert hiragana in the same position as the game.<br>
-                          Multiple hiragana can be placed in the same box. Empty spaces are wildcards.
+                         Insert hiragana in the same position as the game.<br>
+                         Multiple hiragana can be placed in the same box. Empty spaces are wildcards.
                     </div>
                     
                     <div class="pos-filter-container">

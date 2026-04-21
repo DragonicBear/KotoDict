@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -12,801 +11,722 @@
         html, body { width: 100%; height: 100%; overflow-x: hidden; position: fixed; -webkit-overflow-scrolling: touch; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; background: #f5f5f5; -webkit-touch-callout: none; overscroll-behavior: none; }
         #app { width: 100%; height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 10px; }
+        
+        .container { max-width: 800px; margin: 0 auto 60px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        h1 { font-size: 24px; margin-bottom: 20px; color: #333; font-weight: 600; text-align: center; }
+        .loading { text-align: center; padding: 40px; color: #666; }
+        
+        .input-section { background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 15px; }
+        .instruction-text { font-size: 13px; color: #666; margin-bottom: 15px; text-align: center; line-height: 1.4; }
+        
+        /* Box Layout Fixes for Mobile */
+        .pos-filter-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
+        .pos-filter-container > div { position: relative; width: 100%; aspect-ratio: 1/1; min-width: 0; }
+        .pos-labels-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
+        
+        /* Absolutely positioned to prevent IME stretching */
+        .pos-input { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            padding: 0; 
+            margin: 0; 
+            font-size: 18px; 
+            font-weight: bold; 
+            text-align: center; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            background: #fff; 
+            -webkit-appearance: none; 
+            appearance: none; 
+            transition: all 0.2s; 
+            overflow: hidden; 
+            white-space: nowrap; 
+        }
+        .pos-input:focus { border-color: #007AFF; outline: none; background: #fff; }
+        .pos-input.filled { background: #f0f8ff; border-color: #007AFF; }
+        .pos-label { font-size: 11px; color: #999; text-align: center; margin-top: 4px; height: 16px; }
+        
+        .action-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 15px; gap: 10px; }
+        .sort-select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; font-size: 14px; }
+        button { padding: 8px 16px; font-size: 14px; border: none; border-radius: 6px; background: #8E8E93; color: white; font-weight: 500; cursor: pointer; transition: background 0.1s; }
+        button:active { background: #636366; transform: scale(0.97); }
+        
+        /* Checkbox Style in Action Row */
+        .board-requirement-check { display: flex; align-items: center; font-size: 14px; font-weight: 500; color: #333; }
+        .board-requirement-check input { width: 18px; height: 18px; margin-right: 6px; }
 
-```
-    .container { max-width: 800px; margin: 0 auto 60px; background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-    h1 { font-size: 24px; margin-bottom: 20px; color: #333; font-weight: 600; text-align: center; }
-    .loading { text-align: center; padding: 40px; color: #666; }
-    
-    .input-section { background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 15px; }
-    .instruction-text { font-size: 13px; color: #666; margin-bottom: 15px; text-align: center; line-height: 1.4; }
-    
-    .pos-filter-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
-    .pos-filter-container > div { position: relative; width: 100%; aspect-ratio: 1/1; min-width: 0; }
-    .pos-labels-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
-    
-    .pos-input { 
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-        padding: 0; margin: 0; font-size: 18px; font-weight: bold; text-align: center; 
-        border: 2px solid #ddd; border-radius: 8px; background: #fff; 
-        -webkit-appearance: none; appearance: none; transition: all 0.2s; 
-        overflow: hidden; white-space: nowrap; 
-    }
-    .pos-input:focus { border-color: #007AFF; outline: none; background: #fff; }
-    .pos-input.filled { background: #f0f8ff; border-color: #007AFF; }
-    .pos-label { font-size: 11px; color: #999; text-align: center; margin-top: 4px; height: 16px; }
-    
-    .action-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 15px; gap: 10px; }
-    .sort-select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; font-size: 14px; }
-    button { padding: 8px 16px; font-size: 14px; border: none; border-radius: 6px; background: #8E8E93; color: white; font-weight: 500; cursor: pointer; transition: background 0.1s; }
-    button:active { background: #636366; transform: scale(0.97); }
-    
-    .board-requirement-check { display: flex; align-items: center; font-size: 14px; font-weight: 500; color: #333; }
-    .board-requirement-check input { width: 18px; height: 18px; margin-right: 6px; }
+        .filters { margin-bottom: 15px; padding: 0 5px; }
+        .filter-row { margin: 12px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; }
+        .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; border: 2px solid #ccc; border-radius: 4px; }
+        input[type="checkbox"]:checked { background: #007AFF; border-color: #007AFF; }
+        label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
+        
+        /* Refine Section Styles */
+        .refine-section { background: #fff8f0; border: 1px solid #ffe4cc; padding: 15px; border-radius: 8px; margin-bottom: 15px; transition: background 0.2s, border-color 0.2s; }
+        .refine-section.and-mode { background: #f0f7ff; border-color: #cce4ff; }
+        
+        .refine-header { margin-bottom: 12px; }
+        .refine-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+        .refine-title { font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 8px; }
+        
+        .refine-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
+        
+        /* Mini Button Style */
+        .mini-btn { padding: 4px 10px; font-size: 11px; background: #fff; border: 1px solid #ccc; border-radius: 6px; color: #666; margin-right: 4px; font-weight: 600; }
+        .mini-btn:active { background: #eee; }
+        
+        .toggle-switch { display: inline-flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
+        .toggle-option { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; white-space: nowrap; }
+        .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        
+        .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
+        .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
+        
+        .refine-inputs { display: flex; gap: 10px; }
+        
+        /* Refine inputs locked down for mobile as well */
+        .refine-input { 
+            width: 100%; 
+            height: 40px; 
+            padding: 0;
+            margin: 0;
+            border: 1px solid #e0e0e0; 
+            border-radius: 6px; 
+            text-align: center; 
+            font-size: 18px; 
+            background: white;
+            overflow: hidden; 
+            white-space: nowrap;
+        }
+        .refine-input:focus { outline: none; background: #fff; }
+        .refine-section .refine-input:focus { border-color: #d67a00; }
+        .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
+        .refine-input.filled { background: #fffdf5; border-color: #d67a00; font-weight: bold; }
+        .refine-section.and-mode .refine-input.filled { background: #f0f8ff; border-color: #007AFF; }
+        
+        /* New Refine Column & Unit Search Styles */
+        .refine-col { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
+        
+        .unit-search-input {
+            width: 100%;
+            height: 24px;
+            padding: 0 4px;
+            font-size: 11px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            text-align: center;
+            background: white;
+            color: #333;
+            transition: background-color 0.3s;
+        }
+        .unit-search-input:focus {
+            outline: none;
+            border-color: #007AFF;
+        }
+        .unit-search-input::placeholder {
+            color: #aaa;
+        }
 
-    .filters { margin-bottom: 15px; padding: 0 5px; }
-    .filter-row { margin: 12px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; }
-    .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
-    
-    input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; border: 2px solid #ccc; border-radius: 4px; }
-    input[type="checkbox"]:checked { background: #007AFF; border-color: #007AFF; }
-    label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
-    
-    /* ── Refine Section ───────────────────────────────────────────── */
-    .refine-section { background: #fff8f0; border: 1px solid #ffe4cc; padding: 15px; border-radius: 8px; margin-bottom: 15px; transition: background 0.2s, border-color 0.2s; }
-    .refine-section.and-mode { background: #f0f7ff; border-color: #cce4ff; }
-    
-    .refine-header { margin-bottom: 12px; }
-    .refine-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
-    .refine-title { font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 8px; }
-    .refine-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
-    
-    .mini-btn { padding: 4px 10px; font-size: 11px; background: #fff; border: 1px solid #ccc; border-radius: 6px; color: #666; margin-right: 4px; font-weight: 600; }
-    .mini-btn:active { background: #eee; }
-    
-    .toggle-switch { display: inline-flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
-    .toggle-option { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; white-space: nowrap; }
-    .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-    .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
-    .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
-    
-    .refine-inputs { display: flex; gap: 10px; }
-    
-    .refine-input { 
-        width: 100%; height: 40px; padding: 0; margin: 0;
-        border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; 
-        font-size: 18px; background: white;
-        overflow: hidden; white-space: nowrap;
-    }
-    .refine-input:focus { outline: none; background: #fff; }
-    .refine-section .refine-input:focus { border-color: #d67a00; }
-    .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
-    .refine-input.filled { background: #fffdf5; border-color: #d67a00; font-weight: bold; }
-    .refine-section.and-mode .refine-input.filled { background: #f0f8ff; border-color: #007AFF; }
-    
-    /* ── Unit Autofill ────────────────────────────────────────────── */
-    .refine-col { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; position: relative; }
+        /* Text Filter */
+        .text-filter-container { background: #fff; border: 2px solid #eee; border-radius: 8px; padding: 10px 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .text-filter-label { font-weight: 600; font-size: 14px; color: #333; white-space: nowrap; }
+        .text-filter-input { flex: 1; border: none; font-size: 16px; padding: 5px; outline: none; color: #333; background: transparent; }
+        .text-filter-input::placeholder { color: #ccc; }
+        
+        .results { margin-top: 10px; }
+        .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
+        .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
+        
+        .result-item.refine-match { border-left-color: #d67a00; background: #fffcf5; }
+        .and-mode .result-item.refine-match { border-left-color: #007AFF; background: #f2f8ff; }
 
-    .unit-search-wrap { position: relative; }
-
-    .unit-search-input {
-        width: 100%;
-        height: 26px;
-        padding: 0 24px 0 6px;   /* right padding for clear btn */
-        font-size: 12px;
-        border: 1px solid #e0e0e0;
-        border-radius: 5px;
-        background: white;
-        color: #333;
-        -webkit-appearance: none;
-        appearance: none;
-    }
-    .unit-search-input:focus { outline: none; border-color: #007AFF; }
-    .unit-search-input::placeholder { color: #bbb; }
-    .unit-search-input.has-value { border-color: #34c759; background: #f0fff4; font-weight: 600; }
-
-    /* ✕ clear button inside search box */
-    .unit-clear-btn {
-        position: absolute;
-        right: 4px; top: 50%; transform: translateY(-50%);
-        width: 16px; height: 16px;
-        background: #ccc; color: white;
-        border: none; border-radius: 50%;
-        font-size: 10px; line-height: 16px; text-align: center;
-        cursor: pointer; padding: 0;
-        display: none;
-    }
-    .unit-search-input.has-value ~ .unit-clear-btn { display: block; }
-    .unit-clear-btn:active { background: #999; }
-
-    /* Dropdown */
-    .unit-dropdown {
-        position: absolute;
-        top: calc(100% + 2px);
-        left: 0; right: 0;
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-        z-index: 9999;
-        max-height: 220px;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        display: none;
-    }
-    .unit-dropdown.open { display: block; }
-    .unit-dropdown-item {
-        padding: 9px 12px;
-        font-size: 13px;
-        border-bottom: 1px solid #f0f0f0;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
-        touch-action: manipulation;
-    }
-    .unit-dropdown-item:last-child { border-bottom: none; }
-    .unit-dropdown-item:active,
-    .unit-dropdown-item.highlighted { background: #f0f7ff; }
-    .unit-dropdown-name { font-weight: 600; color: #111; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .unit-dropdown-letters { font-size: 11px; color: #888; white-space: nowrap; font-family: monospace; }
-    .unit-dropdown-empty { padding: 12px; text-align: center; color: #aaa; font-size: 13px; }
-    .unit-dropdown-count { padding: 6px 12px; font-size: 11px; color: #999; border-top: 1px solid #f0f0f0; text-align: right; }
-
-    /* ── Text Filter ──────────────────────────────────────────────── */
-    .text-filter-container { background: #fff; border: 2px solid #eee; border-radius: 8px; padding: 10px 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-    .text-filter-label { font-weight: 600; font-size: 14px; color: #333; white-space: nowrap; }
-    .text-filter-input { flex: 1; border: none; font-size: 16px; padding: 5px; outline: none; color: #333; background: transparent; }
-    .text-filter-input::placeholder { color: #ccc; }
-    
-    /* ── Results ──────────────────────────────────────────────────── */
-    .results { margin-top: 10px; }
-    .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
-    .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
-    .result-item.refine-match { border-left-color: #d67a00; background: #fffcf5; }
-    .and-mode .result-item.refine-match { border-left-color: #007AFF; background: #f2f8ff; }
-    .result-item:active { background: #f0f0f0; }
-    .result-word { font-size: 20px; font-weight: 600; margin-bottom: 6px; color: #111; display:flex; justify-content: space-between; align-items: center;}
-    .result-info { color: #666; font-size: 14px; }
-    .result-themes { color: #007AFF; font-size: 13px; margin-top: 4px; }
-    .no-results { text-align: center; padding: 40px 20px; color: #999; font-size: 16px; }
-    
-    .mini-grid { display: grid; grid-template-columns: repeat(7, 18px); gap: 2px; }
-    .mini-box { width: 18px; height: 18px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px; display: flex; align-items: center; justify-content: center; background: #fff; color: #ccc; }
-    .mini-box.matched { background: #007AFF; border-color: #007AFF; color: white; }
-    .mini-box.overlap { background: #e0efff; border-color: #007AFF; color: #007AFF; }
-</style>
-```
-
+        .result-item:active { background: #f0f0f0; }
+        .result-word { font-size: 20px; font-weight: 600; margin-bottom: 6px; color: #111; display:flex; justify-content: space-between; align-items: center;}
+        .result-info { color: #666; font-size: 14px; }
+        .result-themes { color: #007AFF; font-size: 13px; margin-top: 4px; }
+        .no-results { text-align: center; padding: 40px 20px; color: #999; font-size: 16px; }
+        
+        /* Grid Viz */
+        .mini-grid { display: grid; grid-template-columns: repeat(7, 18px); gap: 2px; }
+        .mini-box { width: 18px; height: 18px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px; display: flex; align-items: center; justify-content: center; background: #fff; color: #ccc; }
+        .mini-box.matched { background: #007AFF; border-color: #007AFF; color: white; }
+        .mini-box.overlap { background: #e0efff; border-color: #007AFF; color: #007AFF; }
+    </style>
 </head>
 <body>
-<div id="app">
-    <div class="container">
-        <h1>Kotodaman Board Solver</h1>
-        <div class="loading" id="loadingMsg">Loading dictionary…</div>
+    <div id="app">
+        <div class="container">
+            <h1>Kotodaman Board Solver</h1>
+            <div class="loading" id="loadingMsg">Loading dictionary...</div>
 
-```
-    <div id="mainContent" style="display:none;">
-        
-        <div class="input-section">
-            <div class="instruction-text">
-                Put hiragana in the same position as the game.<br>
-                Multiple hiragana can be in the same box.<br>
-                Empty spaces are wildcards.
-            </div>
-            
-            <div class="pos-filter-container">
-                <div><input type="text" class="pos-input" data-index="0" autocomplete="off"></div>
-                <div><input type="text" class="pos-input" data-index="1" autocomplete="off"></div>
-                <div><input type="text" class="pos-input" data-index="2" autocomplete="off"></div>
-                <div><input type="text" class="pos-input" data-index="3" autocomplete="off"></div>
-                <div><input type="text" class="pos-input" data-index="4" autocomplete="off"></div>
-                <div><input type="text" class="pos-input" data-index="5" autocomplete="off"></div>
-                <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
-            </div>
-            <div class="pos-labels-container">
-                <div class="pos-label">1</div>
-                <div class="pos-label">2</div>
-                <div class="pos-label">3</div>
-                <div class="pos-label">4</div>
-                <div class="pos-label">5</div>
-                <div class="pos-label">6</div>
-                <div class="pos-label">7</div>
-            </div>
+            <div id="mainContent" style="display:none;">
+                
+                <div class="input-section">
+                    <div class="instruction-text">
+                         Put hiragana in the same position as the game.<br>
+                         Multiple hiragana can be in the same box.<br>
+                         Empty spaces are wildcards.
+                    </div>
+                    
+                    <div class="pos-filter-container">
+                        <div><input type="text" class="pos-input" data-index="0" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="1" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="2" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="3" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="4" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="5" autocomplete="off"></div>
+                        <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
+                    </div>
 
-            <div class="action-row">
-                <select id="sortSelect" class="sort-select">
-                    <option value="asc">Shortest First</option>
-                    <option value="desc">Longest First</option>
-                </select>
-                <label class="board-requirement-check">
-                    <input type="checkbox" id="requireAllBoard"> Must use all board chars
-                </label>
-                <button id="clearBtn" type="button">Reset Grid</button>
-            </div>
-        </div>
-        
-        <div class="filters">
-            <div class="filter-row">
-                <span class="filter-label">Length:</span>
-                <div class="radio-group">
-                    <label><input type="checkbox" name="chars" value="2"><span>2</span></label>
-                    <label><input type="checkbox" name="chars" value="3"><span>3</span></label>
-                    <label><input type="checkbox" name="chars" value="4"><span>4</span></label>
-                    <label><input type="checkbox" name="chars" value="5"><span>5</span></label>
-                    <label><input type="checkbox" name="chars" value="6"><span>6</span></label>
-                    <label><input type="checkbox" name="chars" value="7"><span>7</span></label>
-                </div>
-            </div>
-        </div>
+                    <div class="pos-labels-container">
+                        <div class="pos-label">1</div>
+                        <div class="pos-label">2</div>
+                        <div class="pos-label">3</div>
+                        <div class="pos-label">4</div>
+                        <div class="pos-label">5</div>
+                        <div class="pos-label">6</div>
+                        <div class="pos-label">7</div>
+                    </div>
 
-        <div class="refine-section" id="refineSection">
-            <div class="refine-header">
-                <span class="refine-title">Refine (Deck Check):</span>
-                <div class="refine-controls">
-                    <button id="clearRefineBtn" class="mini-btn" type="button">Clear</button>
-                    <div class="toggle-switch logic-toggle">
-                        <div class="toggle-option active" data-logic="OR">Any (OR)</div>
-                        <div class="toggle-option" data-logic="AND">All (AND)</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="refine-inputs">
-                <!-- Column A -->
-                <div class="refine-col">
-                    <input type="text" class="refine-input" id="refine-A" placeholder="A" autocomplete="off">
-                    <div class="unit-search-wrap">
-                        <input type="text" class="unit-search-input" data-target="refine-A" placeholder="Unit search…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                        <button class="unit-clear-btn" type="button" aria-label="Clear unit">✕</button>
-                        <div class="unit-dropdown"></div>
-                    </div>
-                </div>
-                <!-- Column B -->
-                <div class="refine-col">
-                    <input type="text" class="refine-input" id="refine-B" placeholder="B" autocomplete="off">
-                    <div class="unit-search-wrap">
-                        <input type="text" class="unit-search-input" data-target="refine-B" placeholder="Unit search…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                        <button class="unit-clear-btn" type="button" aria-label="Clear unit">✕</button>
-                        <div class="unit-dropdown"></div>
-                    </div>
-                </div>
-                <!-- Column C -->
-                <div class="refine-col">
-                    <input type="text" class="refine-input" id="refine-C" placeholder="C" autocomplete="off">
-                    <div class="unit-search-wrap">
-                        <input type="text" class="unit-search-input" data-target="refine-C" placeholder="Unit search…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                        <button class="unit-clear-btn" type="button" aria-label="Clear unit">✕</button>
-                        <div class="unit-dropdown"></div>
-                    </div>
-                </div>
-                <!-- Column D -->
-                <div class="refine-col">
-                    <input type="text" class="refine-input" id="refine-D" placeholder="D" autocomplete="off">
-                    <div class="unit-search-wrap">
-                        <input type="text" class="unit-search-input" data-target="refine-D" placeholder="Unit search…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-                        <button class="unit-clear-btn" type="button" aria-label="Clear unit">✕</button>
-                        <div class="unit-dropdown"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="text-filter-container">
-            <span class="text-filter-label">Contains:</span>
-            <input type="text" id="textSearch" class="text-filter-input" placeholder="e.g. あ-い (- is wildcard)" autocomplete="off">
-        </div>
+                    <div class="action-row">
+                        <select id="sortSelect" class="sort-select">
+                            <option value="asc">Shortest First</option>
+                            <option value="desc">Longest First</option>
+                        </select>
+                        
+                        <label class="board-requirement-check">
+                            <input type="checkbox" id="requireAllBoard"> Must use all board chars
+                        </label>
 
-        <div class="results">
-            <div class="result-count" id="resultCount">Enter characters to search</div>
-            <div id="resultList"></div>
+                        <button id="clearBtn" type="button">Reset Grid</button>
+                    </div>
+                </div>
+                
+                <div class="filters">
+                    <div class="filter-row">
+                        <span class="filter-label">Length:</span>
+                        <div class="radio-group">
+                            <label><input type="checkbox" name="chars" value="2"><span>2</span></label>
+                            <label><input type="checkbox" name="chars" value="3"><span>3</span></label>
+                            <label><input type="checkbox" name="chars" value="4"><span>4</span></label>
+                            <label><input type="checkbox" name="chars" value="5"><span>5</span></label>
+                            <label><input type="checkbox" name="chars" value="6"><span>6</span></label>
+                            <label><input type="checkbox" name="chars" value="7"><span>7</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="refine-section" id="refineSection">
+                    <div class="refine-header">
+                        <span class="refine-title">Refine (Deck Check):</span>
+                        <div class="refine-controls">
+                            <button id="clearRefineBtn" class="mini-btn" type="button">Clear</button>
+                            
+                            <div class="toggle-switch logic-toggle">
+                                <div class="toggle-option active" data-logic="OR">Any (OR)</div>
+                                <div class="toggle-option" data-logic="AND">All (AND)</div>
+                            </div>
+                            
+                            </div>
+                    </div>
+                    
+                    <div class="refine-inputs">
+                        <div class="refine-col">
+                            <input type="text" class="refine-input" id="refine-A" placeholder="A" autocomplete="off">
+                            <input type="text" class="unit-search-input" data-target="refine-A" placeholder="Unit..." autocomplete="off">
+                        </div>
+                        <div class="refine-col">
+                            <input type="text" class="refine-input" id="refine-B" placeholder="B" autocomplete="off">
+                            <input type="text" class="unit-search-input" data-target="refine-B" placeholder="Unit..." autocomplete="off">
+                        </div>
+                        <div class="refine-col">
+                            <input type="text" class="refine-input" id="refine-C" placeholder="C" autocomplete="off">
+                            <input type="text" class="unit-search-input" data-target="refine-C" placeholder="Unit..." autocomplete="off">
+                        </div>
+                        <div class="refine-col">
+                            <input type="text" class="refine-input" id="refine-D" placeholder="D" autocomplete="off">
+                            <input type="text" class="unit-search-input" data-target="refine-D" placeholder="Unit..." autocomplete="off">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-filter-container">
+                    <span class="text-filter-label">Contains:</span>
+                    <input type="text" id="textSearch" class="text-filter-input" placeholder="e.g. あ-い (- is wildcard)" autocomplete="off">
+                </div>
+
+                <div class="results">
+                    <div class="result-count" id="resultCount">Enter characters to search</div>
+                    <div id="resultList"></div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-```
-
-</div>
-
-<!-- units.js is auto-generated by the GitHub Actions scraper -->
 
 <script src="units.js"></script>
 
 <script>
-// ─── Fallback database if units.js is missing ─────────────────────────────
-if (typeof unitDatabase === 'undefined') {
-    window.unitDatabase = [
-        { name: "ンヘループ",      letters: "んおたすけと" },
-        { name: "天佑",            letters: "んおたすけと" },
-        { name: "電王",            letters: "てでもうきり" },
-        { name: "ティアマーター",  letters: "てきぎひびに" },
-        { name: "石流龍",          letters: "いいりたほう" },
-        { name: "胡蝶しのぶ",      letters: "こごちょうし" }
-    ];
-    console.warn('units.js missing — using built-in fallback.');
-}
-
-// ─── Globals ──────────────────────────────────────────────────────────────
-let dictionary = [];
-let currentRefineLogic = 'OR';
-
-// ─── Unit Autofill Engine ─────────────────────────────────────────────────
-const MAX_DROPDOWN = 30;
-
-/**
- * Score a unit against a query string.
- * Returns -1 if no match, otherwise a numeric score (higher = better).
- * Priority: exact name match > starts-with > contains > letters contain
- */
-function scoreUnit(unit, query) {
-    if (!query) return 0;
-    const q = query.toLowerCase();
-    const name = unit.name.toLowerCase();
-    if (name === q)            return 100;
-    if (name.startsWith(q))   return 80;
-    if (name.includes(q))     return 60;
-    // hiragana inside letters
-    if (unit.letters.includes(query)) return 40;
-    return -1;
-}
-
-function filterUnits(query) {
-    if (!query || query.length === 0) return [];
-    const scored = [];
-    for (const u of window.unitDatabase) {
-        const s = scoreUnit(u, query);
-        if (s >= 0) scored.push({ unit: u, score: s });
+    // Fallback if you haven't created units.js yet
+    if (typeof unitDatabase === 'undefined') {
+        window.unitDatabase = [
+            { name: "ンヘループ", letters: "んおたすけと" },
+            { name: "天佑", letters: "んおたすけと" },
+            { name: "電王", letters: "てでもうきり" },
+            { name: "ティアマーター", letters: "てきぎひびに" },
+            { name: "石流龍", letters: "いいりたほう" },
+            { name: "胡蝶しのぶ", letters: "こごちょうし" }
+        ];
+        console.warn("units.js is missing! Using sample 6-character database.");
     }
-    scored.sort((a, b) => b.score - a.score || a.unit.name.length - b.unit.name.length);
-    return scored.map(s => s.unit).slice(0, MAX_DROPDOWN);
-}
 
-// ─── Dropdown UI helpers ──────────────────────────────────────────────────
-let activeDropdown = null; // currently open { searchInput, dropdown, refineInput }
+    let dictionary = [];
+    let currentRefineLogic = 'OR';
 
-function openDropdown(ctx) {
-    if (activeDropdown && activeDropdown !== ctx) closeDropdown(activeDropdown);
-    activeDropdown = ctx;
-    ctx.dropdown.classList.add('open');
-}
-
-function closeDropdown(ctx) {
-    if (!ctx) return;
-    ctx.dropdown.classList.remove('open');
-    if (activeDropdown === ctx) activeDropdown = null;
-}
-
-function renderDropdown(ctx, units) {
-    const dd = ctx.dropdown;
-    if (units.length === 0) {
-        dd.innerHTML = '<div class="unit-dropdown-empty">No units found</div>';
-    } else {
-        const rows = units.map((u, i) =>
-            `<div class="unit-dropdown-item" data-index="${i}" data-letters="${u.letters}">
-                <span class="unit-dropdown-name">${escapeHtml(u.name)}</span>
-                <span class="unit-dropdown-letters">${escapeHtml(u.letters)}</span>
-            </div>`
-        ).join('');
-        const footer = units.length >= MAX_DROPDOWN
-            ? `<div class="unit-dropdown-count">Showing top ${MAX_DROPDOWN}</div>` : '';
-        dd.innerHTML = rows + footer;
-
-        // Tap / click on item
-        dd.querySelectorAll('.unit-dropdown-item').forEach((el, i) => {
-            const select = () => selectUnit(ctx, units[i]);
-            el.addEventListener('mousedown', e => { e.preventDefault(); select(); });
-            el.addEventListener('touchend', e => { e.preventDefault(); select(); });
-        });
+    function getSampleDictionary() {
+        const samples = [
+            ["あい","",1,["愛"],[]],
+            ["あお","",1,["青"],[]],
+            ["うみ","",1,["海"],[]],
+            ["うそう","",1,["雨窓"],[]],
+            ["しょうそう","",4,["焦燥"],[]],
+            ["うそうかい","",5,["有象海"],[]],
+            ["さいし","",3,["祭祀"],[]],
+            ["さいしょ","",4,["最初"],[]],
+            ["さいしょう","",5,["最小"],[]],
+            ["しょうさ","",4,["勝差"],[]],
+            ["しょうさい","",5,["詳細"],[]],
+            ["さんしょう","",5,["参照"],[]],
+            ["あした","",3,["明日"],[]],
+            ["あいさつ","",4,["挨拶"],[]],
+            ["こう","",2,["甲"],[]],
+            ["こうこう","",4,["高校"],[]],
+            ["こうこうしゃ","",5,["高校社"],[]],
+            ["こうそ","",3,["酵素"],[]],
+            ["たいいく","",4,["体育"],[]],
+            ["あとこうしゃく","",7,["後講釈"],[]]
+        ];
+        return samples.map(entry => ({
+            word: entry[0],
+            chars: entry[1] || entry[0],
+            combo: entry[2],
+            displays: entry[3],
+            themes: entry[4] || []
+        }));
     }
-}
-
-function selectUnit(ctx, unit) {
-    // Fill refine input with this unit's letters
-    ctx.refineInput.value = unit.letters;
-    ctx.refineInput.classList.add('filled');
-    // Update search box to show selected unit name
-    ctx.searchInput.value = unit.name;
-    ctx.searchInput.classList.add('has-value');
-    closeDropdown(ctx);
-    performSearch();
-}
-
-function clearUnitSelection(ctx) {
-    ctx.searchInput.value = '';
-    ctx.searchInput.classList.remove('has-value');
-    ctx.refineInput.value = '';
-    ctx.refineInput.classList.remove('filled');
-    closeDropdown(ctx);
-    performSearch();
-}
-
-function escapeHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ─── Wire up unit search inputs ───────────────────────────────────────────
-function initUnitSearches() {
-    document.querySelectorAll('.unit-search-wrap').forEach(wrap => {
-        const searchInput  = wrap.querySelector('.unit-search-input');
-        const clearBtn     = wrap.querySelector('.unit-clear-btn');
-        const dropdown     = wrap.querySelector('.unit-dropdown');
-        const refineInput  = document.getElementById(searchInput.getAttribute('data-target'));
-        const ctx = { searchInput, clearBtn, dropdown, refineInput };
-
-        // Input → show dropdown
-        searchInput.addEventListener('input', () => {
-            const q = searchInput.value.trim();
-            if (q.length === 0) {
-                closeDropdown(ctx);
-                return;
-            }
-            const matches = filterUnits(q);
-            renderDropdown(ctx, matches);
-            openDropdown(ctx);
-        });
-
-        // Focus → reopen if query present
-        searchInput.addEventListener('focus', () => {
-            const q = searchInput.value.trim();
-            if (q.length > 0 && !ctx.dropdown.classList.contains('open')) {
-                const matches = filterUnits(q);
-                renderDropdown(ctx, matches);
-                openDropdown(ctx);
-            }
-        });
-
-        // Keyboard navigation
-        searchInput.addEventListener('keydown', e => {
-            if (!ctx.dropdown.classList.contains('open')) return;
-            const items = ctx.dropdown.querySelectorAll('.unit-dropdown-item');
-            let hi = [...items].findIndex(el => el.classList.contains('highlighted'));
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                if (hi >= 0) items[hi].classList.remove('highlighted');
-                hi = Math.min(hi + 1, items.length - 1);
-                items[hi]?.classList.add('highlighted');
-                items[hi]?.scrollIntoView({ block: 'nearest' });
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                if (hi >= 0) items[hi].classList.remove('highlighted');
-                hi = Math.max(hi - 1, 0);
-                items[hi]?.classList.add('highlighted');
-                items[hi]?.scrollIntoView({ block: 'nearest' });
-            } else if (e.key === 'Enter') {
-                e.preventDefault();
-                const hiEl = ctx.dropdown.querySelector('.highlighted');
-                if (hiEl) hiEl.dispatchEvent(new Event('mousedown'));
-                else closeDropdown(ctx);
-            } else if (e.key === 'Escape') {
-                closeDropdown(ctx);
-            }
-        });
-
-        // Clear button
-        clearBtn.addEventListener('click', e => { e.preventDefault(); clearUnitSelection(ctx); });
-        clearBtn.addEventListener('touchend', e => { e.preventDefault(); clearUnitSelection(ctx); });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('pointerdown', e => {
-            if (!wrap.contains(e.target)) closeDropdown(ctx);
-        }, { passive: true });
-    });
-}
-
-// ─── Sample dictionary fallback ───────────────────────────────────────────
-function getSampleDictionary() {
-    const samples = [
-        ["あい","",1,["愛"],[]],["あお","",1,["青"],[]],["うみ","",1,["海"],[]],
-        ["うそう","",1,["雨窓"],[]],["しょうそう","",4,["焦燥"],[]],
-        ["うそうかい","",5,["有象海"],[]],["さいし","",3,["祭祀"],[]],
-        ["さいしょ","",4,["最初"],[]],["さいしょう","",5,["最小"],[]],
-        ["しょうさ","",4,["勝差"],[]],["しょうさい","",5,["詳細"],[]],
-        ["さんしょう","",5,["参照"],[]],["あした","",3,["明日"],[]],
-        ["あいさつ","",4,["挨拶"],[]],["こう","",2,["甲"],[]],
-        ["こうこう","",4,["高校"],[]],["こうこうしゃ","",5,["高校社"],[]],
-        ["こうそ","",3,["酵素"],[]],["たいいく","",4,["体育"],[]],
-        ["あとこうしゃく","",7,["後講釈"],[]]
-    ];
-    return samples.map(e => ({ word:e[0], chars:e[1]||e[0], combo:e[2], displays:e[3], themes:e[4]||[] }));
-}
-
-// ─── Dictionary load ──────────────────────────────────────────────────────
-fetch('https://cdn.jsdelivr.net/npm/@kotodaman-unofficial/dictionary@0.1.1/dist/words.json')
-    .then(r => { if (!r.ok) throw new Error('Network error'); return r.json(); })
-    .then(data => {
-        dictionary = data.map(e => ({ word:e[0], chars:e[1]||e[0], combo:e[2], displays:e[3], themes:e[4]||[] }));
-        document.getElementById('loadingMsg').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        initializeApp();
-    })
-    .catch(err => {
-        console.error('Dictionary load failed:', err);
-        dictionary = getSampleDictionary();
-        document.getElementById('loadingMsg').textContent = 'Loaded sample dictionary.';
-        setTimeout(() => {
+    
+    fetch('https://cdn.jsdelivr.net/npm/@kotodaman-unofficial/dictionary@0.1.1/dist/words.json')
+        .then(response => { if (!response.ok) throw new Error('Network error'); return response.json(); })
+        .then(data => {
+            dictionary = data.map(entry => ({
+                word: entry[0],
+                chars: entry[1] || entry[0],
+                combo: entry[2],
+                displays: entry[3],
+                themes: entry[4] || []
+            }));
             document.getElementById('loadingMsg').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
             initializeApp();
-        }, 1000);
-    });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            dictionary = getSampleDictionary();
+            document.getElementById('loadingMsg').textContent = 'Loaded sample dictionary.';
+            setTimeout(() => {
+                document.getElementById('loadingMsg').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                initializeApp();
+            }, 1000);
+        });
+    
+    function initializeApp() {
+        const clearBtn = document.getElementById('clearBtn');
+        const clearRefineBtn = document.getElementById('clearRefineBtn');
+        const posInputs = document.querySelectorAll('.pos-input');
+        const refineInputs = document.querySelectorAll('.refine-input');
+        const sortSelect = document.getElementById('sortSelect');
+        const refineSection = document.getElementById('refineSection');
+        const textSearch = document.getElementById('textSearch');
+        const requireAllBoardCheck = document.getElementById('requireAllBoard');
+        
+        // Unit Search Functionality
+        const unitSearchInputs = document.querySelectorAll('.unit-search-input');
+        unitSearchInputs.forEach(uInput => {
+            uInput.addEventListener('change', (e) => {
+                const query = e.target.value.trim();
+                if (!query) return;
 
-// ─── App init ─────────────────────────────────────────────────────────────
-function initializeApp() {
-    initUnitSearches();
+                // Find a unit that includes the typed text from the globally loaded database
+                const match = window.unitDatabase.find(u => u.name.includes(query));
+                
+                if (match) {
+                    // Update the corresponding Refine Input
+                    const targetId = e.target.getAttribute('data-target');
+                    const targetInput = document.getElementById(targetId);
+                    
+                    targetInput.value = match.letters;
+                    targetInput.classList.add('filled');
+                    
+                    // Automatically trigger the board solver search
+                    performSearch();
+                    
+                    // Optional: Change background briefly to show success
+                    e.target.style.backgroundColor = '#e6ffe6';
+                    setTimeout(() => e.target.style.backgroundColor = '', 500);
+                } else {
+                    // Visual feedback if unit is not found
+                    e.target.style.backgroundColor = '#ffe6e6';
+                    setTimeout(() => e.target.style.backgroundColor = '', 500);
+                }
+            });
+        });
 
-    const clearBtn         = document.getElementById('clearBtn');
-    const clearRefineBtn   = document.getElementById('clearRefineBtn');
-    const posInputs        = document.querySelectorAll('.pos-input');
-    const refineInputs     = document.querySelectorAll('.refine-input');
-    const sortSelect       = document.getElementById('sortSelect');
-    const refineSection    = document.getElementById('refineSection');
-    const textSearch       = document.getElementById('textSearch');
-    const requireAllBoardCheck = document.getElementById('requireAllBoard');
+        // Logic Toggles
+        const logicOptions = document.querySelectorAll('.logic-toggle .toggle-option');
+        logicOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                logicOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                currentRefineLogic = opt.getAttribute('data-logic');
+                if (currentRefineLogic === 'AND') {
+                    refineSection.classList.add('and-mode');
+                } else {
+                    refineSection.classList.remove('and-mode');
+                }
+                performSearch();
+            });
+        });
 
-    // Logic toggles
-    document.querySelectorAll('.logic-toggle .toggle-option').forEach(opt => {
-        opt.addEventListener('click', () => {
-            document.querySelectorAll('.logic-toggle .toggle-option').forEach(o => o.classList.remove('active'));
-            opt.classList.add('active');
-            currentRefineLogic = opt.getAttribute('data-logic');
-            refineSection.classList.toggle('and-mode', currentRefineLogic === 'AND');
+        clearBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            posInputs.forEach(input => { input.value = ''; input.classList.remove('filled'); });
+            textSearch.value = '';
             performSearch();
         });
-    });
 
-    clearBtn.addEventListener('click', e => {
-        e.preventDefault();
-        posInputs.forEach(i => { i.value=''; i.classList.remove('filled'); });
-        textSearch.value = '';
-        performSearch();
-    });
-
-    clearRefineBtn.addEventListener('click', e => {
-        e.preventDefault();
-        refineInputs.forEach(i => { i.value=''; i.classList.remove('filled'); });
-        document.querySelectorAll('.unit-search-input').forEach(u => {
-            u.value=''; u.classList.remove('has-value');
+        clearRefineBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            refineInputs.forEach(input => { 
+                input.value = ''; 
+                input.classList.remove('filled'); 
+            });
+            document.querySelectorAll('.unit-search-input').forEach(u => u.value = '');
+            performSearch();
         });
-        performSearch();
-    });
-
-    let searchTimeout;
-    const debouncedSearch = () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(performSearch, 200); };
-
-    posInputs.forEach(input => {
-        input.addEventListener('input', () => {
-            input.classList.toggle('filled', input.value.length > 0);
-            debouncedSearch();
-        });
-    });
-
-    refineInputs.forEach(input => {
-        input.addEventListener('input', () => {
-            input.classList.toggle('filled', input.value.length > 0);
-            debouncedSearch();
-        });
-    });
-
-    textSearch.addEventListener('input', debouncedSearch);
-
-    document.querySelectorAll('input[type="checkbox"]').forEach(i => i.addEventListener('change', performSearch));
-    sortSelect.addEventListener('change', performSearch);
-    requireAllBoardCheck.addEventListener('change', performSearch);
-
-    document.querySelectorAll('label').forEach(label => {
-        label.addEventListener('touchend', function(e) {
-            if (e.target.tagName !== 'INPUT') {
-                e.preventDefault();
-                const input = this.querySelector('input');
-                if (input) { input.checked = !input.checked; performSearch(); }
-            }
-        });
-    });
-
-    performSearch();
-}
-
-// ─── Core search logic (unchanged from original) ──────────────────────────
-function performSearch() {
-    const resultCount  = document.getElementById('resultCount');
-    const resultList   = document.getElementById('resultList');
-    const sortOrder    = document.getElementById('sortSelect').value;
-    const charFilters  = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
-    const textFilterValue = document.getElementById('textSearch').value.trim();
-    const requireAllBoard = document.getElementById('requireAllBoard').checked;
-
-    const posInputs   = Array.from(document.querySelectorAll('.pos-input'));
-    const inputValues = posInputs.map(i => i.value.trim());
-    const hasActivePosFilter = inputValues.some(v => v.length > 0);
-
-    let requiredBoardIndices = [];
-    if (requireAllBoard && hasActivePosFilter) {
-        inputValues.forEach((val, idx) => { if (val.length > 0) requiredBoardIndices.push(idx); });
-    }
-
-    const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
-        .map(input => input.value.trim().split(''))
-        .filter(arr => arr.length > 0);
-    const hasRefineFilter = refineConstraints.length > 0;
-
-    let results = dictionary;
-
-    if (charFilters.length > 0) {
-        results = results.filter(word => charFilters.includes(word.word.length));
-    }
-
-    if (textFilterValue.length > 0) {
-        const escaped = textFilterValue.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-        const pattern = escaped.replace(/-/g,'.');
-        const regex   = new RegExp(pattern);
-        results = results.filter(word => regex.test(word.word));
-    }
-
-    let wordMeta      = new Map();
-    let validBoardWords = [];
-
-    results.forEach(word => {
-        const len = word.word.length;
-        let validOffsets = [];
         
-        if (hasActivePosFilter) {
-            for (let start = 0; start <= 7 - len; start++) {
-                let fits = true;
-                for (let i = 0; i < len; i++) {
-                    const boardChar = inputValues[start + i];
-                    const wordChar  = word.word[i];
-                    if (boardChar && boardChar.length > 0 && !boardChar.includes(wordChar)) {
-                        fits = false; break;
+        let searchTimeout;
+        const debouncedSearch = () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(performSearch, 200);
+        };
+
+        posInputs.forEach(input => {
+            input.addEventListener('input', () => {
+                input.classList.toggle('filled', input.value.length > 0);
+                debouncedSearch();
+            });
+        });
+
+        refineInputs.forEach(input => {
+            input.addEventListener('input', () => {
+                input.classList.toggle('filled', input.value.length > 0);
+                debouncedSearch();
+            });
+        });
+        
+        textSearch.addEventListener('input', debouncedSearch);
+        
+        document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+            input.addEventListener('change', performSearch);
+        });
+
+        sortSelect.addEventListener('change', performSearch);
+        requireAllBoardCheck.addEventListener('change', performSearch);
+        
+        document.querySelectorAll('label').forEach(label => {
+            label.addEventListener('touchend', function(e) {
+                if (e.target.tagName !== 'INPUT') {
+                    e.preventDefault();
+                    const input = this.querySelector('input');
+                    if (input) { input.checked = !input.checked; performSearch(); }
+                }
+            });
+        });
+
+        performSearch();
+    }
+    
+    function performSearch() {
+        const resultCount = document.getElementById('resultCount');
+        const resultList = document.getElementById('resultList');
+        const sortOrder = document.getElementById('sortSelect').value;
+        const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
+        const textFilterValue = document.getElementById('textSearch').value.trim();
+        const strictRefine = true; 
+        const requireAllBoard = document.getElementById('requireAllBoard').checked;
+
+        const posInputs = Array.from(document.querySelectorAll('.pos-input'));
+        const inputValues = posInputs.map(i => i.value.trim());
+        const hasActivePosFilter = inputValues.some(v => v.length > 0);
+
+        let requiredBoardIndices = [];
+        if (requireAllBoard && hasActivePosFilter) {
+            inputValues.forEach((val, idx) => {
+                if (val.length > 0) requiredBoardIndices.push(idx);
+            });
+        }
+
+        const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
+            .map(input => input.value.trim().split('')) 
+            .filter(arr => arr.length > 0);
+        const hasRefineFilter = refineConstraints.length > 0;
+
+        let results = dictionary;
+
+        // A. Length Filter
+        if (charFilters.length > 0) {
+            results = results.filter(word => charFilters.includes(word.word.length));
+        }
+
+        // B. Text Filter (Wildcard support)
+        if (textFilterValue.length > 0) {
+            const escaped = textFilterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const pattern = escaped.replace(/-/g, '.');
+            const regex = new RegExp(pattern);
+            results = results.filter(word => regex.test(word.word));
+        }
+
+        // C. Board Placement AND Refine Calculation
+        let wordMeta = new Map(); 
+        let validBoardWords = [];
+
+        results.forEach(word => {
+            const len = word.word.length;
+            let validOffsets = [];
+            
+            if (hasActivePosFilter) {
+                for (let start = 0; start <= 7 - len; start++) {
+                    let fits = true;
+                    for (let i = 0; i < len; i++) {
+                        const boardChar = inputValues[start + i];
+                        const wordChar = word.word[i];
+                        if (boardChar && boardChar.length > 0) {
+                            if (!boardChar.includes(wordChar)) {
+                                fits = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (fits && requireAllBoard && requiredBoardIndices.length > 0) {
+                        const wordStart = start;
+                        const wordEnd = start + len;
+                        
+                        const coversAll = requiredBoardIndices.every(idx => idx >= wordStart && idx < wordEnd);
+                        if (!coversAll) fits = false;
+                    }
+
+                    if (fits) validOffsets.push(start);
+                }
+                if (validOffsets.length === 0) return; 
+            } else {
+                validOffsets = [-1]; 
+            }
+
+            let isRefineMatch = false;
+            
+            if (hasRefineFilter) {
+                for (let offset of validOffsets) {
+                    const chars = word.word.split('');
+                    let charsToSearch = [];
+                    
+                    if (offset === -1) {
+                        charsToSearch = [...chars];
+                    } else {
+                        for (let i = 0; i < chars.length; i++) {
+                            let boardIndex = offset + i;
+                            if (!inputValues[boardIndex] || inputValues[boardIndex].length === 0) {
+                                charsToSearch.push(chars[i]);
+                            }
+                        }
+                    }
+
+                    let placementPasses = false;
+
+                    if (currentRefineLogic === 'OR') {
+                        if (charsToSearch.length > 0) {
+                            placementPasses = refineConstraints.some(constraint => {
+                                return charsToSearch.some(char => constraint.includes(char));
+                            });
+                        }
+                    } else {
+                        let currentPool = [...charsToSearch];
+                        let allConstraintsMet = true;
+                        for (let constraint of refineConstraints) {
+                            let matchIndex = -1;
+                            for (let k = 0; k < currentPool.length; k++) {
+                                if (constraint.includes(currentPool[k])) {
+                                    matchIndex = k;
+                                    break;
+                                }
+                            }
+                            if (matchIndex !== -1) {
+                                currentPool.splice(matchIndex, 1);
+                            } else {
+                                allConstraintsMet = false;
+                                break;
+                            }
+                        }
+                        placementPasses = allConstraintsMet;
+                    }
+
+                    if (placementPasses) {
+                        isRefineMatch = true;
+                        validOffsets = [offset]; 
+                        break; 
                     }
                 }
-                if (fits && requireAllBoard && requiredBoardIndices.length > 0) {
-                    const coversAll = requiredBoardIndices.every(idx => idx >= start && idx < start + len);
-                    if (!coversAll) fits = false;
-                }
-                if (fits) validOffsets.push(start);
             }
-            if (validOffsets.length === 0) return;
+
+            wordMeta.set(word.word, { validOffsets, isRefineMatch });
+            
+            if (hasRefineFilter && !isRefineMatch) {
+                return; 
+            }
+
+            validBoardWords.push(word);
+        });
+
+        results = validBoardWords;
+
+        results.sort((a, b) => {
+            const metaA = wordMeta.get(a.word);
+            const metaB = wordMeta.get(b.word);
+            
+            if (hasRefineFilter) {
+                if (metaA.isRefineMatch !== metaB.isRefineMatch) {
+                    return metaA.isRefineMatch ? -1 : 1; 
+                }
+            }
+
+            if (sortOrder === 'asc') {
+                return a.word.length - b.word.length;
+            } else {
+                return b.word.length - a.word.length;
+            }
+        });
+        
+        const maxResults = 300; 
+        const displayResults = results.slice(0, maxResults);
+        
+        if (!hasActivePosFilter && !hasRefineFilter && charFilters.length === 0 && textFilterValue.length === 0) {
+            resultCount.textContent = `Waiting for input... (${dictionary.length} words)`;
+            resultList.innerHTML = '';
+            return;
+        }
+
+        if (results.length === 0) {
+            resultCount.textContent = "No matches found";
+            resultList.innerHTML = '<div class="no-results">No words match your criteria</div>';
         } else {
-            validOffsets = [-1];
-        }
+            const suffix = results.length > maxResults ? ` (Showing first ${maxResults})` : '';
+            resultCount.textContent = `Found ${results.length} words${suffix}`;
 
-        let isRefineMatch = false;
-        if (hasRefineFilter) {
-            for (let offset of validOffsets) {
+            resultList.innerHTML = displayResults.map(word => {
+                const meta = wordMeta.get(word.word);
+                const displayText = word.displays[0] || word.word;
+                const themesText = word.themes.length > 0 
+                    ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>`
+                    : '';
+                
+                let placementOffset = meta.validOffsets[0];
                 const chars = word.word.split('');
-                let charsToSearch = [];
-                if (offset === -1) {
-                    charsToSearch = [...chars];
-                } else {
-                    for (let i = 0; i < chars.length; i++) {
-                        const bi = offset + i;
-                        if (!inputValues[bi] || inputValues[bi].length === 0) charsToSearch.push(chars[i]);
+                
+                let gridIndices = new Set();
+                let refineIndices = new Set();
+                
+                if (placementOffset !== -1) {
+                    for(let i=0; i<chars.length; i++) {
+                        let boardIndex = placementOffset + i;
+                        if (inputValues[boardIndex] && inputValues[boardIndex].length > 0) {
+                            gridIndices.add(i);
+                        }
                     }
                 }
 
-                let placementPasses = false;
-                if (currentRefineLogic === 'OR') {
-                    placementPasses = charsToSearch.length > 0 && refineConstraints.some(c => charsToSearch.some(ch => c.includes(ch)));
-                } else {
-                    let pool = [...charsToSearch];
-                    let ok   = true;
-                    for (let c of refineConstraints) {
-                        const mi = pool.findIndex(ch => c.includes(ch));
-                        if (mi !== -1) pool.splice(mi,1); else { ok=false; break; }
+                if (hasRefineFilter && meta.isRefineMatch) {
+                    let availIndices = [];
+                    chars.forEach((_, i) => { 
+                        if (!gridIndices.has(i)) {
+                            availIndices.push(i); 
+                        }
+                    });
+                    
+                    let vizConsumed = new Set();
+                    for(let constraint of refineConstraints) {
+                        for(let idx of availIndices) {
+                            if(!vizConsumed.has(idx) && constraint.includes(chars[idx])) {
+                                refineIndices.add(idx);
+                                vizConsumed.add(idx);
+                                if(currentRefineLogic === 'AND') break; 
+                            }
+                        }
                     }
-                    placementPasses = ok;
                 }
 
-                if (placementPasses) {
-                    isRefineMatch = true;
-                    validOffsets  = [offset];
-                    break;
+                let highlightedWordHTML = chars.map((char, i) => {
+                    let style = '';
+                    let isGrid = gridIndices.has(i);
+                    let isRefine = refineIndices.has(i);
+
+                    if (isGrid) {
+                        style = "font-weight:bold; text-decoration:underline; color:#007AFF;";
+                    } else if (isRefine) {
+                        style = currentRefineLogic === 'AND' 
+                            ? "background:#cce4ff; padding:0 1px; border-radius:2px; color:#0051d5;"
+                            : "background:#ffeb3b; padding:0 1px; border-radius:2px; color:#333;";
+                    }
+                    return style ? `<span style="${style}">${char}</span>` : char;
+                }).join('');
+
+                let gridHtml = '';
+                if (placementOffset !== -1) {
+                    gridHtml = '<div class="mini-grid">';
+                    for(let b=0; b<7; b++) {
+                        let content = '';
+                        let className = 'mini-box';
+                        if (b >= placementOffset && b < placementOffset + word.word.length) {
+                            content = word.word[b - placementOffset];
+                            if (inputValues[b] && inputValues[b].length > 0) className += ' matched';
+                            else className += ' overlap';
+                        }
+                        gridHtml += `<div class="${className}">${content}</div>`;
+                    }
+                    gridHtml += '</div>';
                 }
-            }
+
+                let itemClass = 'result-item';
+                if (meta.isRefineMatch) itemClass += ' refine-match';
+
+                return `
+                    <div class="${itemClass}">
+                        <div class="result-word">
+                            <span>${displayText} <span style="font-weight:normal; font-size:0.8em; color:#666;">(${highlightedWordHTML})</span></span>
+                            ${gridHtml}
+                        </div>
+                        <div class="result-info">${word.word.length} chars | Combo: ${word.combo}</div>
+                        ${themesText}
+                    </div>
+                `;
+            }).join('');
         }
-
-        wordMeta.set(word.word, { validOffsets, isRefineMatch });
-        if (hasRefineFilter && !isRefineMatch) return;
-        validBoardWords.push(word);
-    });
-
-    results = validBoardWords;
-
-    results.sort((a, b) => {
-        const ma = wordMeta.get(a.word), mb = wordMeta.get(b.word);
-        if (hasRefineFilter && ma.isRefineMatch !== mb.isRefineMatch)
-            return ma.isRefineMatch ? -1 : 1;
-        return sortOrder === 'asc' ? a.word.length - b.word.length : b.word.length - a.word.length;
-    });
-
-    const maxResults = 300;
-    const displayResults = results.slice(0, maxResults);
-
-    if (!hasActivePosFilter && !hasRefineFilter && charFilters.length === 0 && textFilterValue.length === 0) {
-        resultCount.textContent = `Waiting for input… (${dictionary.length} words)`;
-        resultList.innerHTML = '';
-        return;
     }
-
-    if (results.length === 0) {
-        resultCount.textContent = 'No matches found';
-        resultList.innerHTML = '<div class="no-results">No words match your criteria</div>';
-        return;
-    }
-
-    const suffix = results.length > maxResults ? ` (Showing first ${maxResults})` : '';
-    resultCount.textContent = `Found ${results.length} words${suffix}`;
-
-    resultList.innerHTML = displayResults.map(word => {
-        const meta        = wordMeta.get(word.word);
-        const displayText = word.displays[0] || word.word;
-        const themesText  = word.themes.length > 0
-            ? `<div class="result-themes">Theme: ${word.themes.join(', ')}</div>` : '';
-
-        const inputValues2 = Array.from(document.querySelectorAll('.pos-input')).map(i => i.value.trim());
-        let placementOffset = meta.validOffsets[0];
-        const chars = word.word.split('');
-        let gridIndices  = new Set();
-        let refineIndices = new Set();
-
-        if (placementOffset !== -1) {
-            for (let i = 0; i < chars.length; i++) {
-                const bi = placementOffset + i;
-                if (inputValues2[bi] && inputValues2[bi].length > 0) gridIndices.add(i);
-            }
-        }
-
-        if (hasRefineFilter && meta.isRefineMatch) {
-            let avail = chars.map((_,i) => i).filter(i => !gridIndices.has(i));
-            let consumed = new Set();
-            for (let c of refineConstraints) {
-                for (let idx of avail) {
-                    if (!consumed.has(idx) && c.includes(chars[idx])) {
-                        refineIndices.add(idx); consumed.add(idx);
-                        if (currentRefineLogic === 'AND') break;
-                    }
-                }
-            }
-        }
-
-        const highlightedWordHTML = chars.map((ch, i) => {
-            let style = '';
-            if (gridIndices.has(i))  style = 'font-weight:bold;text-decoration:underline;color:#007AFF;';
-            else if (refineIndices.has(i)) {
-                style = currentRefineLogic === 'AND'
-                    ? 'background:#cce4ff;padding:0 1px;border-radius:2px;color:#0051d5;'
-                    : 'background:#ffeb3b;padding:0 1px;border-radius:2px;color:#333;';
-            }
-            return style ? `<span style="${style}">${ch}</span>` : ch;
-        }).join('');
-
-        let gridHtml = '';
-        if (placementOffset !== -1) {
-            gridHtml = '<div class="mini-grid">';
-            for (let b=0; b<7; b++) {
-                let content='', cls='mini-box';
-                if (b >= placementOffset && b < placementOffset + word.word.length) {
-                    content = word.word[b - placementOffset];
-                    cls += inputValues2[b]&&inputValues2[b].length>0 ? ' matched' : ' overlap';
-                }
-                gridHtml += `<div class="${cls}">${content}</div>`;
-            }
-            gridHtml += '</div>';
-        }
-
-        return `
-            <div class="result-item${meta.isRefineMatch ? ' refine-match' : ''}">
-                <div class="result-word">
-                    <span>${escapeHtml(displayText)} <span style="font-weight:normal;font-size:0.8em;color:#666;">(${highlightedWordHTML})</span></span>
-                    ${gridHtml}
-                </div>
-                <div class="result-info">${word.word.length} chars | Combo: ${word.combo}</div>
-                ${themesText}
-            </div>`;
-    }).join('');
-}
 </script>
-
 </body>
 </html>

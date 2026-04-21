@@ -92,7 +92,9 @@
         
         /* Refine inputs locked down for mobile as well */
         .refine-input { 
-            width: 100%; 
+            flex: 1; 
+            min-width: 0; 
+            max-width: 60px; 
             height: 40px; 
             padding: 0;
             margin: 0;
@@ -110,29 +112,6 @@
         .refine-input.filled { background: #fffdf5; border-color: #d67a00; font-weight: bold; }
         .refine-section.and-mode .refine-input.filled { background: #f0f8ff; border-color: #007AFF; }
         
-        /* New Refine Column & Unit Search Styles */
-        .refine-col { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 0; }
-        
-        .unit-search-input {
-            width: 100%;
-            height: 24px;
-            padding: 0 4px;
-            font-size: 11px;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            text-align: center;
-            background: white;
-            color: #333;
-            transition: background-color 0.3s;
-        }
-        .unit-search-input:focus {
-            outline: none;
-            border-color: #007AFF;
-        }
-        .unit-search-input::placeholder {
-            color: #aaa;
-        }
-
         /* Text Filter */
         .text-filter-container { background: #fff; border: 2px solid #eee; border-radius: 8px; padding: 10px 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .text-filter-label { font-weight: 600; font-size: 14px; color: #333; white-space: nowrap; }
@@ -237,22 +216,10 @@
                     </div>
                     
                     <div class="refine-inputs">
-                        <div class="refine-col">
-                            <input type="text" class="refine-input" id="refine-A" placeholder="A" autocomplete="off">
-                            <input type="text" class="unit-search-input" data-target="refine-A" placeholder="Unit..." autocomplete="off">
-                        </div>
-                        <div class="refine-col">
-                            <input type="text" class="refine-input" id="refine-B" placeholder="B" autocomplete="off">
-                            <input type="text" class="unit-search-input" data-target="refine-B" placeholder="Unit..." autocomplete="off">
-                        </div>
-                        <div class="refine-col">
-                            <input type="text" class="refine-input" id="refine-C" placeholder="C" autocomplete="off">
-                            <input type="text" class="unit-search-input" data-target="refine-C" placeholder="Unit..." autocomplete="off">
-                        </div>
-                        <div class="refine-col">
-                            <input type="text" class="refine-input" id="refine-D" placeholder="D" autocomplete="off">
-                            <input type="text" class="unit-search-input" data-target="refine-D" placeholder="Unit..." autocomplete="off">
-                        </div>
+                        <input type="text" class="refine-input" placeholder="A" autocomplete="off">
+                        <input type="text" class="refine-input" placeholder="B" autocomplete="off">
+                        <input type="text" class="refine-input" placeholder="C" autocomplete="off">
+                        <input type="text" class="refine-input" placeholder="D" autocomplete="off">
                     </div>
                 </div>
                 
@@ -269,22 +236,7 @@
         </div>
     </div>
 
-<script src="units.js"></script>
-
 <script>
-    // Fallback if you haven't created units.js yet
-    if (typeof unitDatabase === 'undefined') {
-        window.unitDatabase = [
-            { name: "ンヘループ", letters: "んおたすけと" },
-            { name: "天佑", letters: "んおたすけと" },
-            { name: "電王", letters: "てでもうきり" },
-            { name: "ティアマーター", letters: "てきぎひびに" },
-            { name: "石流龍", letters: "いいりたほう" },
-            { name: "胡蝶しのぶ", letters: "こごちょうし" }
-        ];
-        console.warn("units.js is missing! Using sample 6-character database.");
-    }
-
     let dictionary = [];
     let currentRefineLogic = 'OR';
 
@@ -353,40 +305,9 @@
         const sortSelect = document.getElementById('sortSelect');
         const refineSection = document.getElementById('refineSection');
         const textSearch = document.getElementById('textSearch');
+        // const strictRefineCheck removed
         const requireAllBoardCheck = document.getElementById('requireAllBoard');
         
-        // Unit Search Functionality
-        const unitSearchInputs = document.querySelectorAll('.unit-search-input');
-        unitSearchInputs.forEach(uInput => {
-            uInput.addEventListener('change', (e) => {
-                const query = e.target.value.trim();
-                if (!query) return;
-
-                // Find a unit that includes the typed text from the globally loaded database
-                const match = window.unitDatabase.find(u => u.name.includes(query));
-                
-                if (match) {
-                    // Update the corresponding Refine Input
-                    const targetId = e.target.getAttribute('data-target');
-                    const targetInput = document.getElementById(targetId);
-                    
-                    targetInput.value = match.letters;
-                    targetInput.classList.add('filled');
-                    
-                    // Automatically trigger the board solver search
-                    performSearch();
-                    
-                    // Optional: Change background briefly to show success
-                    e.target.style.backgroundColor = '#e6ffe6';
-                    setTimeout(() => e.target.style.backgroundColor = '', 500);
-                } else {
-                    // Visual feedback if unit is not found
-                    e.target.style.backgroundColor = '#ffe6e6';
-                    setTimeout(() => e.target.style.backgroundColor = '', 500);
-                }
-            });
-        });
-
         // Logic Toggles
         const logicOptions = document.querySelectorAll('.logic-toggle .toggle-option');
         logicOptions.forEach(opt => {
@@ -416,7 +337,6 @@
                 input.value = ''; 
                 input.classList.remove('filled'); 
             });
-            document.querySelectorAll('.unit-search-input').forEach(u => u.value = '');
             performSearch();
         });
         
@@ -447,6 +367,7 @@
         });
 
         sortSelect.addEventListener('change', performSearch);
+        // strictRefineCheck listener removed
         requireAllBoardCheck.addEventListener('change', performSearch);
         
         document.querySelectorAll('label').forEach(label => {
@@ -468,13 +389,14 @@
         const sortOrder = document.getElementById('sortSelect').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
         const textFilterValue = document.getElementById('textSearch').value.trim();
-        const strictRefine = true; 
+        const strictRefine = true; // Always strict mode
         const requireAllBoard = document.getElementById('requireAllBoard').checked;
 
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
+        // Identify non-empty board indices for "Must use all board chars" logic
         let requiredBoardIndices = [];
         if (requireAllBoard && hasActivePosFilter) {
             inputValues.forEach((val, idx) => {
@@ -510,9 +432,11 @@
             const len = word.word.length;
             let validOffsets = [];
             
+            // 1. Calculate Board Placement
             if (hasActivePosFilter) {
                 for (let start = 0; start <= 7 - len; start++) {
                     let fits = true;
+                    // Check Character Matching
                     for (let i = 0; i < len; i++) {
                         const boardChar = inputValues[start + i];
                         const wordChar = word.word[i];
@@ -524,9 +448,13 @@
                         }
                     }
 
+                    // Check Requirement: Must use all board chars?
                     if (fits && requireAllBoard && requiredBoardIndices.length > 0) {
+                        // The word must span across ALL requiredBoardIndices.
+                        // i.e., Word Start <= First Required Index AND Word End >= Last Required Index.
+                        // Actually, simpler: Every required index must be >= start and < start + len
                         const wordStart = start;
-                        const wordEnd = start + len;
+                        const wordEnd = start + len; // exclusive
                         
                         const coversAll = requiredBoardIndices.every(idx => idx >= wordStart && idx < wordEnd);
                         if (!coversAll) fits = false;
@@ -534,11 +462,12 @@
 
                     if (fits) validOffsets.push(start);
                 }
-                if (validOffsets.length === 0) return; 
+                if (validOffsets.length === 0) return; // Word doesn't fit board
             } else {
                 validOffsets = [-1]; 
             }
 
+            // 2. Calculate Refine Match (Deck)
             let isRefineMatch = false;
             
             if (hasRefineFilter) {
@@ -566,6 +495,7 @@
                             });
                         }
                     } else {
+                        // AND Logic
                         let currentPool = [...charsToSearch];
                         let allConstraintsMet = true;
                         for (let constraint of refineConstraints) {
@@ -594,10 +524,13 @@
                 }
             }
 
+            // 3. Store Meta
             wordMeta.set(word.word, { validOffsets, isRefineMatch });
             
+            // 4. Strict Filter Check
+            // Since strictRefine is now always TRUE, this simply checks if refine filter exists and word doesn't match
             if (hasRefineFilter && !isRefineMatch) {
-                return; 
+                return; // Skip
             }
 
             validBoardWords.push(word);
@@ -605,6 +538,7 @@
 
         results = validBoardWords;
 
+        // D. Sort
         results.sort((a, b) => {
             const metaA = wordMeta.get(a.word);
             const metaB = wordMeta.get(b.word);
@@ -625,6 +559,7 @@
         const maxResults = 300; 
         const displayResults = results.slice(0, maxResults);
         
+        // E. Update UI
         if (!hasActivePosFilter && !hasRefineFilter && charFilters.length === 0 && textFilterValue.length === 0) {
             resultCount.textContent = `Waiting for input... (${dictionary.length} words)`;
             resultList.innerHTML = '';

@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 const { execSync } = require('child_process');
-
+ 
 function findChromium() {
   const candidates = [
     '/usr/bin/chromium-browser',
@@ -21,21 +21,21 @@ function findChromium() {
   } catch (_) {}
   return null;
 }
-
+ 
 (async () => {
   const executablePath = findChromium();
   if (!executablePath) {
     console.error('Chromium not found. Install it before running.');
     process.exit(1);
   }
-
+ 
   const browser = await puppeteer.launch({
     executablePath,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
   });
-
+ 
   const page = await browser.newPage();
-
+ 
   // Log all JS files loaded
   const capturedJS = [];
   await page.setRequestInterception(true);
@@ -51,13 +51,13 @@ function findChromium() {
       } catch (_) {}
     }
   });
-
+ 
   console.log('Loading page...');
   await page.goto('https://gaccag.com/kotodaman/dictionary/', {
     waitUntil: 'networkidle0',
     timeout: 60000
   });
-
+ 
   // Log all window arrays for debugging
   const windowScan = await page.evaluate(() => {
     const results = [];
@@ -75,10 +75,10 @@ function findChromium() {
     }
     return results;
   });
-
+ 
   console.log('Window arrays:');
   windowScan.forEach(r => console.log(`  window.${r.key} [${r.length}]: ${r.preview}`));
-
+ 
   // Strategy 1: Hiragana array in window
   let wordData = await page.evaluate(() => {
     for (const key of Object.keys(window)) {
@@ -97,7 +97,7 @@ function findChromium() {
     }
     return null;
   });
-
+ 
   // Strategy 2: Trigger search interaction then re-scan
   if (!wordData) {
     console.log('Trying search interaction...');
@@ -125,7 +125,7 @@ function findChromium() {
       console.warn('Search interaction error:', e.message);
     }
   }
-
+ 
   // Strategy 3: Parse raw JS files
   if (!wordData) {
     console.log('Scanning JS file contents...');
@@ -154,15 +154,16 @@ function findChromium() {
       }
     }
   }
-
+ 
   await browser.close();
-
+ 
   if (!wordData) {
     console.error('All strategies failed. Check the JS file list and window arrays above.');
     process.exit(1);
   }
-
+ 
   fs.mkdirSync('data', { recursive: true });
   fs.writeFileSync('data/dictionary.json', JSON.stringify(wordData));
   console.log(`Done — saved ${wordData.length} entries.`);  // FIXED: straight backticks
 })();
+ 

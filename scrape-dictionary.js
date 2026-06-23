@@ -46,7 +46,7 @@ function findChromium() {
     if (ct.includes('javascript') || url.endsWith('.js')) {
       try {
         const text = await res.text();
-        console.log(JS: ${url} (${text.length} bytes));
+        console.log(`JS: ${url} (${text.length} bytes)`);  // FIXED: straight backticks
         if (text.length > 5000) capturedJS.push({ url, text });
       } catch (_) {}
     }
@@ -146,7 +146,7 @@ function findChromium() {
             if (c === ']') { depth--; if (depth === 0) { i++; break; } }
           }
           wordData = JSON.parse(text.slice(startIdx, i));
-          console.log(Parsed ${wordData.length} entries from ${url});
+          console.log(`Parsed ${wordData.length} entries from ${url}`);  // FIXED: straight backticks
           break;
         } catch (e) {
           console.warn('Parse failed:', e.message);
@@ -164,5 +164,5 @@ function findChromium() {
 
   fs.mkdirSync('data', { recursive: true });
   fs.writeFileSync('data/dictionary.json', JSON.stringify(wordData));
-  console.log(Done — saved ${wordData.length} entries.);
+  console.log(`Done — saved ${wordData.length} entries.`);  // FIXED: straight backticks
 })();

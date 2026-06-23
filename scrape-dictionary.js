@@ -125,7 +125,7 @@ function findChromium() {
   if (!wordData) {
     console.log('Scanning JS file contents...');
     for (const { url, text } of capturedJS) {
-      const match = text.match(/=\s*(\[\s*\["[\u3040-\u309F]/);
+      const match = text.match(/=\s*\[\s*\["[\u3040-\u309F]/);
       if (match) {
         console.log('Array pattern found in:', url);
         try {

@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 const { execSync } = require('child_process');
- 
+
 function findChromium() {
   const candidates = [
     '/usr/bin/chromium-browser',
@@ -21,22 +21,21 @@ function findChromium() {
   } catch (_) {}
   return null;
 }
- 
+
 (async () => {
   const executablePath = findChromium();
   if (!executablePath) {
     console.error('Chromium not found. Install it before running.');
     process.exit(1);
   }
- 
+
   const browser = await puppeteer.launch({
     executablePath,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
   });
- 
+
   const page = await browser.newPage();
- 
-  // Log all JS files loaded
+
   const capturedJS = [];
   await page.setRequestInterception(true);
   page.on('request', req => req.continue());
@@ -46,19 +45,18 @@ function findChromium() {
     if (ct.includes('javascript') || url.endsWith('.js')) {
       try {
         const text = await res.text();
-        console.log(`JS: ${url} (${text.length} bytes)`);  // FIXED: straight backticks
+        console.log('JS: ' + url + ' (' + text.length + ' bytes)');
         if (text.length > 5000) capturedJS.push({ url, text });
       } catch (_) {}
     }
   });
- 
+
   console.log('Loading page...');
   await page.goto('https://gaccag.com/kotodaman/dictionary/', {
     waitUntil: 'networkidle0',
     timeout: 60000
   });
- 
-  // Log all window arrays for debugging
+
   const windowScan = await page.evaluate(() => {
     const results = [];
     for (const key of Object.keys(window)) {
@@ -75,11 +73,10 @@ function findChromium() {
     }
     return results;
   });
- 
+
   console.log('Window arrays:');
-  windowScan.forEach(r => console.log(`  window.${r.key} [${r.length}]: ${r.preview}`));
- 
-  // Strategy 1: Hiragana array in window
+  windowScan.forEach(r => console.log('  window.' + r.key + ' [' + r.length + ']: ' + r.preview));
+
   let wordData = await page.evaluate(() => {
     for (const key of Object.keys(window)) {
       try {
@@ -97,14 +94,13 @@ function findChromium() {
     }
     return null;
   });
- 
-  // Strategy 2: Trigger search interaction then re-scan
+
   if (!wordData) {
     console.log('Trying search interaction...');
     try {
       const inputs = await page.$$('input[type="text"]');
       if (inputs.length > 0) {
-        await inputs[0].type('あ');
+        await inputs[0].type('\u3042');
         await new Promise(r => setTimeout(r, 2000));
         wordData = await page.evaluate(() => {
           for (const key of Object.keys(window)) {
@@ -125,8 +121,7 @@ function findChromium() {
       console.warn('Search interaction error:', e.message);
     }
   }
- 
-  // Strategy 3: Parse raw JS files
+
   if (!wordData) {
     console.log('Scanning JS file contents...');
     for (const { url, text } of capturedJS) {
@@ -146,7 +141,7 @@ function findChromium() {
             if (c === ']') { depth--; if (depth === 0) { i++; break; } }
           }
           wordData = JSON.parse(text.slice(startIdx, i));
-          console.log(`Parsed ${wordData.length} entries from ${url}`);  // FIXED: straight backticks
+          console.log('Parsed ' + wordData.length + ' entries from ' + url);
           break;
         } catch (e) {
           console.warn('Parse failed:', e.message);
@@ -154,16 +149,15 @@ function findChromium() {
       }
     }
   }
- 
+
   await browser.close();
- 
+
   if (!wordData) {
     console.error('All strategies failed. Check the JS file list and window arrays above.');
     process.exit(1);
   }
- 
+
   fs.mkdirSync('data', { recursive: true });
   fs.writeFileSync('data/dictionary.json', JSON.stringify(wordData));
-  console.log(`Done — saved ${wordData.length} entries.`);  // FIXED: straight backticks
+  console.log('Done -- saved ' + wordData.length + ' entries.');
 })();
- 

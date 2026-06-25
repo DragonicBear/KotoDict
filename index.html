@@ -272,7 +272,7 @@
         }));
     }
     
-    fetch('https://cdn.jsdelivr.net/npm/@kotodaman-unofficial/dictionary@0.1.1/dist/words.json')
+    fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json')
         .then(response => { if (!response.ok) throw new Error('Network error'); return response.json(); })
         .then(data => {
             dictionary = data.map(entry => ({

@@ -266,7 +266,6 @@
         return samples.map(entry => ({
             word: entry[0],
             chars: entry[1] || entry[0],
-            combo: entry[2],
             displays: entry[3],
             themes: entry[4] || []
         }));
@@ -278,7 +277,6 @@
             dictionary = data.map(entry => ({
                 word: entry[0],
                 chars: entry[1] || entry[0],
-                combo: entry[2],
                 displays: entry[3],
                 themes: entry[4] || []
             }));
@@ -305,7 +303,6 @@
         const sortSelect = document.getElementById('sortSelect');
         const refineSection = document.getElementById('refineSection');
         const textSearch = document.getElementById('textSearch');
-        // const strictRefineCheck removed
         const requireAllBoardCheck = document.getElementById('requireAllBoard');
         
         // Logic Toggles
@@ -367,7 +364,6 @@
         });
 
         sortSelect.addEventListener('change', performSearch);
-        // strictRefineCheck listener removed
         requireAllBoardCheck.addEventListener('change', performSearch);
         
         document.querySelectorAll('label').forEach(label => {
@@ -450,9 +446,6 @@
 
                     // Check Requirement: Must use all board chars?
                     if (fits && requireAllBoard && requiredBoardIndices.length > 0) {
-                        // The word must span across ALL requiredBoardIndices.
-                        // i.e., Word Start <= First Required Index AND Word End >= Last Required Index.
-                        // Actually, simpler: Every required index must be >= start and < start + len
                         const wordStart = start;
                         const wordEnd = start + len; // exclusive
                         
@@ -528,7 +521,6 @@
             wordMeta.set(word.word, { validOffsets, isRefineMatch });
             
             // 4. Strict Filter Check
-            // Since strictRefine is now always TRUE, this simply checks if refine filter exists and word doesn't match
             if (hasRefineFilter && !isRefineMatch) {
                 return; // Skip
             }
@@ -655,7 +647,7 @@
                             <span>${displayText} <span style="font-weight:normal; font-size:0.8em; color:#666;">(${highlightedWordHTML})</span></span>
                             ${gridHtml}
                         </div>
-                        <div class="result-info">${word.word.length} chars | Combo: ${word.combo}</div>
+                        <div class="result-info">${word.word.length} chars</div>
                         ${themesText}
                     </div>
                 `;

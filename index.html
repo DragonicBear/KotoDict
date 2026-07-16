@@ -127,28 +127,39 @@
         .text-filter-input { flex: 1; border: none; font-size: 16px; padding: 5px; outline: none; color: #333; background: transparent; }
         .text-filter-input::placeholder { color: #ccc; }
         
-        /* Board combo display (always visible) */
+        /* Board combo display - fills the line */
         .board-combo-display {
             background: #f0f8ff;
             border-radius: 8px;
             padding: 10px 15px;
             margin-bottom: 15px;
             display: flex;
-            flex-wrap: wrap;
             align-items: center;
-            gap: 10px 20px;
+            justify-content: space-between;
+            width: 100%;
             font-size: 16px;
             font-weight: 500;
             color: #333;
+            gap: 10px;
         }
         .board-combo-display .label {
             font-weight: 600;
             color: #007AFF;
+            flex: 0 0 auto;
+        }
+        .board-combo-display .combo-value {
+            flex: 1 1 auto;
+            text-align: center;
+            min-width: 80px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .board-combo-display .bonus-wrapper {
             display: inline-flex;
             align-items: center;
             gap: 6px;
+            flex: 0 0 auto;
         }
         .board-combo-display .bonus-wrapper label {
             font-weight: 600;
@@ -224,42 +235,48 @@
                 padding: 12px;
             }
 
-            /* Board combo one-line */
+            /* Board combo - full width, balanced sizes */
             .board-combo-display {
-                flex-wrap: nowrap;
+                font-size: 15px;
                 padding: 6px 10px;
-                font-size: 14px;
-                gap: 6px 10px;
-                white-space: nowrap;
-                overflow: hidden;
+                gap: 6px;
             }
             .board-combo-display .label {
-                font-size: 14px;
+                font-size: 15px;
+            }
+            .board-combo-display .combo-value {
+                font-size: 15px;
+                min-width: 60px;
             }
             .board-combo-display .bonus-wrapper input {
-                width: 40px;
-                font-size: 14px;
+                width: 44px;
+                font-size: 15px;
                 padding: 2px 4px;
             }
             .board-combo-display .bonus-wrapper label {
-                font-size: 14px;
+                font-size: 15px;
             }
         }
         @media (max-width: 400px) {
             .board-combo-display {
-                font-size: 12px;
-                gap: 4px 6px;
+                font-size: 13px;
                 padding: 4px 8px;
+                gap: 4px;
             }
             .board-combo-display .label {
-                font-size: 12px;
+                font-size: 13px;
+            }
+            .board-combo-display .combo-value {
+                font-size: 13px;
+                min-width: 50px;
             }
             .board-combo-display .bonus-wrapper input {
-                width: 32px;
-                font-size: 12px;
+                width: 36px;
+                font-size: 13px;
+                padding: 2px 3px;
             }
             .board-combo-display .bonus-wrapper label {
-                font-size: 12px;
+                font-size: 13px;
             }
         }
     </style>
@@ -275,7 +292,8 @@
                 <div class="input-section">
                     <div class="instruction-text">
                          Put hiragana in the boxes provided.<br>
-                         Multiple can be put in the same box.<br>
+                         Multiple hiragana can be in the same box.<br>
+                         Empty spaces are wildcards.<br>
                          Tap the coloured circle in each cell to toggle between <b>Board</b> (excluded) and <b>Character</b> (counted) for combo.
                     </div>
                     
@@ -318,7 +336,7 @@
                 <!-- Board Combo Display (always visible) -->
                 <div class="board-combo-display" id="boardComboDisplay">
                     <span class="label">Board Combo:</span>
-                    <span id="boardComboText">-- (fill all 7 cells)</span>
+                    <span class="combo-value" id="boardComboText">-- (fill all 7 cells)</span>
                     <span class="bonus-wrapper">
                         <label>+</label>
                         <input type="number" id="bonusCombo" value="0" min="0">

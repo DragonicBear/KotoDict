@@ -224,8 +224,10 @@
 
                     <div class="action-row">
                         <select id="sortSelect" class="sort-select">
-                            <option value="asc">Shortest First</option>
-                            <option value="desc">Longest First</option>
+                            <option value="combo-desc" selected>Combo (High to Low)</option>
+                            <option value="combo-asc">Combo (Low to High)</option>
+                            <option value="asc">Length (Low to High)</option>
+                            <option value="desc">Length (High to Low)</option>
                         </select>
                         
                         <label class="board-requirement-check">
@@ -752,17 +754,24 @@
             const hasRefineFilter = Array.from(document.querySelectorAll('.refine-input'))
                 .some(input => input.value.trim().length > 0);
 
+            // First priority: refine matches (if refine filter is active)
             if (hasRefineFilter) {
                 if (metaA.isRefineMatch !== metaB.isRefineMatch) {
                     return metaA.isRefineMatch ? -1 : 1;
                 }
             }
 
+            // Then sort by selected order
             if (sortOrder === 'asc') {
                 return a.word.length - b.word.length;
-            } else {
+            } else if (sortOrder === 'desc') {
                 return b.word.length - a.word.length;
+            } else if (sortOrder === 'combo-asc') {
+                return (metaA.combo || 0) - (metaB.combo || 0);
+            } else if (sortOrder === 'combo-desc') {
+                return (metaB.combo || 0) - (metaA.combo || 0);
             }
+            return 0;
         });
         
         const maxResults = 300; 

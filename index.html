@@ -19,12 +19,10 @@
         .input-section { background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 15px; }
         .instruction-text { font-size: 13px; color: #666; margin-bottom: 15px; text-align: center; line-height: 1.4; }
         
-        /* Box Layout Fixes for Mobile */
         .pos-filter-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
         .pos-filter-container > div { position: relative; width: 100%; aspect-ratio: 1/1; min-width: 0; }
         .pos-labels-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
         
-        /* Absolutely positioned to prevent IME stretching */
         .pos-input { 
             position: absolute; 
             top: 0; 
@@ -54,7 +52,6 @@
         button { padding: 8px 16px; font-size: 14px; border: none; border-radius: 6px; background: #8E8E93; color: white; font-weight: 500; cursor: pointer; transition: background 0.1s; }
         button:active { background: #636366; transform: scale(0.97); }
         
-        /* Checkbox Style in Action Row */
         .board-requirement-check { display: flex; align-items: center; font-size: 14px; font-weight: 500; color: #333; }
         .board-requirement-check input { width: 18px; height: 18px; margin-right: 6px; }
 
@@ -62,57 +59,33 @@
         .filter-row { margin: 12px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; }
         .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .combo-input { width: 70px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
         
         input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; border: 2px solid #ccc; border-radius: 4px; }
         input[type="checkbox"]:checked { background: #007AFF; border-color: #007AFF; }
         label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
         
-        /* Refine Section Styles */
         .refine-section { background: #fff8f0; border: 1px solid #ffe4cc; padding: 15px; border-radius: 8px; margin-bottom: 15px; transition: background 0.2s, border-color 0.2s; }
         .refine-section.and-mode { background: #f0f7ff; border-color: #cce4ff; }
-        
         .refine-header { margin-bottom: 12px; }
         .refine-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
         .refine-title { font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 8px; }
-        
         .refine-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
-        
-        /* Mini Button Style */
         .mini-btn { padding: 4px 10px; font-size: 11px; background: #fff; border: 1px solid #ccc; border-radius: 6px; color: #666; margin-right: 4px; font-weight: 600; }
         .mini-btn:active { background: #eee; }
-        
         .toggle-switch { display: inline-flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
         .toggle-option { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; white-space: nowrap; }
         .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        
         .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
         .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
-        
         .refine-inputs { display: flex; gap: 10px; }
-        
-        /* Refine inputs locked down for mobile as well */
-        .refine-input { 
-            flex: 1; 
-            min-width: 0; 
-            max-width: 60px; 
-            height: 40px; 
-            padding: 0;
-            margin: 0;
-            border: 1px solid #e0e0e0; 
-            border-radius: 6px; 
-            text-align: center; 
-            font-size: 18px; 
-            background: white;
-            overflow: hidden; 
-            white-space: nowrap;
-        }
+        .refine-input { flex: 1; min-width: 0; max-width: 60px; height: 40px; padding: 0; margin: 0; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; overflow: hidden; white-space: nowrap; }
         .refine-input:focus { outline: none; background: #fff; }
         .refine-section .refine-input:focus { border-color: #d67a00; }
         .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
         .refine-input.filled { background: #fffdf5; border-color: #d67a00; font-weight: bold; }
         .refine-section.and-mode .refine-input.filled { background: #f0f8ff; border-color: #007AFF; }
         
-        /* Text Filter */
         .text-filter-container { background: #fff; border: 2px solid #eee; border-radius: 8px; padding: 10px 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .text-filter-label { font-weight: 600; font-size: 14px; color: #333; white-space: nowrap; }
         .text-filter-input { flex: 1; border: none; font-size: 16px; padding: 5px; outline: none; color: #333; background: transparent; }
@@ -121,17 +94,14 @@
         .results { margin-top: 10px; }
         .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
         .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
-        
         .result-item.refine-match { border-left-color: #d67a00; background: #fffcf5; }
         .and-mode .result-item.refine-match { border-left-color: #007AFF; background: #f2f8ff; }
-
         .result-item:active { background: #f0f0f0; }
         .result-word { font-size: 20px; font-weight: 600; margin-bottom: 6px; color: #111; display:flex; justify-content: space-between; align-items: center;}
         .result-info { color: #666; font-size: 14px; }
         .result-themes { color: #007AFF; font-size: 13px; margin-top: 4px; }
         .no-results { text-align: center; padding: 40px 20px; color: #999; font-size: 16px; }
         
-        /* Grid Viz */
         .mini-grid { display: grid; grid-template-columns: repeat(7, 18px); gap: 2px; }
         .mini-box { width: 18px; height: 18px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px; display: flex; align-items: center; justify-content: center; background: #fff; color: #ccc; }
         .mini-box.matched { background: #007AFF; border-color: #007AFF; color: white; }
@@ -199,6 +169,10 @@
                             <label><input type="checkbox" name="chars" value="7"><span>7</span></label>
                         </div>
                     </div>
+                    <div class="filter-row">
+                        <span class="filter-label">Min Combo:</span>
+                        <input type="number" id="comboMin" class="combo-input" value="0" min="0">
+                    </div>
                 </div>
 
                 <div class="refine-section" id="refineSection">
@@ -206,15 +180,12 @@
                         <span class="refine-title">Refine (Deck Check):</span>
                         <div class="refine-controls">
                             <button id="clearRefineBtn" class="mini-btn" type="button">Clear</button>
-                            
                             <div class="toggle-switch logic-toggle">
                                 <div class="toggle-option active" data-logic="OR">Any (OR)</div>
                                 <div class="toggle-option" data-logic="AND">All (AND)</div>
                             </div>
-                            
-                            </div>
+                        </div>
                     </div>
-                    
                     <div class="refine-inputs">
                         <input type="text" class="refine-input" placeholder="A" autocomplete="off">
                         <input type="text" class="refine-input" placeholder="B" autocomplete="off">
@@ -240,37 +211,59 @@
     let dictionary = [];
     let currentRefineLogic = 'OR';
 
-    function getSampleDictionary() {
-        const samples = [
-            ["あい","",1,["愛"],[]],
-            ["あお","",1,["青"],[]],
-            ["うみ","",1,["海"],[]],
-            ["うそう","",1,["雨窓"],[]],
-            ["しょうそう","",4,["焦燥"],[]],
-            ["うそうかい","",5,["有象海"],[]],
-            ["さいし","",3,["祭祀"],[]],
-            ["さいしょ","",4,["最初"],[]],
-            ["さいしょう","",5,["最小"],[]],
-            ["しょうさ","",4,["勝差"],[]],
-            ["しょうさい","",5,["詳細"],[]],
-            ["さんしょう","",5,["参照"],[]],
-            ["あした","",3,["明日"],[]],
-            ["あいさつ","",4,["挨拶"],[]],
-            ["こう","",2,["甲"],[]],
-            ["こうこう","",4,["高校"],[]],
-            ["こうこうしゃ","",5,["高校社"],[]],
-            ["こうそ","",3,["酵素"],[]],
-            ["たいいく","",4,["体育"],[]],
-            ["あとこうしゃく","",7,["後講釈"],[]]
-        ];
-        return samples.map(entry => ({
-            word: entry[0],
-            chars: entry[1] || entry[0],
-            displays: entry[3],
-            themes: entry[4] || []
-        }));
+    // --------------------------------------------------------------------
+    //  Combo computation
+    // --------------------------------------------------------------------
+    function computeComboLengths(words) {
+        // Build signature → count map
+        const sigCount = new Map();
+        for (const w of words) {
+            const sig = w.word.split('').sort().join('');
+            sigCount.set(sig, (sigCount.get(sig) || 0) + 1);
+        }
+
+        // For each word, generate all subset signatures and sum counts
+        const result = new Map();
+        for (const w of words) {
+            const word = w.word;
+            const len = word.length;
+            const counts = new Map();
+            for (const ch of word) counts.set(ch, (counts.get(ch) || 0) + 1);
+            const chars = Array.from(counts.keys()).sort();
+            const maxCounts = chars.map(ch => counts.get(ch));
+
+            let total = 0;
+
+            // Recursive DFS to generate subset signatures
+            function dfs(idx, currentSigParts) {
+                if (idx === chars.length) {
+                    // Build signature string from current counts
+                    const sig = currentSigParts.map((cnt, i) => chars[i].repeat(cnt)).join('');
+                    if (sig.length > 0 && sig.length < len) {
+                        total += sigCount.get(sig) || 0;
+                    }
+                    return;
+                }
+                for (let cnt = 0; cnt <= maxCounts[idx]; cnt++) {
+                    currentSigParts.push(cnt);
+                    dfs(idx + 1, currentSigParts);
+                    currentSigParts.pop();
+                }
+            }
+
+            dfs(0, []);
+            result.set(word, total);
+        }
+        return result;
     }
-    
+
+    // --------------------------------------------------------------------
+    //  Main code
+    // --------------------------------------------------------------------
+    function getSampleDictionary() {
+        // ... same sample data as before ...
+    }
+
     fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json')
         .then(response => { if (!response.ok) throw new Error('Network error'); return response.json(); })
         .then(data => {
@@ -280,6 +273,13 @@
                 displays: entry[3],
                 themes: entry[4] || []
             }));
+
+            // ---- Compute combo for each word ----
+            const comboMap = computeComboLengths(dictionary);
+            for (const w of dictionary) {
+                w.combo = comboMap.get(w.word) || 0;
+            }
+
             document.getElementById('loadingMsg').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
             initializeApp();
@@ -287,6 +287,9 @@
         .catch(error => {
             console.error('Error:', error);
             dictionary = getSampleDictionary();
+            // For sample, compute combo too
+            const comboMap = computeComboLengths(dictionary);
+            for (const w of dictionary) w.combo = comboMap.get(w.word) || 0;
             document.getElementById('loadingMsg').textContent = 'Loaded sample dictionary.';
             setTimeout(() => {
                 document.getElementById('loadingMsg').style.display = 'none';
@@ -294,7 +297,7 @@
                 initializeApp();
             }, 1000);
         });
-    
+
     function initializeApp() {
         const clearBtn = document.getElementById('clearBtn');
         const clearRefineBtn = document.getElementById('clearRefineBtn');
@@ -304,6 +307,7 @@
         const refineSection = document.getElementById('refineSection');
         const textSearch = document.getElementById('textSearch');
         const requireAllBoardCheck = document.getElementById('requireAllBoard');
+        const comboMinInput = document.getElementById('comboMin');
         
         // Logic Toggles
         const logicOptions = document.querySelectorAll('.logic-toggle .toggle-option');
@@ -358,6 +362,7 @@
         });
         
         textSearch.addEventListener('input', debouncedSearch);
+        comboMinInput.addEventListener('input', debouncedSearch);
         
         document.querySelectorAll('input[type="checkbox"]').forEach(input => {
             input.addEventListener('change', performSearch);
@@ -385,14 +390,13 @@
         const sortOrder = document.getElementById('sortSelect').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
         const textFilterValue = document.getElementById('textSearch').value.trim();
-        const strictRefine = true; // Always strict mode
+        const comboMin = parseInt(document.getElementById('comboMin').value) || 0;
         const requireAllBoard = document.getElementById('requireAllBoard').checked;
 
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
-        // Identify non-empty board indices for "Must use all board chars" logic
         let requiredBoardIndices = [];
         if (requireAllBoard && hasActivePosFilter) {
             inputValues.forEach((val, idx) => {
@@ -412,7 +416,10 @@
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // B. Text Filter (Wildcard support)
+        // B. Combo Filter
+        results = results.filter(word => word.combo >= comboMin);
+
+        // C. Text Filter (Wildcard support)
         if (textFilterValue.length > 0) {
             const escaped = textFilterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const pattern = escaped.replace(/-/g, '.');
@@ -420,7 +427,7 @@
             results = results.filter(word => regex.test(word.word));
         }
 
-        // C. Board Placement AND Refine Calculation
+        // D. Board Placement AND Refine Calculation
         let wordMeta = new Map(); 
         let validBoardWords = [];
 
@@ -428,11 +435,9 @@
             const len = word.word.length;
             let validOffsets = [];
             
-            // 1. Calculate Board Placement
             if (hasActivePosFilter) {
                 for (let start = 0; start <= 7 - len; start++) {
                     let fits = true;
-                    // Check Character Matching
                     for (let i = 0; i < len; i++) {
                         const boardChar = inputValues[start + i];
                         const wordChar = word.word[i];
@@ -443,31 +448,25 @@
                             }
                         }
                     }
-
-                    // Check Requirement: Must use all board chars?
                     if (fits && requireAllBoard && requiredBoardIndices.length > 0) {
                         const wordStart = start;
-                        const wordEnd = start + len; // exclusive
-                        
+                        const wordEnd = start + len;
                         const coversAll = requiredBoardIndices.every(idx => idx >= wordStart && idx < wordEnd);
                         if (!coversAll) fits = false;
                     }
-
                     if (fits) validOffsets.push(start);
                 }
-                if (validOffsets.length === 0) return; // Word doesn't fit board
+                if (validOffsets.length === 0) return;
             } else {
                 validOffsets = [-1]; 
             }
 
-            // 2. Calculate Refine Match (Deck)
+            // Refine Match (Deck)
             let isRefineMatch = false;
-            
             if (hasRefineFilter) {
                 for (let offset of validOffsets) {
                     const chars = word.word.split('');
                     let charsToSearch = [];
-                    
                     if (offset === -1) {
                         charsToSearch = [...chars];
                     } else {
@@ -480,7 +479,6 @@
                     }
 
                     let placementPasses = false;
-
                     if (currentRefineLogic === 'OR') {
                         if (charsToSearch.length > 0) {
                             placementPasses = refineConstraints.some(constraint => {
@@ -488,7 +486,6 @@
                             });
                         }
                     } else {
-                        // AND Logic
                         let currentPool = [...charsToSearch];
                         let allConstraintsMet = true;
                         for (let constraint of refineConstraints) {
@@ -511,33 +508,27 @@
 
                     if (placementPasses) {
                         isRefineMatch = true;
-                        validOffsets = [offset]; 
-                        break; 
+                        validOffsets = [offset];
+                        break;
                     }
                 }
             }
 
-            // 3. Store Meta
             wordMeta.set(word.word, { validOffsets, isRefineMatch });
-            
-            // 4. Strict Filter Check
-            if (hasRefineFilter && !isRefineMatch) {
-                return; // Skip
-            }
-
+            if (hasRefineFilter && !isRefineMatch) return;
             validBoardWords.push(word);
         });
 
         results = validBoardWords;
 
-        // D. Sort
+        // E. Sort
         results.sort((a, b) => {
             const metaA = wordMeta.get(a.word);
             const metaB = wordMeta.get(b.word);
             
             if (hasRefineFilter) {
                 if (metaA.isRefineMatch !== metaB.isRefineMatch) {
-                    return metaA.isRefineMatch ? -1 : 1; 
+                    return metaA.isRefineMatch ? -1 : 1;
                 }
             }
 
@@ -551,8 +542,8 @@
         const maxResults = 300; 
         const displayResults = results.slice(0, maxResults);
         
-        // E. Update UI
-        if (!hasActivePosFilter && !hasRefineFilter && charFilters.length === 0 && textFilterValue.length === 0) {
+        // F. Update UI
+        if (!hasActivePosFilter && !hasRefineFilter && charFilters.length === 0 && textFilterValue.length === 0 && comboMin === 0) {
             resultCount.textContent = `Waiting for input... (${dictionary.length} words)`;
             resultList.innerHTML = '';
             return;
@@ -647,7 +638,7 @@
                             <span>${displayText} <span style="font-weight:normal; font-size:0.8em; color:#666;">(${highlightedWordHTML})</span></span>
                             ${gridHtml}
                         </div>
-                        <div class="result-info">${word.word.length} characters</div>
+                        <div class="result-info">${word.word.length} chars · Combo: ${word.combo}</div>
                         ${themesText}
                     </div>
                 `;

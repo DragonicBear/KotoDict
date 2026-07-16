@@ -213,16 +213,17 @@
 
     // --------------------------------------------------------------------
     //  CORRECT combo computation: contiguous substrings only
+    //  Counts all substrings of length >= 2 that exist in the dictionary,
+    //  including the word itself.
     // --------------------------------------------------------------------
     function computeComboLengths(words) {
-        // Build a set of all dictionary words for fast lookup
         const wordSet = new Set(words.map(w => w.word));
         const comboMap = new Map();
 
         for (const w of words) {
             const word = w.word;
             const len = word.length;
-            const found = new Set(); // to avoid duplicates
+            const found = new Set();
 
             // Generate all contiguous substrings of length >= 2
             for (let start = 0; start < len; start++) {
@@ -240,7 +241,7 @@
     }
 
     // --------------------------------------------------------------------
-    //  Main code
+    //  Sample dictionary (fallback if fetch fails)
     // --------------------------------------------------------------------
     function getSampleDictionary() {
         const samples = [
@@ -273,6 +274,9 @@
         }));
     }
 
+    // --------------------------------------------------------------------
+    //  Load dictionary and initialize app
+    // --------------------------------------------------------------------
     fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json')
         .then(response => { if (!response.ok) throw new Error('Network error'); return response.json(); })
         .then(data => {
@@ -283,7 +287,7 @@
                 themes: entry[4] || []
             }));
 
-            // ---- Compute combo for each word (contiguous substrings) ----
+            // Compute combo for each word (contiguous substrings)
             const comboMap = computeComboLengths(dictionary);
             for (const w of dictionary) {
                 w.combo = comboMap.get(w.word) || 0;
@@ -294,12 +298,11 @@
             initializeApp();
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error loading dictionary:', error);
             dictionary = getSampleDictionary();
-            // For sample, compute combo too
             const comboMap = computeComboLengths(dictionary);
             for (const w of dictionary) w.combo = comboMap.get(w.word) || 0;
-            document.getElementById('loadingMsg').textContent = 'Loaded sample dictionary.';
+            document.getElementById('loadingMsg').textContent = '⚠ Loaded sample dictionary (limited).';
             setTimeout(() => {
                 document.getElementById('loadingMsg').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';

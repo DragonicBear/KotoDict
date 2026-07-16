@@ -210,22 +210,18 @@
 <script>
     let dictionary = [];
     let currentRefineLogic = 'OR';
+    let wordSet = new Set();
 
     // --------------------------------------------------------------------
-    //  CORRECT combo computation: contiguous substrings only
-    //  Counts all substrings of length >= 2 that exist in the dictionary,
-    //  including the word itself.
+    //  Global combo computation (no board restrictions)
+    //  Counts all contiguous substrings of length >= 2 that exist in the dictionary.
     // --------------------------------------------------------------------
-    function computeComboLengths(words) {
-        const wordSet = new Set(words.map(w => w.word));
+    function computeGlobalComboLengths(words) {
         const comboMap = new Map();
-
         for (const w of words) {
             const word = w.word;
             const len = word.length;
             const found = new Set();
-
-            // Generate all contiguous substrings of length >= 2
             for (let start = 0; start < len; start++) {
                 for (let end = start + 2; end <= len; end++) {
                     const sub = word.substring(start, end);
@@ -234,14 +230,49 @@
                     }
                 }
             }
-
             comboMap.set(word, found.size);
         }
         return comboMap;
     }
 
     // --------------------------------------------------------------------
-    //  Sample dictionary (fallback if fetch fails)
+    //  Combo for a specific placement, considering board occupancy
+    //  Only substrings that land entirely on empty board cells count.
+    // --------------------------------------------------------------------
+    function countComboForPlacement(word, offset, boardInput) {
+        const len = word.length;
+        const found = new Set();
+        // Precompute which positions in the word are on empty board cells
+        const emptyPos = new Array(len).fill(false);
+        for (let i = 0; i < len; i++) {
+            const boardIdx = offset + i;
+            // If board cell is empty (no characters), it's a new tile
+            emptyPos[i] = (boardInput[boardIdx] === '' || boardInput[boardIdx] === undefined);
+        }
+
+        for (let start = 0; start < len; start++) {
+            for (let end = start + 2; end <= len; end++) {
+                // Check if all positions in this substring are on empty cells
+                let allEmpty = true;
+                for (let i = start; i < end; i++) {
+                    if (!emptyPos[i]) {
+                        allEmpty = false;
+                        break;
+                    }
+                }
+                if (allEmpty) {
+                    const sub = word.substring(start, end);
+                    if (wordSet.has(sub)) {
+                        found.add(sub);
+                    }
+                }
+            }
+        }
+        return found.size;
+    }
+
+    // --------------------------------------------------------------------
+    //  Sample dictionary (fallback)
     // --------------------------------------------------------------------
     function getSampleDictionary() {
         const samples = [
@@ -275,7 +306,7 @@
     }
 
     // --------------------------------------------------------------------
-    //  Load dictionary and initialize app
+    //  Load dictionary and initialize
     // --------------------------------------------------------------------
     fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json')
         .then(response => { if (!response.ok) throw new Error('Network error'); return response.json(); })
@@ -286,9 +317,9 @@
                 displays: entry[3],
                 themes: entry[4] || []
             }));
+            wordSet = new Set(dictionary.map(w => w.word));
 
-            // Compute combo for each word (contiguous substrings)
-            const comboMap = computeComboLengths(dictionary);
+            const comboMap = computeGlobalComboLengths(dictionary);
             for (const w of dictionary) {
                 w.combo = comboMap.get(w.word) || 0;
             }
@@ -300,7 +331,8 @@
         .catch(error => {
             console.error('Error loading dictionary:', error);
             dictionary = getSampleDictionary();
-            const comboMap = computeComboLengths(dictionary);
+            wordSet = new Set(dictionary.map(w => w.word));
+            const comboMap = computeGlobalComboLengths(dictionary);
             for (const w of dictionary) w.combo = comboMap.get(w.word) || 0;
             document.getElementById('loadingMsg').textContent = '⚠ Loaded sample dictionary (limited).';
             setTimeout(() => {
@@ -428,7 +460,8 @@
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // B. Combo Filter
+        // B. Global combo filter (uses the global combo, not board-adjusted)
+        // We'll still filter using the global combo because it's the maximum possible.
         results = results.filter(word => word.combo >= comboMin);
 
         // C. Text Filter (Wildcard support)
@@ -526,14 +559,25 @@
                 }
             }
 
-            wordMeta.set(word.word, { validOffsets, isRefineMatch });
+            // --- Compute combo for this word based on board ---
+            let comboDisplay = word.combo; // default global
+            if (hasActivePosFilter && validOffsets.length > 0) {
+                let maxCombo = 0;
+                for (let offset of validOffsets) {
+                    const c = countComboForPlacement(word.word, offset, inputValues);
+                    if (c > maxCombo) maxCombo = c;
+                }
+                comboDisplay = maxCombo;
+            }
+
+            wordMeta.set(word.word, { validOffsets, isRefineMatch, combo: comboDisplay });
             if (hasRefineFilter && !isRefineMatch) return;
             validBoardWords.push(word);
         });
 
         results = validBoardWords;
 
-        // E. Sort
+        // E. Sort (use the displayed combo as secondary sort)
         results.sort((a, b) => {
             const metaA = wordMeta.get(a.word);
             const metaB = wordMeta.get(b.word);
@@ -545,9 +589,12 @@
             }
 
             if (sortOrder === 'asc') {
-                return a.word.length - b.word.length;
+                if (a.word.length !== b.word.length) return a.word.length - b.word.length;
+                // secondary: higher combo first for asc? better to keep as length first.
+                return 0;
             } else {
-                return b.word.length - a.word.length;
+                if (a.word.length !== b.word.length) return b.word.length - a.word.length;
+                return 0;
             }
         });
         
@@ -644,13 +691,16 @@
                 let itemClass = 'result-item';
                 if (meta.isRefineMatch) itemClass += ' refine-match';
 
+                // Show combo: if board has letters, we show adjusted combo; else global.
+                const comboStr = hasActivePosFilter ? `${meta.combo} (adjusted)` : `${meta.combo}`;
+
                 return `
                     <div class="${itemClass}">
                         <div class="result-word">
                             <span>${displayText} <span style="font-weight:normal; font-size:0.8em; color:#666;">(${highlightedWordHTML})</span></span>
                             ${gridHtml}
                         </div>
-                        <div class="result-info">${word.word.length} chars · Combo: ${word.combo}</div>
+                        <div class="result-info">${word.word.length} chars · Combo: ${comboStr}</div>
                         ${themesText}
                     </div>
                 `;

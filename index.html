@@ -50,7 +50,7 @@
         /* Cell toggle badge */
         .cell-toggle {
             position: absolute;
-            bottom: 2px;
+            top: 2px;
             right: 2px;
             width: 18px;
             height: 18px;
@@ -184,6 +184,37 @@
         .mini-box { width: 18px; height: 18px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px; display: flex; align-items: center; justify-content: center; background: #fff; color: #ccc; }
         .mini-box.matched { background: #007AFF; border-color: #007AFF; color: white; }
         .mini-box.overlap { background: #e0efff; border-color: #007AFF; color: #007AFF; }
+
+        /* Mobile improvements */
+        @media (max-width: 600px) {
+            .pos-filter-container {
+                gap: 8px;
+            }
+            .pos-filter-container > div {
+                aspect-ratio: 1/1;
+                min-width: 48px;
+                min-height: 48px;
+            }
+            .pos-input {
+                font-size: 22px;
+                border-width: 2px;
+            }
+            .cell-toggle {
+                width: 22px;
+                height: 22px;
+                font-size: 12px;
+                top: -2px;
+                right: -2px;
+                border-width: 2px;
+            }
+            .pos-label {
+                font-size: 13px;
+                margin-top: 6px;
+            }
+            .instruction-text {
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>

@@ -574,13 +574,12 @@
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
-        // ---- Compute full board combo ----
+        // ---- Compute full board combo (for display) ----
         const boardComboEl = document.getElementById('boardCombo');
         const boardComboText = document.getElementById('boardComboText');
         const bonusWrapper = document.getElementById('bonusWrapper');
         
         if (inputValues.every(v => v.length > 0)) {
-            // All cells have at least one character – compute board combo
             const rawCombo = computeFullBoardCombo(inputValues, freeFlags);
             const totalCombo = rawCombo + bonusCombo;
             boardComboText.textContent = `Board Combo: ${rawCombo} (+ ${bonusCombo}) = ${totalCombo}`;
@@ -591,29 +590,14 @@
             bonusWrapper.style.display = 'none';
         }
 
-        let requiredBoardIndices = [];
-        if (requireAllBoard && hasActivePosFilter) {
-            inputValues.forEach((val, idx) => {
-                if (val.length > 0) requiredBoardIndices.push(idx);
-            });
-        }
-
-        const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
-            .map(input => input.value.trim().split('')) 
-            .filter(arr => arr.length > 0);
-        const hasRefineFilter = refineConstraints.length > 0;
-
+        // ---- Filtering pipeline ----
+        // 1. Length filter
         let results = dictionary;
-
-        // A. Length Filter
         if (charFilters.length > 0) {
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // B. Global combo filter
-        results = results.filter(word => word.combo >= comboMin);
-
-        // C. Text Filter (Wildcard support)
+        // 2. Text filter
         if (textFilterValue.length > 0) {
             const escaped = textFilterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const pattern = escaped.replace(/-/g, '.');
@@ -621,11 +605,16 @@
             results = results.filter(word => regex.test(word.word));
         }
 
-        // D. Board Placement AND Refine Calculation
+        // ---- For each candidate, compute valid offsets and adjusted combo ----
+        // We'll store meta info for each word that passes placement and comboMin
         let wordMeta = new Map(); 
         let validBoardWords = [];
 
-        results.forEach(word => {
+        const requiredBoardIndices = (requireAllBoard && hasActivePosFilter) 
+            ? inputValues.map((val, idx) => val.length > 0 ? idx : -1).filter(idx => idx !== -1)
+            : [];
+
+        for (const word of results) {
             const len = word.word.length;
             let validOffsets = [];
             
@@ -650,22 +639,45 @@
                     }
                     if (fits) validOffsets.push(start);
                 }
-                if (validOffsets.length === 0) return;
+                if (validOffsets.length === 0) continue;
             } else {
-                validOffsets = [-1]; 
+                // No board filter: word can be placed anywhere (use -1 as placeholder)
+                validOffsets = [-1];
             }
 
-            // Refine Match (Deck)
+            // Compute adjusted combo (max over valid offsets)
+            let adjustedCombo = 0;
+            if (hasActivePosFilter) {
+                for (const offset of validOffsets) {
+                    const c = countComboForPlacement(word.word, offset, inputValues, freeFlags);
+                    if (c > adjustedCombo) adjustedCombo = c;
+                }
+            } else {
+                adjustedCombo = word.combo; // global combo
+            }
+
+            // Filter by comboMin using adjustedCombo
+            if (adjustedCombo < comboMin) continue;
+
+            // ---- Refine matching (Deck Check) ----
             let isRefineMatch = false;
+            const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
+                .map(input => input.value.trim().split('')) 
+                .filter(arr => arr.length > 0);
+            const hasRefineFilter = refineConstraints.length > 0;
+
             if (hasRefineFilter) {
-                for (let offset of validOffsets) {
+                // We need to check each valid offset; if any passes, mark as match and keep all offsets?
+                // For refine matching, we keep the first offset that passes (same as before)
+                let matchedOffset = null;
+                for (const offset of validOffsets) {
                     const chars = word.word.split('');
                     let charsToSearch = [];
                     if (offset === -1) {
                         charsToSearch = [...chars];
                     } else {
                         for (let i = 0; i < chars.length; i++) {
-                            let boardIndex = offset + i;
+                            const boardIndex = offset + i;
                             if (!inputValues[boardIndex] || inputValues[boardIndex].length === 0) {
                                 charsToSearch.push(chars[i]);
                             }
@@ -679,10 +691,10 @@
                                 return charsToSearch.some(char => constraint.includes(char));
                             });
                         }
-                    } else {
+                    } else { // AND
                         let currentPool = [...charsToSearch];
                         let allConstraintsMet = true;
-                        for (let constraint of refineConstraints) {
+                        for (const constraint of refineConstraints) {
                             let matchIndex = -1;
                             for (let k = 0; k < currentPool.length; k++) {
                                 if (constraint.includes(currentPool[k])) {
@@ -702,35 +714,38 @@
 
                     if (placementPasses) {
                         isRefineMatch = true;
-                        validOffsets = [offset];
+                        matchedOffset = offset;
                         break;
                     }
                 }
+                if (!isRefineMatch) continue; // word doesn't satisfy refine
+                // For display we only keep the matched offset
+                validOffsets = [matchedOffset];
+            } else {
+                // No refine filter: keep all offsets, but we'll just pick the first for display later
+                // We'll store all offsets in meta but for highlighting we use first one
+                // (We already have all offsets)
             }
 
-            // --- Compute combo for this word based on board and Character flags ---
-            let comboDisplay = word.combo;
-            if (hasActivePosFilter && validOffsets.length > 0) {
-                let maxCombo = 0;
-                for (let offset of validOffsets) {
-                    const c = countComboForPlacement(word.word, offset, inputValues, freeFlags);
-                    if (c > maxCombo) maxCombo = c;
-                }
-                comboDisplay = maxCombo;
-            }
-
-            wordMeta.set(word.word, { validOffsets, isRefineMatch, combo: comboDisplay });
-            if (hasRefineFilter && !isRefineMatch) return;
+            // Store meta
+            wordMeta.set(word.word, { 
+                validOffsets: validOffsets, 
+                isRefineMatch: isRefineMatch, 
+                combo: adjustedCombo 
+            });
             validBoardWords.push(word);
-        });
+        }
 
         results = validBoardWords;
 
-        // E. Sort
+        // ---- Sorting ----
         results.sort((a, b) => {
             const metaA = wordMeta.get(a.word);
             const metaB = wordMeta.get(b.word);
             
+            const hasRefineFilter = Array.from(document.querySelectorAll('.refine-input'))
+                .some(input => input.value.trim().length > 0);
+
             if (hasRefineFilter) {
                 if (metaA.isRefineMatch !== metaB.isRefineMatch) {
                     return metaA.isRefineMatch ? -1 : 1;
@@ -747,8 +762,8 @@
         const maxResults = 300; 
         const displayResults = results.slice(0, maxResults);
         
-        // F. Update UI
-        if (!hasActivePosFilter && !hasRefineFilter && charFilters.length === 0 && textFilterValue.length === 0 && comboMin === 0) {
+        // ---- Update UI ----
+        if (!hasActivePosFilter && !document.querySelector('.refine-input[value]') && charFilters.length === 0 && textFilterValue.length === 0 && comboMin === 0) {
             resultCount.textContent = `Waiting for input... (${dictionary.length} words)`;
             resultList.innerHTML = '';
             return;
@@ -782,6 +797,11 @@
                         }
                     }
                 }
+
+                const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
+                    .map(input => input.value.trim().split('')) 
+                    .filter(arr => arr.length > 0);
+                const hasRefineFilter = refineConstraints.length > 0;
 
                 if (hasRefineFilter && meta.isRefineMatch) {
                     let availIndices = [];

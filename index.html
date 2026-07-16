@@ -212,56 +212,65 @@
     let currentRefineLogic = 'OR';
 
     // --------------------------------------------------------------------
-    //  Combo computation
+    //  CORRECT combo computation: contiguous substrings only
     // --------------------------------------------------------------------
     function computeComboLengths(words) {
-        // Build signature → count map
-        const sigCount = new Map();
-        for (const w of words) {
-            const sig = w.word.split('').sort().join('');
-            sigCount.set(sig, (sigCount.get(sig) || 0) + 1);
-        }
+        // Build a set of all dictionary words for fast lookup
+        const wordSet = new Set(words.map(w => w.word));
+        const comboMap = new Map();
 
-        // For each word, generate all subset signatures and sum counts
-        const result = new Map();
         for (const w of words) {
             const word = w.word;
             const len = word.length;
-            const counts = new Map();
-            for (const ch of word) counts.set(ch, (counts.get(ch) || 0) + 1);
-            const chars = Array.from(counts.keys()).sort();
-            const maxCounts = chars.map(ch => counts.get(ch));
+            const found = new Set(); // to avoid duplicates
 
-            let total = 0;
-
-            // Recursive DFS to generate subset signatures
-            function dfs(idx, currentSigParts) {
-                if (idx === chars.length) {
-                    // Build signature string from current counts
-                    const sig = currentSigParts.map((cnt, i) => chars[i].repeat(cnt)).join('');
-                    if (sig.length > 0 && sig.length < len) {
-                        total += sigCount.get(sig) || 0;
+            // Generate all contiguous substrings of length >= 2
+            for (let start = 0; start < len; start++) {
+                for (let end = start + 2; end <= len; end++) {
+                    const sub = word.substring(start, end);
+                    if (wordSet.has(sub)) {
+                        found.add(sub);
                     }
-                    return;
-                }
-                for (let cnt = 0; cnt <= maxCounts[idx]; cnt++) {
-                    currentSigParts.push(cnt);
-                    dfs(idx + 1, currentSigParts);
-                    currentSigParts.pop();
                 }
             }
 
-            dfs(0, []);
-            result.set(word, total);
+            comboMap.set(word, found.size);
         }
-        return result;
+        return comboMap;
     }
 
     // --------------------------------------------------------------------
     //  Main code
     // --------------------------------------------------------------------
     function getSampleDictionary() {
-        // ... same sample data as before ...
+        const samples = [
+            ["あい","",1,["愛"],[]],
+            ["あお","",1,["青"],[]],
+            ["うみ","",1,["海"],[]],
+            ["うそう","",1,["雨窓"],[]],
+            ["しょうそう","",4,["焦燥"],[]],
+            ["うそうかい","",5,["有象海"],[]],
+            ["さいし","",3,["祭祀"],[]],
+            ["さいしょ","",4,["最初"],[]],
+            ["さいしょう","",5,["最小"],[]],
+            ["しょうさ","",4,["勝差"],[]],
+            ["しょうさい","",5,["詳細"],[]],
+            ["さんしょう","",5,["参照"],[]],
+            ["あした","",3,["明日"],[]],
+            ["あいさつ","",4,["挨拶"],[]],
+            ["こう","",2,["甲"],[]],
+            ["こうこう","",4,["高校"],[]],
+            ["こうこうしゃ","",5,["高校社"],[]],
+            ["こうそ","",3,["酵素"],[]],
+            ["たいいく","",4,["体育"],[]],
+            ["あとこうしゃく","",7,["後講釈"],[]]
+        ];
+        return samples.map(entry => ({
+            word: entry[0],
+            chars: entry[1] || entry[0],
+            displays: entry[3],
+            themes: entry[4] || []
+        }));
     }
 
     fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json')
@@ -274,7 +283,7 @@
                 themes: entry[4] || []
             }));
 
-            // ---- Compute combo for each word ----
+            // ---- Compute combo for each word (contiguous substrings) ----
             const comboMap = computeComboLengths(dictionary);
             for (const w of dictionary) {
                 w.combo = comboMap.get(w.word) || 0;

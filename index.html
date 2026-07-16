@@ -7,6 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Kotodaman Board Solver</title>
     <style>
+        /* ... same CSS as before ... */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); }
         html, body { width: 100%; height: 100%; overflow-x: hidden; position: fixed; -webkit-overflow-scrolling: touch; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; background: #f5f5f5; -webkit-touch-callout: none; overscroll-behavior: none; }
@@ -214,7 +215,6 @@
 
     // --------------------------------------------------------------------
     //  Global combo computation (no board restrictions)
-    //  Counts all contiguous substrings of length >= 2 that exist in the dictionary.
     // --------------------------------------------------------------------
     function computeGlobalComboLengths(words) {
         const comboMap = new Map();
@@ -236,31 +236,30 @@
     }
 
     // --------------------------------------------------------------------
-    //  Combo for a specific placement, considering board occupancy
-    //  Only substrings that land entirely on empty board cells count.
+    //  Combo for a specific placement – counts only substrings that
+    //  include at least one new tile (i.e., not entirely on board letters).
     // --------------------------------------------------------------------
     function countComboForPlacement(word, offset, boardInput) {
         const len = word.length;
         const found = new Set();
-        // Precompute which positions in the word are on empty board cells
-        const emptyPos = new Array(len).fill(false);
+        // Precompute which positions are on empty board cells (new tiles)
+        const isEmpty = new Array(len).fill(false);
         for (let i = 0; i < len; i++) {
             const boardIdx = offset + i;
-            // If board cell is empty (no characters), it's a new tile
-            emptyPos[i] = (boardInput[boardIdx] === '' || boardInput[boardIdx] === undefined);
+            isEmpty[i] = (boardInput[boardIdx] === '' || boardInput[boardIdx] === undefined);
         }
 
         for (let start = 0; start < len; start++) {
             for (let end = start + 2; end <= len; end++) {
-                // Check if all positions in this substring are on empty cells
-                let allEmpty = true;
+                // Count the substring if at least one character is on an empty cell
+                let hasNew = false;
                 for (let i = start; i < end; i++) {
-                    if (!emptyPos[i]) {
-                        allEmpty = false;
+                    if (isEmpty[i]) {
+                        hasNew = true;
                         break;
                     }
                 }
-                if (allEmpty) {
+                if (hasNew) {
                     const sub = word.substring(start, end);
                     if (wordSet.has(sub)) {
                         found.add(sub);
@@ -460,8 +459,7 @@
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // B. Global combo filter (uses the global combo, not board-adjusted)
-        // We'll still filter using the global combo because it's the maximum possible.
+        // B. Global combo filter (used for minimum, regardless of board)
         results = results.filter(word => word.combo >= comboMin);
 
         // C. Text Filter (Wildcard support)
@@ -577,7 +575,7 @@
 
         results = validBoardWords;
 
-        // E. Sort (use the displayed combo as secondary sort)
+        // E. Sort
         results.sort((a, b) => {
             const metaA = wordMeta.get(a.word);
             const metaB = wordMeta.get(b.word);
@@ -589,12 +587,9 @@
             }
 
             if (sortOrder === 'asc') {
-                if (a.word.length !== b.word.length) return a.word.length - b.word.length;
-                // secondary: higher combo first for asc? better to keep as length first.
-                return 0;
+                return a.word.length - b.word.length;
             } else {
-                if (a.word.length !== b.word.length) return b.word.length - a.word.length;
-                return 0;
+                return b.word.length - a.word.length;
             }
         });
         
@@ -691,7 +686,7 @@
                 let itemClass = 'result-item';
                 if (meta.isRefineMatch) itemClass += ' refine-match';
 
-                // Show combo: if board has letters, we show adjusted combo; else global.
+                // Show combo: if board has letters, show adjusted; else global.
                 const comboStr = hasActivePosFilter ? `${meta.combo} (adjusted)` : `${meta.combo}`;
 
                 return `

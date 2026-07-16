@@ -127,32 +127,35 @@
         .text-filter-input { flex: 1; border: none; font-size: 16px; padding: 5px; outline: none; color: #333; background: transparent; }
         .text-filter-input::placeholder { color: #ccc; }
         
-        .results { margin-top: 10px; }
-        .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
-        .board-combo { 
-            font-size: 18px; 
-            font-weight: 600; 
-            color: #007AFF; 
-            margin-bottom: 15px; 
-            padding: 10px 15px; 
-            background: #f0f8ff; 
-            border-radius: 8px; 
-            display: inline-block; 
+        /* Board combo display (always visible) */
+        .board-combo-display {
+            background: #f0f8ff;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
         }
-        .bonus-combo-wrapper {
+        .board-combo-display .label {
+            font-weight: 600;
+            color: #007AFF;
+        }
+        .board-combo-display .bonus-wrapper {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            margin-left: 12px;
-            font-size: 16px;
-            font-weight: 400;
-            color: #333;
         }
-        .bonus-combo-wrapper label {
+        .board-combo-display .bonus-wrapper label {
             font-weight: 600;
             color: #333;
+            margin: 0;
         }
-        .bonus-combo-wrapper input {
+        .board-combo-display .bonus-wrapper input {
             width: 50px;
             padding: 4px 6px;
             border: 1px solid #ccc;
@@ -161,10 +164,13 @@
             text-align: center;
             background: white;
         }
-        .bonus-combo-wrapper input:focus {
+        .board-combo-display .bonus-wrapper input:focus {
             outline: none;
             border-color: #007AFF;
         }
+
+        .results { margin-top: 10px; }
+        .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
         .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
         .result-item.refine-match { border-left-color: #d67a00; background: #fffcf5; }
         .and-mode .result-item.refine-match { border-left-color: #007AFF; background: #f2f8ff; }
@@ -229,6 +235,16 @@
                         <button id="clearBtn" type="button">Reset Grid</button>
                     </div>
                 </div>
+
+                <!-- Board Combo Display (always visible) -->
+                <div class="board-combo-display" id="boardComboDisplay">
+                    <span class="label">Board Combo:</span>
+                    <span id="boardComboText">-- (fill all 7 cells)</span>
+                    <span class="bonus-wrapper">
+                        <label>+</label>
+                        <input type="number" id="bonusCombo" value="0" min="0">
+                    </span>
+                </div>
                 
                 <div class="filters">
                     <div class="filter-row">
@@ -274,13 +290,6 @@
 
                 <div class="results">
                     <div class="result-count" id="resultCount">Enter characters to search</div>
-                    <div id="boardCombo" class="board-combo" style="display:none;">
-                        <span id="boardComboText"></span>
-                        <span class="bonus-combo-wrapper" id="bonusWrapper">
-                            <label>+</label>
-                            <input type="number" id="bonusCombo" value="0" min="0">
-                        </span>
-                    </div>
                     <div id="resultList"></div>
                 </div>
             </div>
@@ -357,7 +366,7 @@
         // boardChars: array of 7 strings (each may be empty or multiple chars)
         // For simplicity, take the first character of each cell if non‑empty.
         const boardStr = boardChars.map(s => s ? s[0] : '').join('');
-        if (boardStr.length !== 7) return 0; // not all filled
+        if (boardStr.length !== 7) return -1; // -1 indicates not fully filled
         let count = 0;
         for (let start = 0; start < 7; start++) {
             for (let end = start + 2; end <= 7; end++) {
@@ -459,9 +468,7 @@
         const requireAllBoardCheck = document.getElementById('requireAllBoard');
         const comboMinInput = document.getElementById('comboMin');
         const toggles = document.querySelectorAll('.cell-toggle');
-        const boardComboEl = document.getElementById('boardCombo');
         const bonusComboInput = document.getElementById('bonusCombo');
-        const bonusWrapper = document.getElementById('bonusWrapper');
         
         // Toggle logic: cycle Board ↔ Character
         toggles.forEach(toggle => {
@@ -574,20 +581,19 @@
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
-        // ---- Compute full board combo (for display) ----
-        const boardComboEl = document.getElementById('boardCombo');
+        // ---- Update Board Combo Display (always visible) ----
         const boardComboText = document.getElementById('boardComboText');
-        const bonusWrapper = document.getElementById('bonusWrapper');
-        
-        if (inputValues.every(v => v.length > 0)) {
+        const allFilled = inputValues.every(v => v.length > 0);
+        if (allFilled) {
             const rawCombo = computeFullBoardCombo(inputValues, freeFlags);
-            const totalCombo = rawCombo + bonusCombo;
-            boardComboText.textContent = `Board Combo: ${rawCombo} (+ ${bonusCombo}) = ${totalCombo}`;
-            boardComboEl.style.display = 'inline-block';
-            bonusWrapper.style.display = 'inline-flex';
+            if (rawCombo === -1) {
+                boardComboText.textContent = '-- (fill all 7 cells)';
+            } else {
+                const totalCombo = rawCombo + bonusCombo;
+                boardComboText.textContent = `${rawCombo} (+ ${bonusCombo}) = ${totalCombo}`;
+            }
         } else {
-            boardComboEl.style.display = 'none';
-            bonusWrapper.style.display = 'none';
+            boardComboText.textContent = '-- (fill all 7 cells)';
         }
 
         // ---- Filtering pipeline ----

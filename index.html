@@ -7,7 +7,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Kotodaman Board Solver</title>
     <style>
-        /* ... same CSS as before ... */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: rgba(0,0,0,0); }
         html, body { width: 100%; height: 100%; overflow-x: hidden; position: fixed; -webkit-overflow-scrolling: touch; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; background: #f5f5f5; -webkit-touch-callout: none; overscroll-behavior: none; }
@@ -47,6 +46,42 @@
         .pos-input:focus { border-color: #007AFF; outline: none; background: #fff; }
         .pos-input.filled { background: #f0f8ff; border-color: #007AFF; }
         .pos-label { font-size: 11px; color: #999; text-align: center; margin-top: 4px; height: 16px; }
+
+        /* Cell toggle badge */
+        .cell-toggle {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #666;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2;
+            pointer-events: auto;
+            border: 1px solid #ccc;
+            transition: 0.15s;
+            user-select: none;
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+        }
+        .cell-toggle.free {
+            background: #34c759;
+            color: white;
+            border-color: #28a745;
+        }
+        .cell-toggle.board {
+            background: #e0e0e0;
+            color: #666;
+            border-color: #ccc;
+        }
+        .pos-filter-container > div { position: relative; }
+        .pos-input { z-index: 1; }
         
         .action-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 15px; gap: 10px; }
         .sort-select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; font-size: 14px; }
@@ -121,17 +156,18 @@
                     <div class="instruction-text">
                          Put hiragana in the boxes provided.<br>
                          Multiple hiragana can be in the same box.<br>
-                         Empty spaces are wildcards.
+                         Empty spaces are wildcards.<br>
+                         Tap the coloured circle in each cell to toggle between <b>Board</b> (excluded) and <b>Free</b> (counted) for combo.
                     </div>
                     
-                    <div class="pos-filter-container">
-                        <div><input type="text" class="pos-input" data-index="0" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="1" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="2" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="3" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="4" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="5" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
+                    <div class="pos-filter-container" id="boardContainer">
+                        <div data-index="0"><input type="text" class="pos-input" data-index="0" autocomplete="off"><span class="cell-toggle board" data-index="0">B</span></div>
+                        <div data-index="1"><input type="text" class="pos-input" data-index="1" autocomplete="off"><span class="cell-toggle board" data-index="1">B</span></div>
+                        <div data-index="2"><input type="text" class="pos-input" data-index="2" autocomplete="off"><span class="cell-toggle board" data-index="2">B</span></div>
+                        <div data-index="3"><input type="text" class="pos-input" data-index="3" autocomplete="off"><span class="cell-toggle board" data-index="3">B</span></div>
+                        <div data-index="4"><input type="text" class="pos-input" data-index="4" autocomplete="off"><span class="cell-toggle board" data-index="4">B</span></div>
+                        <div data-index="5"><input type="text" class="pos-input" data-index="5" autocomplete="off"><span class="cell-toggle board" data-index="5">B</span></div>
+                        <div data-index="6"><input type="text" class="pos-input" data-index="6" autocomplete="off"><span class="cell-toggle board" data-index="6">B</span></div>
                     </div>
 
                     <div class="pos-labels-container">
@@ -212,6 +248,8 @@
     let dictionary = [];
     let currentRefineLogic = 'OR';
     let wordSet = new Set();
+    // Free flags: true = free (counted), false = board (excluded)
+    let freeFlags = new Array(7).fill(false);
 
     // --------------------------------------------------------------------
     //  Global combo computation (no board restrictions)
@@ -236,25 +274,20 @@
     }
 
     // --------------------------------------------------------------------
-    //  Combo for a specific placement – counts only substrings that
-    //  include at least one new tile (i.e., not entirely on board letters).
+    //  Combo for a specific placement – counts substrings that contain
+    //  at least one position that is either empty OR marked "free".
     // --------------------------------------------------------------------
-    function countComboForPlacement(word, offset, boardInput) {
+    function countComboForPlacement(word, offset, boardInput, freeFlags) {
         const len = word.length;
         const found = new Set();
-        // Precompute which positions are on empty board cells (new tiles)
-        const isEmpty = new Array(len).fill(false);
-        for (let i = 0; i < len; i++) {
-            const boardIdx = offset + i;
-            isEmpty[i] = (boardInput[boardIdx] === '' || boardInput[boardIdx] === undefined);
-        }
-
         for (let start = 0; start < len; start++) {
             for (let end = start + 2; end <= len; end++) {
-                // Count the substring if at least one character is on an empty cell
                 let hasNew = false;
                 for (let i = start; i < end; i++) {
-                    if (isEmpty[i]) {
+                    const boardIdx = offset + i;
+                    const isFree = freeFlags[boardIdx] || false;
+                    const isEmpty = (boardInput[boardIdx] === '' || boardInput[boardIdx] === undefined);
+                    if (isEmpty || isFree) {
                         hasNew = true;
                         break;
                     }
@@ -351,7 +384,21 @@
         const textSearch = document.getElementById('textSearch');
         const requireAllBoardCheck = document.getElementById('requireAllBoard');
         const comboMinInput = document.getElementById('comboMin');
+        const toggles = document.querySelectorAll('.cell-toggle');
         
+        // Toggle logic
+        toggles.forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(toggle.getAttribute('data-index'), 10);
+                freeFlags[idx] = !freeFlags[idx];
+                toggle.classList.toggle('free', freeFlags[idx]);
+                toggle.classList.toggle('board', !freeFlags[idx]);
+                toggle.textContent = freeFlags[idx] ? 'F' : 'B';
+                performSearch();
+            });
+        });
+
         // Logic Toggles
         const logicOptions = document.querySelectorAll('.logic-toggle .toggle-option');
         logicOptions.forEach(opt => {
@@ -371,6 +418,13 @@
         clearBtn.addEventListener('click', (e) => {
             e.preventDefault();
             posInputs.forEach(input => { input.value = ''; input.classList.remove('filled'); });
+            // Reset free flags to false (Board)
+            freeFlags.fill(false);
+            toggles.forEach(t => {
+                t.classList.remove('free');
+                t.classList.add('board');
+                t.textContent = 'B';
+            });
             textSearch.value = '';
             performSearch();
         });
@@ -459,7 +513,7 @@
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // B. Global combo filter (used for minimum, regardless of board)
+        // B. Global combo filter
         results = results.filter(word => word.combo >= comboMin);
 
         // C. Text Filter (Wildcard support)
@@ -557,12 +611,12 @@
                 }
             }
 
-            // --- Compute combo for this word based on board ---
-            let comboDisplay = word.combo; // default global
+            // --- Compute combo for this word based on board and free flags ---
+            let comboDisplay = word.combo;
             if (hasActivePosFilter && validOffsets.length > 0) {
                 let maxCombo = 0;
                 for (let offset of validOffsets) {
-                    const c = countComboForPlacement(word.word, offset, inputValues);
+                    const c = countComboForPlacement(word.word, offset, inputValues, freeFlags);
                     if (c > maxCombo) maxCombo = c;
                 }
                 comboDisplay = maxCombo;
@@ -686,7 +740,6 @@
                 let itemClass = 'result-item';
                 if (meta.isRefineMatch) itemClass += ' refine-match';
 
-                // Show combo: if board has letters, show adjusted; else global.
                 const comboStr = hasActivePosFilter ? `${meta.combo} (adjusted)` : `${meta.combo}`;
 
                 return `

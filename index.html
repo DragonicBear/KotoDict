@@ -129,7 +129,6 @@
         
         .results { margin-top: 10px; }
         .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
-        .board-combo { font-size: 18px; font-weight: 600; color: #007AFF; margin-bottom: 15px; padding: 10px 15px; background: #f0f8ff; border-radius: 8px; display: inline-block; }
         .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
         .result-item.refine-match { border-left-color: #d67a00; background: #fffcf5; }
         .and-mode .result-item.refine-match { border-left-color: #007AFF; background: #f2f8ff; }
@@ -239,7 +238,6 @@
 
                 <div class="results">
                     <div class="result-count" id="resultCount">Enter characters to search</div>
-                    <div id="boardCombo" class="board-combo" style="display:none;"></div>
                     <div id="resultList"></div>
                 </div>
             </div>
@@ -297,34 +295,6 @@
                 if (hasNew) {
                     const sub = word.substring(start, end);
                     if (wordSet.has(sub)) {
-                        found.add(sub);
-                    }
-                }
-            }
-        }
-        return found.size;
-    }
-
-    // --------------------------------------------------------------------
-    //  Full board combo: count distinct words appearing as substrings
-    //  of the 7‑character board, but only if they contain at least one C.
-    // --------------------------------------------------------------------
-    function computeFullBoardCombo(boardChars, freeFlags) {
-        // boardChars: array of 7 strings (each may be empty or multiple chars)
-        // For simplicity, take the first character of each cell if non‑empty.
-        const boardStr = boardChars.map(s => s ? s[0] : '').join('');
-        if (boardStr.length !== 7) return 0; // not all filled
-        const found = new Set();
-        for (let start = 0; start < 7; start++) {
-            for (let end = start + 2; end <= 7; end++) {
-                const sub = boardStr.substring(start, end);
-                if (wordSet.has(sub)) {
-                    // Check if substring contains at least one C cell
-                    let hasC = false;
-                    for (let i = start; i < end; i++) {
-                        if (freeFlags[i]) { hasC = true; break; }
-                    }
-                    if (hasC) {
                         found.add(sub);
                     }
                 }
@@ -415,7 +385,6 @@
         const requireAllBoardCheck = document.getElementById('requireAllBoard');
         const comboMinInput = document.getElementById('comboMin');
         const toggles = document.querySelectorAll('.cell-toggle');
-        const boardComboEl = document.getElementById('boardCombo');
         
         // Toggle logic: cycle Board ↔ Character
         toggles.forEach(toggle => {
@@ -524,17 +493,6 @@
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
-
-        // ---- Compute full board combo ----
-        const boardComboEl = document.getElementById('boardCombo');
-        if (inputValues.every(v => v.length > 0)) {
-            // All cells have at least one character – compute board combo
-            const boardCombo = computeFullBoardCombo(inputValues, freeFlags);
-            boardComboEl.textContent = `Board Combo: ${boardCombo}`;
-            boardComboEl.style.display = 'inline-block';
-        } else {
-            boardComboEl.style.display = 'none';
-        }
 
         let requiredBoardIndices = [];
         if (requireAllBoard && hasActivePosFilter) {

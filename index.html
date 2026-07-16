@@ -19,7 +19,7 @@
         .input-section { background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 15px; }
         .instruction-text { font-size: 13px; color: #666; margin-bottom: 15px; text-align: center; line-height: 1.4; }
         
-        .pos-filter-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
+        .pos-filter-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; width: 100%; }
         .pos-filter-container > div { position: relative; width: 100%; aspect-ratio: 1/1; min-width: 0; }
         .pos-labels-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
         
@@ -187,32 +187,41 @@
 
         /* Mobile improvements */
         @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
             .pos-filter-container {
-                gap: 8px;
+                gap: 4px;
             }
             .pos-filter-container > div {
                 aspect-ratio: 1/1;
-                min-width: 48px;
-                min-height: 48px;
+                min-width: 0;
+                min-height: 0;
             }
             .pos-input {
-                font-size: 22px;
+                font-size: 20px;
                 border-width: 2px;
             }
             .cell-toggle {
-                width: 22px;
-                height: 22px;
-                font-size: 12px;
-                top: -2px;
-                right: -2px;
-                border-width: 2px;
+                width: 16px;
+                height: 16px;
+                font-size: 9px;
+                top: -1px;
+                right: -1px;
+                border-width: 1.5px;
             }
             .pos-label {
-                font-size: 13px;
-                margin-top: 6px;
+                font-size: 12px;
+                margin-top: 4px;
             }
             .instruction-text {
                 font-size: 14px;
+            }
+            .pos-labels-container {
+                gap: 4px;
+            }
+            .input-section {
+                padding: 12px;
             }
         }
     </style>
@@ -228,7 +237,7 @@
                 <div class="input-section">
                     <div class="instruction-text">
                          Put hiragana in the boxes provided.<br>
-                         Multiple hiragana can be in the same box.<br>
+                         Multiple can be put in the same box.<br>
                          Empty spaces are wildcards.<br>
                          Tap the coloured circle in each cell to toggle between <b>Board</b> (excluded) and <b>Character</b> (counted) for combo.
                     </div>

@@ -223,6 +223,44 @@
             .input-section {
                 padding: 12px;
             }
+
+            /* Board combo one-line */
+            .board-combo-display {
+                flex-wrap: nowrap;
+                padding: 6px 10px;
+                font-size: 14px;
+                gap: 6px 10px;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+            .board-combo-display .label {
+                font-size: 14px;
+            }
+            .board-combo-display .bonus-wrapper input {
+                width: 40px;
+                font-size: 14px;
+                padding: 2px 4px;
+            }
+            .board-combo-display .bonus-wrapper label {
+                font-size: 14px;
+            }
+        }
+        @media (max-width: 400px) {
+            .board-combo-display {
+                font-size: 12px;
+                gap: 4px 6px;
+                padding: 4px 8px;
+            }
+            .board-combo-display .label {
+                font-size: 12px;
+            }
+            .board-combo-display .bonus-wrapper input {
+                width: 32px;
+                font-size: 12px;
+            }
+            .board-combo-display .bonus-wrapper label {
+                font-size: 12px;
+            }
         }
     </style>
 </head>

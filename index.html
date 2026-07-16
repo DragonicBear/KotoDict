@@ -157,7 +157,7 @@
                          Put hiragana in the boxes provided.<br>
                          Multiple hiragana can be in the same box.<br>
                          Empty spaces are wildcards.<br>
-                         Tap the coloured circle in each cell to toggle between <b>Board</b> (excluded) and <b>Free</b> (counted) for combo.
+                         Tap the coloured circle in each cell to toggle between <b>Board</b> (excluded) and <b>Character</b> (counted) for combo.
                     </div>
                     
                     <div class="pos-filter-container" id="boardContainer">
@@ -248,7 +248,7 @@
     let dictionary = [];
     let currentRefineLogic = 'OR';
     let wordSet = new Set();
-    // Free flags: true = free (counted), false = board (excluded)
+    // freeFlags: true = Character (counted), false = Board (excluded)
     let freeFlags = new Array(7).fill(false);
 
     // --------------------------------------------------------------------
@@ -275,7 +275,7 @@
 
     // --------------------------------------------------------------------
     //  Combo for a specific placement – counts substrings that contain
-    //  at least one position that is either empty OR marked "free".
+    //  at least one position that is either empty OR marked "Character".
     // --------------------------------------------------------------------
     function countComboForPlacement(word, offset, boardInput, freeFlags) {
         const len = word.length;
@@ -386,7 +386,7 @@
         const comboMinInput = document.getElementById('comboMin');
         const toggles = document.querySelectorAll('.cell-toggle');
         
-        // Toggle logic
+        // Toggle logic: cycle Board ↔ Character
         toggles.forEach(toggle => {
             toggle.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -394,7 +394,7 @@
                 freeFlags[idx] = !freeFlags[idx];
                 toggle.classList.toggle('free', freeFlags[idx]);
                 toggle.classList.toggle('board', !freeFlags[idx]);
-                toggle.textContent = freeFlags[idx] ? 'F' : 'B';
+                toggle.textContent = freeFlags[idx] ? 'C' : 'B';
                 performSearch();
             });
         });
@@ -611,7 +611,7 @@
                 }
             }
 
-            // --- Compute combo for this word based on board and free flags ---
+            // --- Compute combo for this word based on board and Character flags ---
             let comboDisplay = word.combo;
             if (hasActivePosFilter && validOffsets.length > 0) {
                 let maxCombo = 0;

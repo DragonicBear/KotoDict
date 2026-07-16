@@ -129,7 +129,42 @@
         
         .results { margin-top: 10px; }
         .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
-        .board-combo { font-size: 18px; font-weight: 600; color: #007AFF; margin-bottom: 15px; padding: 10px 15px; background: #f0f8ff; border-radius: 8px; display: inline-block; }
+        .board-combo { 
+            font-size: 18px; 
+            font-weight: 600; 
+            color: #007AFF; 
+            margin-bottom: 15px; 
+            padding: 10px 15px; 
+            background: #f0f8ff; 
+            border-radius: 8px; 
+            display: inline-block; 
+        }
+        .bonus-combo-wrapper {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 12px;
+            font-size: 16px;
+            font-weight: 400;
+            color: #333;
+        }
+        .bonus-combo-wrapper label {
+            font-weight: 600;
+            color: #333;
+        }
+        .bonus-combo-wrapper input {
+            width: 50px;
+            padding: 4px 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            text-align: center;
+            background: white;
+        }
+        .bonus-combo-wrapper input:focus {
+            outline: none;
+            border-color: #007AFF;
+        }
         .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
         .result-item.refine-match { border-left-color: #d67a00; background: #fffcf5; }
         .and-mode .result-item.refine-match { border-left-color: #007AFF; background: #f2f8ff; }
@@ -239,7 +274,13 @@
 
                 <div class="results">
                     <div class="result-count" id="resultCount">Enter characters to search</div>
-                    <div id="boardCombo" class="board-combo" style="display:none;"></div>
+                    <div id="boardCombo" class="board-combo" style="display:none;">
+                        <span id="boardComboText"></span>
+                        <span class="bonus-combo-wrapper" id="bonusWrapper">
+                            <label>+</label>
+                            <input type="number" id="bonusCombo" value="0" min="0">
+                        </span>
+                    </div>
                     <div id="resultList"></div>
                 </div>
             </div>
@@ -278,10 +319,11 @@
     // --------------------------------------------------------------------
     //  Combo for a specific placement – counts substrings that contain
     //  at least one position that is either empty OR marked "Character".
+    //  (Counts each occurrence, not unique substrings)
     // --------------------------------------------------------------------
     function countComboForPlacement(word, offset, boardInput, freeFlags) {
         const len = word.length;
-        const found = new Set();
+        let count = 0;
         for (let start = 0; start < len; start++) {
             for (let end = start + 2; end <= len; end++) {
                 let hasNew = false;
@@ -297,24 +339,26 @@
                 if (hasNew) {
                     const sub = word.substring(start, end);
                     if (wordSet.has(sub)) {
-                        found.add(sub);
+                        count++;
                     }
                 }
             }
         }
-        return found.size;
+        return count;
     }
 
     // --------------------------------------------------------------------
-    //  Full board combo: count distinct words appearing as substrings
-    //  of the 7‑character board, but only if they contain at least one C.
+    //  Full board combo: count every occurrence of dictionary words
+    //  that appear as substrings of the 7‑character board,
+    //  but only if they contain at least one C cell.
+    //  (Counts each occurrence separately)
     // --------------------------------------------------------------------
     function computeFullBoardCombo(boardChars, freeFlags) {
         // boardChars: array of 7 strings (each may be empty or multiple chars)
         // For simplicity, take the first character of each cell if non‑empty.
         const boardStr = boardChars.map(s => s ? s[0] : '').join('');
         if (boardStr.length !== 7) return 0; // not all filled
-        const found = new Set();
+        let count = 0;
         for (let start = 0; start < 7; start++) {
             for (let end = start + 2; end <= 7; end++) {
                 const sub = boardStr.substring(start, end);
@@ -325,12 +369,12 @@
                         if (freeFlags[i]) { hasC = true; break; }
                     }
                     if (hasC) {
-                        found.add(sub);
+                        count++;
                     }
                 }
             }
         }
-        return found.size;
+        return count;
     }
 
     // --------------------------------------------------------------------
@@ -416,6 +460,8 @@
         const comboMinInput = document.getElementById('comboMin');
         const toggles = document.querySelectorAll('.cell-toggle');
         const boardComboEl = document.getElementById('boardCombo');
+        const bonusComboInput = document.getElementById('bonusCombo');
+        const bonusWrapper = document.getElementById('bonusWrapper');
         
         // Toggle logic: cycle Board ↔ Character
         toggles.forEach(toggle => {
@@ -457,6 +503,7 @@
                 t.textContent = 'B';
             });
             textSearch.value = '';
+            bonusComboInput.value = '0';
             performSearch();
         });
 
@@ -491,6 +538,7 @@
         
         textSearch.addEventListener('input', debouncedSearch);
         comboMinInput.addEventListener('input', debouncedSearch);
+        bonusComboInput.addEventListener('input', debouncedSearch);
         
         document.querySelectorAll('input[type="checkbox"]').forEach(input => {
             input.addEventListener('change', performSearch);
@@ -520,6 +568,7 @@
         const textFilterValue = document.getElementById('textSearch').value.trim();
         const comboMin = parseInt(document.getElementById('comboMin').value) || 0;
         const requireAllBoard = document.getElementById('requireAllBoard').checked;
+        const bonusCombo = parseInt(document.getElementById('bonusCombo').value) || 0;
 
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
         const inputValues = posInputs.map(i => i.value.trim());
@@ -527,13 +576,19 @@
 
         // ---- Compute full board combo ----
         const boardComboEl = document.getElementById('boardCombo');
+        const boardComboText = document.getElementById('boardComboText');
+        const bonusWrapper = document.getElementById('bonusWrapper');
+        
         if (inputValues.every(v => v.length > 0)) {
             // All cells have at least one character – compute board combo
-            const boardCombo = computeFullBoardCombo(inputValues, freeFlags);
-            boardComboEl.textContent = `Board Combo: ${boardCombo}`;
+            const rawCombo = computeFullBoardCombo(inputValues, freeFlags);
+            const totalCombo = rawCombo + bonusCombo;
+            boardComboText.textContent = `Board Combo: ${rawCombo} (+ ${bonusCombo}) = ${totalCombo}`;
             boardComboEl.style.display = 'inline-block';
+            bonusWrapper.style.display = 'inline-flex';
         } else {
             boardComboEl.style.display = 'none';
+            bonusWrapper.style.display = 'none';
         }
 
         let requiredBoardIndices = [];

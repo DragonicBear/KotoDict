@@ -28,7 +28,6 @@
         .cell-toggle.board { background: #e0e0e0; color: #666; border-color: #ccc; }
         .pos-clear-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 8px; width: 100%; }
         .pos-clear { width: 100%; height: 22px; border-radius: 4px; background: #ff3b30; color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; padding: 0; line-height: 1; }
-        .pos-clear:active { background: #cc2f26; }
         .action-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 15px; gap: 10px; }
         .sort-select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; font-size: 14px; }
         button { padding: 8px 16px; font-size: 14px; border: none; border-radius: 6px; background: #8E8E93; color: white; font-weight: 500; cursor: pointer; transition: background 0.1s; }
@@ -59,10 +58,10 @@
         .refine-input.filled { background: #f0f8ff; border-color: #007AFF; font-weight: bold; }
         .or-mode .refine-input.filled { background: #fffdf5; border-color: #d67a00; }
         .refine-clear { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; border-radius: 50%; background: #ff3b30; color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; padding: 0; line-height: 1; }
-        .text-filter-container { background: #fff; border: 2px solid #eee; border-radius: 8px; padding: 10px 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .text-filter-container { background: #fff; border: 2px solid #eee; border-radius: 8px; padding: 10px 15px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; }
         .text-filter-label { font-weight: 600; font-size: 14px; color: #333; white-space: nowrap; }
         .text-filter-input { flex: 1; border: none; font-size: 16px; padding: 5px; outline: none; color: #333; background: transparent; }
-        .text-filter-hint { font-size: 11px; color: #999; margin-top: 2px; }
+        .text-filter-hint { font-size: 11px; color: #999; padding: 0 15px 15px; }
         .board-combo-display { background: #f0f8ff; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; width: 100%; font-size: 16px; font-weight: 500; color: #333; gap: 10px; }
         .board-combo-display .label { font-weight: 600; color: #007AFF; }
         .board-combo-display .combo-value { flex: 1; text-align: center; min-width: 80px; }
@@ -90,15 +89,6 @@
         .mini-box { width: 18px; height: 18px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px; display: flex; align-items: center; justify-content: center; background: #fff; color: #ccc; }
         .mini-box.matched { background: #007AFF; border-color: #007AFF; color: white; }
         .mini-box.overlap { background: #e0efff; border-color: #007AFF; color: #007AFF; }
-        @media (max-width: 600px) {
-            .container { padding: 10px; }
-            .pos-filter-container { gap: 4px; }
-            .pos-input { font-size: 18px; }
-            .cell-toggle { width: 15px; height: 15px; font-size: 8px; top: 1px; right: 1px; }
-            .pos-clear-container { gap: 4px; }
-            .pos-clear { height: 20px; font-size: 10px; }
-            .input-section { padding: 12px; }
-        }
     </style>
 </head>
 <body>
@@ -108,7 +98,7 @@
             <div class="loading" id="loadingMsg">Loading dictionary...</div>
             <div id="mainContent" style="display:none;">
                 <div class="input-section">
-                    <div class="instruction-text">Place hiragana. Tap B/C toggle. Click × below to clear a cell.</div>
+                    <div class="instruction-text">Place hiragana. Tap B/C toggle. Click × to clear. Wildcards (-) use ABCD boxes.</div>
                     <div class="pos-filter-container" id="boardContainer">
                         <div data-index="0"><input type="text" class="pos-input" data-index="0" autocomplete="off"><span class="cell-toggle board" data-index="0">B</span></div>
                         <div data-index="1"><input type="text" class="pos-input" data-index="1" autocomplete="off"><span class="cell-toggle board" data-index="1">B</span></div>
@@ -119,80 +109,23 @@
                         <div data-index="6"><input type="text" class="pos-input" data-index="6" autocomplete="off"><span class="cell-toggle board" data-index="6">B</span></div>
                     </div>
                     <div class="pos-clear-container" id="posClearContainer">
-                        <button class="pos-clear" data-index="0">×</button>
-                        <button class="pos-clear" data-index="1">×</button>
-                        <button class="pos-clear" data-index="2">×</button>
-                        <button class="pos-clear" data-index="3">×</button>
-                        <button class="pos-clear" data-index="4">×</button>
-                        <button class="pos-clear" data-index="5">×</button>
-                        <button class="pos-clear" data-index="6">×</button>
+                        <button class="pos-clear" data-index="0">×</button><button class="pos-clear" data-index="1">×</button><button class="pos-clear" data-index="2">×</button><button class="pos-clear" data-index="3">×</button>
+                        <button class="pos-clear" data-index="4">×</button><button class="pos-clear" data-index="5">×</button><button class="pos-clear" data-index="6">×</button>
                     </div>
-                    <div class="pos-labels-container">
-                        <div class="pos-label">1</div><div class="pos-label">2</div><div class="pos-label">3</div><div class="pos-label">4</div>
-                        <div class="pos-label">5</div><div class="pos-label">6</div><div class="pos-label">7</div>
-                    </div>
+                    <div class="pos-labels-container"><div class="pos-label">1</div><div class="pos-label">2</div><div class="pos-label">3</div><div class="pos-label">4</div><div class="pos-label">5</div><div class="pos-label">6</div><div class="pos-label">7</div></div>
                     <div class="action-row">
-                        <select id="sortSelect" class="sort-select">
-                            <option value="combo-desc" selected>Combo (High→Low)</option>
-                            <option value="combo-asc">Combo (Low→High)</option>
-                            <option value="asc">Length (Low→High)</option>
-                            <option value="desc">Length (High→Low)</option>
-                        </select>
+                        <select id="sortSelect" class="sort-select"><option value="combo-desc" selected>Combo (High→Low)</option><option value="combo-asc">Combo (Low→High)</option><option value="asc">Length (Low→High)</option><option value="desc">Length (High→Low)</option></select>
                         <label class="board-requirement-check"><input type="checkbox" id="requireAllBoard"> Must use all board chars</label>
                         <button id="clearBtn" type="button">Reset Grid</button>
                     </div>
                 </div>
-                <div class="board-combo-display" id="boardComboDisplay">
-                    <span class="label">Board Combo:</span>
-                    <span class="combo-value" id="boardComboText">-- (fill all 7 cells)</span>
-                    <span class="bonus-wrapper"><label>+</label><input type="number" id="bonusCombo" value="0" min="0"></span>
-                </div>
-                <div class="filters">
-                    <div class="filter-row"><span class="filter-label">Length:</span>
-                        <div class="radio-group">
-                            <label><input type="checkbox" name="chars" value="2"><span>2</span></label>
-                            <label><input type="checkbox" name="chars" value="3"><span>3</span></label>
-                            <label><input type="checkbox" name="chars" value="4"><span>4</span></label>
-                            <label><input type="checkbox" name="chars" value="5"><span>5</span></label>
-                            <label><input type="checkbox" name="chars" value="6"><span>6</span></label>
-                            <label><input type="checkbox" name="chars" value="7"><span>7</span></label>
-                        </div>
-                    </div>
-                    <div class="filter-row"><span class="filter-label">Min Combo:</span><input type="number" id="comboMin" class="combo-input" value="0" min="0"></div>
-                </div>
-                <div class="refine-section" id="refineSection">
-                    <span class="refine-title">Boxes (each provides exactly 1 character):</span>
-                    <div class="refine-controls">
-                        <button id="clearRefineBtn" class="mini-btn" type="button">Clear All</button>
-                        <div class="toggle-switch logic-toggle">
-                            <div class="toggle-option" data-logic="OR">Any (OR)</div>
-                            <div class="toggle-option active" data-logic="AND">All (AND)</div>
-                        </div>
-                    </div>
-                    <div class="refine-inputs">
-                        <div class="refine-input-wrap"><input type="text" class="refine-input" placeholder="A" autocomplete="off"><button class="refine-clear">×</button></div>
-                        <div class="refine-input-wrap"><input type="text" class="refine-input" placeholder="B" autocomplete="off"><button class="refine-clear">×</button></div>
-                        <div class="refine-input-wrap"><input type="text" class="refine-input" placeholder="C" autocomplete="off"><button class="refine-clear">×</button></div>
-                        <div class="refine-input-wrap"><input type="text" class="refine-input" placeholder="D" autocomplete="off"><button class="refine-clear">×</button></div>
-                    </div>
-                </div>
-                <div class="optimize-section" id="optimizeSection" style="display:none;">
-                    <div class="optimize-header">
-                        <span class="optimize-title">🎯 Board Optimization</span>
-                        <div><button id="optimizeBtn" class="primary" type="button">Find Best Board</button>
-                        <button id="stopOptimizeBtn" class="optimize-stop-btn" type="button" style="display:none;">Stop</button></div>
-                    </div>
-                    <div id="optimizeResults" class="optimize-results"></div>
-                </div>
-                <div class="text-filter-container">
-                    <span class="text-filter-label">Contains:</span>
-                    <input type="text" id="textSearch" class="text-filter-input" placeholder="--しょう (each - = 1 char, length must match)" autocomplete="off">
-                </div>
-                <div class="text-filter-hint" style="padding: 0 15px;">Use - as wildcard for exactly one character. Pattern length = word length.</div>
-                <div class="results">
-                    <div class="result-count" id="resultCount">Enter characters to search</div>
-                    <div id="resultList"></div>
-                </div>
+                <div class="board-combo-display" id="boardComboDisplay"><span class="label">Board Combo:</span><span class="combo-value" id="boardComboText">-- (fill all 7 cells)</span><span class="bonus-wrapper"><label>+</label><input type="number" id="bonusCombo" value="0" min="0"></span></div>
+                <div class="filters"><div class="filter-row"><span class="filter-label">Length:</span><div class="radio-group"><label><input type="checkbox" name="chars" value="2"><span>2</span></label><label><input type="checkbox" name="chars" value="3"><span>3</span></label><label><input type="checkbox" name="chars" value="4"><span>4</span></label><label><input type="checkbox" name="chars" value="5"><span>5</span></label><label><input type="checkbox" name="chars" value="6"><span>6</span></label><label><input type="checkbox" name="chars" value="7"><span>7</span></label></div></div><div class="filter-row"><span class="filter-label">Min Combo:</span><input type="number" id="comboMin" class="combo-input" value="0" min="0"></div></div>
+                <div class="refine-section" id="refineSection"><span class="refine-title">ABCD Boxes (each provides 1 char for wildcards):</span><div class="refine-controls"><button id="clearRefineBtn" class="mini-btn" type="button">Clear All</button><div class="toggle-switch logic-toggle"><div class="toggle-option" data-logic="OR">Any (OR)</div><div class="toggle-option active" data-logic="AND">All (AND)</div></div></div><div class="refine-inputs"><div class="refine-input-wrap"><input type="text" class="refine-input" placeholder="A" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap"><input type="text" class="refine-input" placeholder="B" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap"><input type="text" class="refine-input" placeholder="C" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap"><input type="text" class="refine-input" placeholder="D" autocomplete="off"><button class="refine-clear">×</button></div></div></div>
+                <div class="optimize-section" id="optimizeSection" style="display:none;"><div class="optimize-header"><span class="optimize-title">🎯 Board Optimization</span><div><button id="optimizeBtn" class="primary" type="button">Find Best Board</button><button id="stopOptimizeBtn" class="optimize-stop-btn" type="button" style="display:none;">Stop</button></div></div><div id="optimizeResults" class="optimize-results"></div></div>
+                <div class="text-filter-container"><span class="text-filter-label">Pattern:</span><input type="text" id="textSearch" class="text-filter-input" placeholder="--しょう (- = use ABCD boxes)" autocomplete="off"></div>
+                <div class="text-filter-hint">Use - for wildcards (uses ABCD boxes). Other chars must match board exactly. Length = word length.</div>
+                <div class="results"><div class="result-count" id="resultCount">Enter characters to search</div><div id="resultList"></div></div>
             </div>
         </div>
     </div>
@@ -225,7 +158,6 @@
         refineSection=document.getElementById('refineSection');optimizeSection=document.getElementById('optimizeSection');
         optimizeBtn=document.getElementById('optimizeBtn');stopOptimizeBtn=document.getElementById('stopOptimizeBtn');
         optimizeResults=document.getElementById('optimizeResults');currentRefineLogic='AND';
-        
         toggles.forEach(t=>t.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(t.dataset.index);freeFlags[i]=!freeFlags[i];t.classList.toggle('free',freeFlags[i]);t.classList.toggle('board',!freeFlags[i]);t.textContent=freeFlags[i]?'C':'B';comboCache.clear();performSearch();}));
         document.querySelectorAll('#posClearContainer .pos-clear').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const idx=parseInt(btn.dataset.index);posInputs[idx].value='';posInputs[idx].classList.remove('filled');comboCache.clear();performSearch();}));
         document.querySelectorAll('.refine-clear').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();const w=btn.parentElement;const i=w.querySelector('.refine-input');i.value='';i.classList.remove('filled');performSearch();checkOptimizeAvailability();}));
@@ -247,16 +179,94 @@
     function getRefineConstraints(){return refineInputs.map(i=>i.value.trim().split('')).filter(a=>a.length>0);}
     function getRefineMatchDetails(ca,ci,co,lo,iv,o){const ac=[],ai=[];for(let i=0;i<ca.length;i++){const bp=o===-1?-1:o+ci[i];if(bp===-1||!iv[bp]){ac.push(ca[i]);ai.push(ci[i]);}}if(lo==='OR'){const m=new Set();co.forEach(c=>{for(let i=0;i<ac.length;i++)if(c.includes(ac[i]))m.add(ai[i]);});return{matched:m,count:m.size>0?1:0};}else{let p=[...ac],pi=[...ai],m=new Set(),count=0;for(const c of co){const idx=p.findIndex(ch=>c.includes(ch));if(idx!==-1){m.add(pi[idx]);p.splice(idx,1);pi.splice(idx,1);count++;}}return{matched:m,count};}}
 
-    function performSearch(){const rc=document.getElementById('resultCount'),rl=document.getElementById('resultList');const so=sortSelect.value;const cf=Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(c=>parseInt(c.value));const tf=textSearch.value.trim(),cmin=parseInt(comboMinInput.value)||0,rab=requireAllBoardCheck.checked;const bc=parseInt(bonusComboInput.value)||0,iv=posInputs.map(i=>i.value.trim()),hapf=iv.some(v=>v.length>0);const bct=document.getElementById('boardComboText'),af=iv.every(v=>v.length>0);if(af){const rc2=computeFullBoardCombo(iv,freeFlags);bct.textContent=rc2===-1?'-- (fill all 7 cells)':`${rc2} (+ ${bc}) = ${rc2+bc}`;}else bct.textContent='-- (fill all 7 cells)';const rfc=getRefineConstraints(),hrf=rfc.length>0;let results=dictionary;if(cf.length>0){const fs=new Set(cf);results=results.filter(w=>fs.has(w.word.length));}if(tf.length>0){// Wildcard search: each - is exactly one character, pattern length = required word length
-        const patternLength=tf.length;
-        // Build regex: replace each - with . (any single char), escape other chars
-        const escaped=tf.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-        const regexStr='^'+escaped.replace(/\\-/g,'.')+'$';
-        const regex=new RegExp(regexStr);
-        results=results.filter(w=>w.word.length===patternLength&&regex.test(w.word));
-    }let wm=new Map(),vbw=[];const rbi=(rab&&hapf)?iv.reduce((a,v,i)=>{if(v.length>0)a.push(i);return a;},[]):[];for(const w of results){const len=w.word.length;if(hapf&&len>7)continue;let vo=[];if(hapf){for(let s=0;s<=7-len;s++){let fits=true;for(let i=0;i<len;i++){if(iv[s+i]&&!iv[s+i].includes(w.word[i])){fits=false;break;}}if(fits&&rab&&rbi.length>0){const we=s+len;if(!rbi.every(idx=>idx>=s&&idx<we))fits=false;}if(fits)vo.push(s);}if(vo.length===0)continue;}else vo=[-1];let ac2=0;if(hapf){for(const o of vo){const c2=countComboForPlacement(w.word,o,iv,freeFlags);if(c2>ac2)ac2=c2;}}else ac2=w.combo||0;if(ac2<cmin)continue;let bo=vo[0],irm=false,mi=new Set(),rmc=0;if(hrf){let bestC=currentRefineLogic==='AND'?-1:0;for(const o of vo){const ch=w.word.split('');let cts=[],ci=[];if(o===-1){cts=[...ch];ci=ch.map((_,i)=>i);}else{for(let i=0;i<ch.length;i++){if(!iv[o+i]){cts.push(ch[i]);ci.push(i);}}}const d=getRefineMatchDetails(cts,ci,rfc,currentRefineLogic,iv,o);if(currentRefineLogic==='OR'){if(d.matched.size>0){bo=o;mi=d.matched;rmc=d.count;irm=true;break;}}else{if(d.count>bestC){bestC=d.count;bo=o;mi=d.matched;rmc=d.count;irm=(d.count===rfc.length);}}}if(currentRefineLogic==='OR'&&!irm)continue;if(currentRefineLogic==='AND'&&rmc===0)continue;}wm.set(w.word,{validOffsets:[bo],isRefineMatch:irm,refineMatchedCount:rmc,matchedIndices:mi,combo:ac2,totalConstraints:rfc.length});vbw.push(w);}vbw.sort((a,b)=>{const ma=wm.get(a.word),mb=wm.get(b.word);if(hrf){if(ma.isRefineMatch!==mb.isRefineMatch)return ma.isRefineMatch?-1:1;if(currentRefineLogic==='AND'&&ma.refineMatchedCount!==mb.refineMatchedCount)return mb.refineMatchedCount-ma.refineMatchedCount;}switch(so){case'asc':return a.word.length-b.word.length;case'desc':return b.word.length-a.word.length;case'combo-asc':return ma.combo-mb.combo;case'combo-desc':return mb.combo-ma.combo;default:return 0;}});const mr=300,dr=vbw.slice(0,mr);if(!hapf&&!hrf&&cf.length===0&&tf.length===0&&cmin===0){rc.textContent=`Waiting for input... (${dictionary.length} words)`;rl.innerHTML='';return;}if(dr.length===0){rc.textContent="No matches found";rl.innerHTML='<div class="no-results">No words match your criteria</div>';}else{rc.textContent=`Found ${vbw.length} words${vbw.length>mr?` (Showing first ${mr})`:''}`;const hp=[];for(const w of dr){const m=wm.get(w.word),dt=w.displays[0]||w.word;const tt=w.themes.length>0?`<div class="result-themes">Theme: ${w.themes.join(', ')}</div>`:'';const po=m.validOffsets[0],ch=w.word.split('');let gi=new Set();if(po!==-1){for(let i=0;i<ch.length;i++){if(iv[po+i])gi.add(i);}}const hwh=ch.map((c,i)=>{const ig=gi.has(i),ir=m.matchedIndices.has(i);if(ig&&ir)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;background:#cce4ff;padding:0 1px;border-radius:2px;">${c}</span>`;if(ig)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;">${c}</span>`;if(ir)return`<span style="background:#cce4ff;padding:0 1px;border-radius:2px;color:#0051d5;">${c}</span>`;return c;}).join('');let gh='';if(po!==-1){let p=['<div class="mini-grid">'];for(let b=0;b<7;b++){let ct='',cl='mini-box';if(b>=po&&b<po+w.word.length){ct=w.word[b-po];cl+=iv[b]?' matched':' overlap';}p.push(`<div class="${cl}">${ct}</div>`);}p.push('</div>');gh=p.join('');}const ic='result-item'+(m.isRefineMatch?' refine-match':''),cs=hapf?`${m.combo} (adj)`:`${m.combo}`;let mi2='';if(hrf&&currentRefineLogic==='AND')mi2=` | Deck: ${m.refineMatchedCount}/${m.totalConstraints||rfc.length}`;hp.push(`<div class="${ic}"><div class="result-word"><span>${dt} <span style="font-weight:normal;font-size:0.8em;color:#666;">(${hwh})</span></span>${gh}</div><div class="result-info">${w.word.length} chars · Combo: ${cs}${mi2}</div>${tt}</div>`);}rl.innerHTML=hp.join('');}}
+    function performSearch(){
+        const rc=document.getElementById('resultCount'),rl=document.getElementById('resultList');
+        const so=sortSelect.value;
+        const cf=Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(c=>parseInt(c.value));
+        const tf=textSearch.value.trim(),cmin=parseInt(comboMinInput.value)||0,rab=requireAllBoardCheck.checked;
+        const bc=parseInt(bonusComboInput.value)||0,iv=posInputs.map(i=>i.value.trim()),hapf=iv.some(v=>v.length>0);
+        const bct=document.getElementById('boardComboText'),af=iv.every(v=>v.length>0);
+        if(af){const rc2=computeFullBoardCombo(iv,freeFlags);bct.textContent=rc2===-1?'-- (fill all 7 cells)':`${rc2} (+ ${bc}) = ${rc2+bc}`;}
+        else bct.textContent='-- (fill all 7 cells)';
+        const rfc=getRefineConstraints(),hrf=rfc.length>0;
+        let results=dictionary;
+        if(cf.length>0){const fs=new Set(cf);results=results.filter(w=>fs.has(w.word.length));}
+        
+        // ===== WILDCARD SEARCH WITH ABCD BOX CONSTRAINT =====
+        if(tf.length>0){
+            const patternLength=tf.length;
+            // Get all available characters from ABCD boxes (for wildcards)
+            const allBoxChars=hrf?rfc.flat():[];
+            
+            // Filter words by pattern: non-wildcard chars must match, wildcards must be from ABCD boxes
+            results=results.filter(w=>{
+                if(w.word.length!==patternLength)return false;
+                for(let i=0;i<patternLength;i++){
+                    const pc=tf[i];
+                    const wc=w.word[i];
+                    if(pc==='-'){
+                        // Wildcard: must be a character available in ABCD boxes
+                        if(allBoxChars.length>0&&!allBoxChars.includes(wc))return false;
+                    } else {
+                        // Non-wildcard: must match exactly
+                        if(pc!==wc)return false;
+                    }
+                }
+                return true;
+            });
+        }
+        // ===== END WILDCARD SEARCH =====
+        
+        let wm=new Map(),vbw=[];
+        const rbi=(rab&&hapf)?iv.reduce((a,v,i)=>{if(v.length>0)a.push(i);return a;},[]):[];
+        for(const w of results){
+            const len=w.word.length;if(hapf&&len>7)continue;
+            let vo=[];
+            if(hapf){for(let s=0;s<=7-len;s++){let fits=true;
+                for(let i=0;i<len;i++){if(iv[s+i]&&!iv[s+i].includes(w.word[i])){fits=false;break;}}
+                if(fits&&rab&&rbi.length>0){const we=s+len;if(!rbi.every(idx=>idx>=s&&idx<we))fits=false;}
+                if(fits)vo.push(s);}
+                if(vo.length===0)continue;}else vo=[-1];
+            let ac2=0;if(hapf){for(const o of vo){const c2=countComboForPlacement(w.word,o,iv,freeFlags);if(c2>ac2)ac2=c2;}}else ac2=w.combo||0;
+            if(ac2<cmin)continue;
+            let bo=vo[0],irm=false,mi=new Set(),rmc=0;
+            if(hrf){let bestC=currentRefineLogic==='AND'?-1:0;
+                for(const o of vo){const ch=w.word.split('');let cts=[],ci=[];
+                    if(o===-1){cts=[...ch];ci=ch.map((_,i)=>i);}
+                    else{for(let i=0;i<ch.length;i++){if(!iv[o+i]){cts.push(ch[i]);ci.push(i);}}}
+                    const d=getRefineMatchDetails(cts,ci,rfc,currentRefineLogic,iv,o);
+                    if(currentRefineLogic==='OR'){if(d.matched.size>0){bo=o;mi=d.matched;rmc=d.count;irm=true;break;}}
+                    else{if(d.count>bestC){bestC=d.count;bo=o;mi=d.matched;rmc=d.count;irm=(d.count===rfc.length);}}}
+                if(currentRefineLogic==='OR'&&!irm)continue;if(currentRefineLogic==='AND'&&rmc===0)continue;}
+            wm.set(w.word,{validOffsets:[bo],isRefineMatch:irm,refineMatchedCount:rmc,matchedIndices:mi,combo:ac2,totalConstraints:rfc.length});
+            vbw.push(w);}
+        vbw.sort((a,b)=>{const ma=wm.get(a.word),mb=wm.get(b.word);
+            if(hrf){if(ma.isRefineMatch!==mb.isRefineMatch)return ma.isRefineMatch?-1:1;
+                if(currentRefineLogic==='AND'&&ma.refineMatchedCount!==mb.refineMatchedCount)return mb.refineMatchedCount-ma.refineMatchedCount;}
+            switch(so){case'asc':return a.word.length-b.word.length;case'desc':return b.word.length-a.word.length;
+                case'combo-asc':return ma.combo-mb.combo;case'combo-desc':return mb.combo-ma.combo;default:return 0;}});
+        const mr=300,dr=vbw.slice(0,mr);
+        if(!hapf&&!hrf&&cf.length===0&&tf.length===0&&cmin===0){rc.textContent=`Waiting for input... (${dictionary.length} words)`;rl.innerHTML='';return;}
+        if(dr.length===0){rc.textContent="No matches found";rl.innerHTML='<div class="no-results">No words match your criteria</div>';}
+        else{rc.textContent=`Found ${vbw.length} words${vbw.length>mr?` (Showing first ${mr})`:''}`;
+            const hp=[];for(const w of dr){const m=wm.get(w.word),dt=w.displays[0]||w.word;
+                const tt=w.themes.length>0?`<div class="result-themes">Theme: ${w.themes.join(', ')}</div>`:'';
+                const po=m.validOffsets[0],ch=w.word.split('');let gi=new Set();
+                if(po!==-1){for(let i=0;i<ch.length;i++){if(iv[po+i])gi.add(i);}}
+                const hwh=ch.map((c,i)=>{const ig=gi.has(i),ir=m.matchedIndices.has(i);
+                    if(ig&&ir)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;background:#cce4ff;padding:0 1px;border-radius:2px;">${c}</span>`;
+                    if(ig)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;">${c}</span>`;
+                    if(ir)return`<span style="background:#cce4ff;padding:0 1px;border-radius:2px;color:#0051d5;">${c}</span>`;return c;}).join('');
+                let gh='';if(po!==-1){let p=['<div class="mini-grid">'];
+                    for(let b=0;b<7;b++){let ct='',cl='mini-box';if(b>=po&&b<po+w.word.length){ct=w.word[b-po];cl+=iv[b]?' matched':' overlap';}p.push(`<div class="${cl}">${ct}</div>`);}
+                    p.push('</div>');gh=p.join('');}
+                const ic='result-item'+(m.isRefineMatch?' refine-match':''),cs=hapf?`${m.combo} (adj)`:`${m.combo}`;
+                let mi2='';if(hrf&&currentRefineLogic==='AND')mi2=` | Deck: ${m.refineMatchedCount}/${m.totalConstraints||rfc.length}`;
+                hp.push(`<div class="${ic}"><div class="result-word"><span>${dt} <span style="font-weight:normal;font-size:0.8em;color:#666;">(${hwh})</span></span>${gh}</div><div class="result-info">${w.word.length} chars · Combo: ${cs}${mi2}</div>${tt}</div>`);}
+            rl.innerHTML=hp.join('');}
+    }
 
-    // ============ OPTIMIZER ============
+    // Optimizer functions (unchanged)
     function startOptimize(){if(isOptimizing)return;isOptimizing=true;stopOptimization=false;optimizeBtn.style.display='none';stopOptimizeBtn.style.display='inline-block';const boxes=getRefineConstraints();if(boxes.length!==4){finishOptimize([]);return;}const curBoard=posInputs.map(i=>i.value.trim());const emptySlots=[];for(let i=0;i<7;i++)if(!curBoard[i])emptySlots.push(i);if(emptySlots.length===0){finishOptimize([{board:curBoard.join(''),combo:countAllSubstrings(curBoard.join(''))}]);return;}const k=emptySlots.length;const boxCombos=(k<=4)?combinations([0,1,2,3],k):[[0,1,2,3]];const results=[];optimizeResults.innerHTML=`<div class="optimize-loading">🔍 Testing ${boxCombos.length} box combinations...</div>`;setTimeout(()=>{for(const combo of boxCombos){if(stopOptimization||results.length>8000)break;const charArrays=combo.map(b=>boxes[b]);const charCombos=cartesian(charArrays);for(const chars of charCombos){if(results.length>8000)break;const perms=permutations([...chars]);for(const perm of perms){const board=[...curBoard];const assignments=[];const n=Math.min(perm.length,k);for(let i=0;i<n;i++){board[emptySlots[i]]=perm[i];assignments.push({pos:emptySlots[i],boxIdx:combo[i]});}const allChars=boxes.flat();for(let i=n;i<k;i++){board[emptySlots[i]]=allChars[Math.floor(Math.random()*allChars.length)];assignments.push({pos:emptySlots[i],boxIdx:-1});}const bs=board.join('');results.push({board:bs,combo:countAllSubstrings(bs),assignments});}}}results.sort((a,b)=>b.combo-a.combo);const unique=[],seen=new Set();for(const r of results){if(!seen.has(r.board)){seen.add(r.board);unique.push(r);if(unique.length>=15)break;}}if(unique.length===0){const board=[...curBoard];const ac=boxes.flat();for(const s of emptySlots)board[s]=ac[Math.floor(Math.random()*ac.length)];unique.push({board:board.join(''),combo:countAllSubstrings(board.join('')),assignments:[]});}finishOptimize(unique);},10);}
     function combinations(arr,k){if(k===0)return[[]];if(k>arr.length)return[];const r=[];function f(s,c){if(c.length===k){r.push([...c]);return;}for(let i=s;i<arr.length;i++){c.push(arr[i]);f(i+1,c);c.pop();}}f(0,[]);return r;}
     function permutations(arr){if(arr.length<=1)return[arr];const r=[];for(let i=0;i<arr.length;i++){const rest=[...arr.slice(0,i),...arr.slice(i+1)];for(const p of permutations(rest))r.push([arr[i],...p]);}return r;}

@@ -19,12 +19,10 @@
         .input-section { background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 15px; }
         .instruction-text { font-size: 13px; color: #666; margin-bottom: 15px; text-align: center; line-height: 1.4; }
         
-        /* Box Layout Fixes for Mobile */
-        .pos-filter-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
+        .pos-filter-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; width: 100%; }
         .pos-filter-container > div { position: relative; width: 100%; aspect-ratio: 1/1; min-width: 0; }
         .pos-labels-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 5px; }
         
-        /* Absolutely positioned to prevent IME stretching */
         .pos-input { 
             position: absolute; 
             top: 0; 
@@ -48,13 +46,48 @@
         .pos-input:focus { border-color: #007AFF; outline: none; background: #fff; }
         .pos-input.filled { background: #f0f8ff; border-color: #007AFF; }
         .pos-label { font-size: 11px; color: #999; text-align: center; margin-top: 4px; height: 16px; }
+
+        /* Cell toggle badge */
+        .cell-toggle {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #666;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2;
+            pointer-events: auto;
+            border: 1px solid #ccc;
+            transition: 0.15s;
+            user-select: none;
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+        }
+        .cell-toggle.free {
+            background: #34c759;
+            color: white;
+            border-color: #28a745;
+        }
+        .cell-toggle.board {
+            background: #e0e0e0;
+            color: #666;
+            border-color: #ccc;
+        }
+        .pos-filter-container > div { position: relative; }
+        .pos-input { z-index: 1; }
         
         .action-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 15px; gap: 10px; }
         .sort-select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; font-size: 14px; }
         button { padding: 8px 16px; font-size: 14px; border: none; border-radius: 6px; background: #8E8E93; color: white; font-weight: 500; cursor: pointer; transition: background 0.1s; }
         button:active { background: #636366; transform: scale(0.97); }
         
-        /* Checkbox Style in Action Row */
         .board-requirement-check { display: flex; align-items: center; font-size: 14px; font-weight: 500; color: #333; }
         .board-requirement-check input { width: 18px; height: 18px; margin-right: 6px; }
 
@@ -62,80 +95,190 @@
         .filter-row { margin: 12px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; }
         .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .combo-input { width: 70px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
         
         input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; border: 2px solid #ccc; border-radius: 4px; }
         input[type="checkbox"]:checked { background: #007AFF; border-color: #007AFF; }
         label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
         
-        /* Refine Section Styles */
         .refine-section { background: #fff8f0; border: 1px solid #ffe4cc; padding: 15px; border-radius: 8px; margin-bottom: 15px; transition: background 0.2s, border-color 0.2s; }
         .refine-section.and-mode { background: #f0f7ff; border-color: #cce4ff; }
-        
         .refine-header { margin-bottom: 12px; }
         .refine-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
         .refine-title { font-size: 14px; font-weight: 600; color: #333; display: block; margin-bottom: 8px; }
-        
         .refine-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
-        
-        /* Mini Button Style */
         .mini-btn { padding: 4px 10px; font-size: 11px; background: #fff; border: 1px solid #ccc; border-radius: 6px; color: #666; margin-right: 4px; font-weight: 600; }
         .mini-btn:active { background: #eee; }
-        
         .toggle-switch { display: inline-flex; background: #e0e0e0; border-radius: 6px; padding: 2px; }
         .toggle-option { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; white-space: nowrap; }
         .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        
         .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
         .logic-toggle .toggle-option[data-logic="AND"].active { color: #007AFF; }
-        
         .refine-inputs { display: flex; gap: 10px; }
-        
-        /* Refine inputs locked down for mobile as well */
-        .refine-input { 
-            flex: 1; 
-            min-width: 0; 
-            max-width: 60px; 
-            height: 40px; 
-            padding: 0;
-            margin: 0;
-            border: 1px solid #e0e0e0; 
-            border-radius: 6px; 
-            text-align: center; 
-            font-size: 18px; 
-            background: white;
-            overflow: hidden; 
-            white-space: nowrap;
-        }
+        .refine-input { flex: 1; min-width: 0; max-width: 60px; height: 40px; padding: 0; margin: 0; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; overflow: hidden; white-space: nowrap; }
         .refine-input:focus { outline: none; background: #fff; }
         .refine-section .refine-input:focus { border-color: #d67a00; }
         .refine-section.and-mode .refine-input:focus { border-color: #007AFF; }
         .refine-input.filled { background: #fffdf5; border-color: #d67a00; font-weight: bold; }
         .refine-section.and-mode .refine-input.filled { background: #f0f8ff; border-color: #007AFF; }
         
-        /* Text Filter */
         .text-filter-container { background: #fff; border: 2px solid #eee; border-radius: 8px; padding: 10px 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .text-filter-label { font-weight: 600; font-size: 14px; color: #333; white-space: nowrap; }
         .text-filter-input { flex: 1; border: none; font-size: 16px; padding: 5px; outline: none; color: #333; background: transparent; }
         .text-filter-input::placeholder { color: #ccc; }
         
+        /* Board combo display - fills the line */
+        .board-combo-display {
+            background: #f0f8ff;
+            border-radius: 8px;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            gap: 10px;
+        }
+        .board-combo-display .label {
+            font-weight: 600;
+            color: #007AFF;
+            flex: 0 0 auto;
+        }
+        .board-combo-display .combo-value {
+            flex: 1 1 auto;
+            text-align: center;
+            min-width: 80px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .board-combo-display .bonus-wrapper {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+        .board-combo-display .bonus-wrapper label {
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        .board-combo-display .bonus-wrapper input {
+            width: 50px;
+            padding: 4px 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            text-align: center;
+            background: white;
+        }
+        .board-combo-display .bonus-wrapper input:focus {
+            outline: none;
+            border-color: #007AFF;
+        }
+
         .results { margin-top: 10px; }
         .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
         .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; cursor: pointer; touch-action: manipulation; transition: background 0.1s; }
-        
         .result-item.refine-match { border-left-color: #d67a00; background: #fffcf5; }
         .and-mode .result-item.refine-match { border-left-color: #007AFF; background: #f2f8ff; }
-
         .result-item:active { background: #f0f0f0; }
         .result-word { font-size: 20px; font-weight: 600; margin-bottom: 6px; color: #111; display:flex; justify-content: space-between; align-items: center;}
         .result-info { color: #666; font-size: 14px; }
         .result-themes { color: #007AFF; font-size: 13px; margin-top: 4px; }
         .no-results { text-align: center; padding: 40px 20px; color: #999; font-size: 16px; }
         
-        /* Grid Viz */
         .mini-grid { display: grid; grid-template-columns: repeat(7, 18px); gap: 2px; }
         .mini-box { width: 18px; height: 18px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px; display: flex; align-items: center; justify-content: center; background: #fff; color: #ccc; }
         .mini-box.matched { background: #007AFF; border-color: #007AFF; color: white; }
         .mini-box.overlap { background: #e0efff; border-color: #007AFF; color: #007AFF; }
+
+        /* Mobile improvements */
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            .pos-filter-container {
+                gap: 4px;
+            }
+            .pos-filter-container > div {
+                aspect-ratio: 1/1;
+                min-width: 0;
+                min-height: 0;
+            }
+            .pos-input {
+                font-size: 20px;
+                border-width: 2px;
+            }
+            .cell-toggle {
+                width: 16px;
+                height: 16px;
+                font-size: 9px;
+                top: -1px;
+                right: -1px;
+                border-width: 1.5px;
+            }
+            .pos-label {
+                font-size: 12px;
+                margin-top: 4px;
+            }
+            .instruction-text {
+                font-size: 14px;
+            }
+            .pos-labels-container {
+                gap: 4px;
+            }
+            .input-section {
+                padding: 12px;
+            }
+
+            /* Board combo - full width, balanced sizes */
+            .board-combo-display {
+                font-size: 15px;
+                padding: 6px 10px;
+                gap: 6px;
+            }
+            .board-combo-display .label {
+                font-size: 15px;
+            }
+            .board-combo-display .combo-value {
+                font-size: 15px;
+                min-width: 60px;
+            }
+            .board-combo-display .bonus-wrapper input {
+                width: 44px;
+                font-size: 15px;
+                padding: 2px 4px;
+            }
+            .board-combo-display .bonus-wrapper label {
+                font-size: 15px;
+            }
+        }
+        @media (max-width: 400px) {
+            .board-combo-display {
+                font-size: 13px;
+                padding: 4px 8px;
+                gap: 4px;
+            }
+            .board-combo-display .label {
+                font-size: 13px;
+            }
+            .board-combo-display .combo-value {
+                font-size: 13px;
+                min-width: 50px;
+            }
+            .board-combo-display .bonus-wrapper input {
+                width: 36px;
+                font-size: 13px;
+                padding: 2px 3px;
+            }
+            .board-combo-display .bonus-wrapper label {
+                font-size: 13px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -148,19 +291,19 @@
                 
                 <div class="input-section">
                     <div class="instruction-text">
-                         Put hiragana in the same position as the game.<br>
-                         Multiple hiragana can be in the same box.<br>
-                         Empty spaces are wildcards.
+                         Place hiragana in the boxes provided.<br>
+                         Multiple can be put in the same box.<br>
+                         Tap the coloured circle in each cell to toggle between <b>Board</b> (excluded) and <b>Character</b> (counted) for combo.
                     </div>
                     
-                    <div class="pos-filter-container">
-                        <div><input type="text" class="pos-input" data-index="0" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="1" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="2" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="3" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="4" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="5" autocomplete="off"></div>
-                        <div><input type="text" class="pos-input" data-index="6" autocomplete="off"></div>
+                    <div class="pos-filter-container" id="boardContainer">
+                        <div data-index="0"><input type="text" class="pos-input" data-index="0" autocomplete="off"><span class="cell-toggle board" data-index="0">B</span></div>
+                        <div data-index="1"><input type="text" class="pos-input" data-index="1" autocomplete="off"><span class="cell-toggle board" data-index="1">B</span></div>
+                        <div data-index="2"><input type="text" class="pos-input" data-index="2" autocomplete="off"><span class="cell-toggle board" data-index="2">B</span></div>
+                        <div data-index="3"><input type="text" class="pos-input" data-index="3" autocomplete="off"><span class="cell-toggle board" data-index="3">B</span></div>
+                        <div data-index="4"><input type="text" class="pos-input" data-index="4" autocomplete="off"><span class="cell-toggle board" data-index="4">B</span></div>
+                        <div data-index="5"><input type="text" class="pos-input" data-index="5" autocomplete="off"><span class="cell-toggle board" data-index="5">B</span></div>
+                        <div data-index="6"><input type="text" class="pos-input" data-index="6" autocomplete="off"><span class="cell-toggle board" data-index="6">B</span></div>
                     </div>
 
                     <div class="pos-labels-container">
@@ -175,16 +318,28 @@
 
                     <div class="action-row">
                         <select id="sortSelect" class="sort-select">
-                            <option value="asc">Shortest First</option>
-                            <option value="desc">Longest First</option>
+                            <option value="combo-desc" selected>Combo (High to Low)</option>
+                            <option value="combo-asc">Combo (Low to High)</option>
+                            <option value="asc">Length (Low to High)</option>
+                            <option value="desc">Length (High to Low)</option>
                         </select>
                         
                         <label class="board-requirement-check">
-                            <input type="checkbox" id="requireAllBoard"> Must use all board chars
+                            <input type="checkbox" id="requireAllBoard"> Must use all board characters
                         </label>
 
                         <button id="clearBtn" type="button">Reset Grid</button>
                     </div>
+                </div>
+
+                <!-- Board Combo Display (always visible) -->
+                <div class="board-combo-display" id="boardComboDisplay">
+                    <span class="label">Board Combo:</span>
+                    <span class="combo-value" id="boardComboText">-- (fill all 7 cells)</span>
+                    <span class="bonus-wrapper">
+                        <label>+</label>
+                        <input type="number" id="bonusCombo" value="0" min="0">
+                    </span>
                 </div>
                 
                 <div class="filters">
@@ -199,6 +354,10 @@
                             <label><input type="checkbox" name="chars" value="7"><span>7</span></label>
                         </div>
                     </div>
+                    <div class="filter-row">
+                        <span class="filter-label">Min Combo:</span>
+                        <input type="number" id="comboMin" class="combo-input" value="0" min="0">
+                    </div>
                 </div>
 
                 <div class="refine-section" id="refineSection">
@@ -206,15 +365,12 @@
                         <span class="refine-title">Refine (Deck Check):</span>
                         <div class="refine-controls">
                             <button id="clearRefineBtn" class="mini-btn" type="button">Clear</button>
-                            
                             <div class="toggle-switch logic-toggle">
                                 <div class="toggle-option active" data-logic="OR">Any (OR)</div>
                                 <div class="toggle-option" data-logic="AND">All (AND)</div>
                             </div>
-                            
-                            </div>
+                        </div>
                     </div>
-                    
                     <div class="refine-inputs">
                         <input type="text" class="refine-input" placeholder="A" autocomplete="off">
                         <input type="text" class="refine-input" placeholder="B" autocomplete="off">
@@ -239,7 +395,96 @@
 <script>
     let dictionary = [];
     let currentRefineLogic = 'OR';
+    let wordSet = new Set();
+    // freeFlags: true = Character (counted), false = Board (excluded)
+    let freeFlags = new Array(7).fill(false);
 
+    // --------------------------------------------------------------------
+    //  Global combo computation (no board restrictions)
+    // --------------------------------------------------------------------
+    function computeGlobalComboLengths(words) {
+        const comboMap = new Map();
+        for (const w of words) {
+            const word = w.word;
+            const len = word.length;
+            const found = new Set();
+            for (let start = 0; start < len; start++) {
+                for (let end = start + 2; end <= len; end++) {
+                    const sub = word.substring(start, end);
+                    if (wordSet.has(sub)) {
+                        found.add(sub);
+                    }
+                }
+            }
+            comboMap.set(word, found.size);
+        }
+        return comboMap;
+    }
+
+    // --------------------------------------------------------------------
+    //  Combo for a specific placement – counts substrings that contain
+    //  at least one position that is either empty OR marked "Character".
+    //  (Counts each occurrence, not unique substrings)
+    // --------------------------------------------------------------------
+    function countComboForPlacement(word, offset, boardInput, freeFlags) {
+        const len = word.length;
+        let count = 0;
+        for (let start = 0; start < len; start++) {
+            for (let end = start + 2; end <= len; end++) {
+                let hasNew = false;
+                for (let i = start; i < end; i++) {
+                    const boardIdx = offset + i;
+                    const isFree = freeFlags[boardIdx] || false;
+                    const isEmpty = (boardInput[boardIdx] === '' || boardInput[boardIdx] === undefined);
+                    if (isEmpty || isFree) {
+                        hasNew = true;
+                        break;
+                    }
+                }
+                if (hasNew) {
+                    const sub = word.substring(start, end);
+                    if (wordSet.has(sub)) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    // --------------------------------------------------------------------
+    //  Full board combo: count every occurrence of dictionary words
+    //  that appear as substrings of the 7‑character board,
+    //  but only if they contain at least one C cell.
+    //  (Counts each occurrence separately)
+    // --------------------------------------------------------------------
+    function computeFullBoardCombo(boardChars, freeFlags) {
+        // boardChars: array of 7 strings (each may be empty or multiple chars)
+        // For simplicity, take the first character of each cell if non‑empty.
+        const boardStr = boardChars.map(s => s ? s[0] : '').join('');
+        if (boardStr.length !== 7) return -1; // -1 indicates not fully filled
+        let count = 0;
+        for (let start = 0; start < 7; start++) {
+            for (let end = start + 2; end <= 7; end++) {
+                const sub = boardStr.substring(start, end);
+                if (wordSet.has(sub)) {
+                    // Check if substring contains at least one C cell
+                    let hasC = false;
+                    for (let i = start; i < end; i++) {
+                        if (freeFlags[i]) { hasC = true; break; }
+                    }
+                    if (hasC) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    // --------------------------------------------------------------------
+    //  Sample dictionary (fallback)
+    // --------------------------------------------------------------------
     function getSampleDictionary() {
         const samples = [
             ["あい","",1,["愛"],[]],
@@ -266,37 +511,48 @@
         return samples.map(entry => ({
             word: entry[0],
             chars: entry[1] || entry[0],
-            combo: entry[2],
             displays: entry[3],
             themes: entry[4] || []
         }));
     }
-    
+
+    // --------------------------------------------------------------------
+    //  Load dictionary and initialize
+    // --------------------------------------------------------------------
     fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json')
         .then(response => { if (!response.ok) throw new Error('Network error'); return response.json(); })
         .then(data => {
             dictionary = data.map(entry => ({
                 word: entry[0],
                 chars: entry[1] || entry[0],
-                combo: entry[2],
                 displays: entry[3],
                 themes: entry[4] || []
             }));
+            wordSet = new Set(dictionary.map(w => w.word));
+
+            const comboMap = computeGlobalComboLengths(dictionary);
+            for (const w of dictionary) {
+                w.combo = comboMap.get(w.word) || 0;
+            }
+
             document.getElementById('loadingMsg').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
             initializeApp();
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error loading dictionary:', error);
             dictionary = getSampleDictionary();
-            document.getElementById('loadingMsg').textContent = 'Loaded sample dictionary.';
+            wordSet = new Set(dictionary.map(w => w.word));
+            const comboMap = computeGlobalComboLengths(dictionary);
+            for (const w of dictionary) w.combo = comboMap.get(w.word) || 0;
+            document.getElementById('loadingMsg').textContent = '⚠ Loaded sample dictionary (limited).';
             setTimeout(() => {
                 document.getElementById('loadingMsg').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
                 initializeApp();
             }, 1000);
         });
-    
+
     function initializeApp() {
         const clearBtn = document.getElementById('clearBtn');
         const clearRefineBtn = document.getElementById('clearRefineBtn');
@@ -305,9 +561,24 @@
         const sortSelect = document.getElementById('sortSelect');
         const refineSection = document.getElementById('refineSection');
         const textSearch = document.getElementById('textSearch');
-        // const strictRefineCheck removed
         const requireAllBoardCheck = document.getElementById('requireAllBoard');
+        const comboMinInput = document.getElementById('comboMin');
+        const toggles = document.querySelectorAll('.cell-toggle');
+        const bonusComboInput = document.getElementById('bonusCombo');
         
+        // Toggle logic: cycle Board ↔ Character
+        toggles.forEach(toggle => {
+            toggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const idx = parseInt(toggle.getAttribute('data-index'), 10);
+                freeFlags[idx] = !freeFlags[idx];
+                toggle.classList.toggle('free', freeFlags[idx]);
+                toggle.classList.toggle('board', !freeFlags[idx]);
+                toggle.textContent = freeFlags[idx] ? 'C' : 'B';
+                performSearch();
+            });
+        });
+
         // Logic Toggles
         const logicOptions = document.querySelectorAll('.logic-toggle .toggle-option');
         logicOptions.forEach(opt => {
@@ -327,7 +598,15 @@
         clearBtn.addEventListener('click', (e) => {
             e.preventDefault();
             posInputs.forEach(input => { input.value = ''; input.classList.remove('filled'); });
+            // Reset free flags to false (Board)
+            freeFlags.fill(false);
+            toggles.forEach(t => {
+                t.classList.remove('free');
+                t.classList.add('board');
+                t.textContent = 'B';
+            });
             textSearch.value = '';
+            bonusComboInput.value = '0';
             performSearch();
         });
 
@@ -361,13 +640,14 @@
         });
         
         textSearch.addEventListener('input', debouncedSearch);
+        comboMinInput.addEventListener('input', debouncedSearch);
+        bonusComboInput.addEventListener('input', debouncedSearch);
         
         document.querySelectorAll('input[type="checkbox"]').forEach(input => {
             input.addEventListener('change', performSearch);
         });
 
         sortSelect.addEventListener('change', performSearch);
-        // strictRefineCheck listener removed
         requireAllBoardCheck.addEventListener('change', performSearch);
         
         document.querySelectorAll('label').forEach(label => {
@@ -389,34 +669,37 @@
         const sortOrder = document.getElementById('sortSelect').value;
         const charFilters = Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(cb => parseInt(cb.value));
         const textFilterValue = document.getElementById('textSearch').value.trim();
-        const strictRefine = true; // Always strict mode
+        const comboMin = parseInt(document.getElementById('comboMin').value) || 0;
         const requireAllBoard = document.getElementById('requireAllBoard').checked;
+        const bonusCombo = parseInt(document.getElementById('bonusCombo').value) || 0;
 
         const posInputs = Array.from(document.querySelectorAll('.pos-input'));
         const inputValues = posInputs.map(i => i.value.trim());
         const hasActivePosFilter = inputValues.some(v => v.length > 0);
 
-        // Identify non-empty board indices for "Must use all board chars" logic
-        let requiredBoardIndices = [];
-        if (requireAllBoard && hasActivePosFilter) {
-            inputValues.forEach((val, idx) => {
-                if (val.length > 0) requiredBoardIndices.push(idx);
-            });
+        // ---- Update Board Combo Display (always visible) ----
+        const boardComboText = document.getElementById('boardComboText');
+        const allFilled = inputValues.every(v => v.length > 0);
+        if (allFilled) {
+            const rawCombo = computeFullBoardCombo(inputValues, freeFlags);
+            if (rawCombo === -1) {
+                boardComboText.textContent = '-- (fill all 7 cells)';
+            } else {
+                const totalCombo = rawCombo + bonusCombo;
+                boardComboText.textContent = `${rawCombo} (+ ${bonusCombo}) = ${totalCombo}`;
+            }
+        } else {
+            boardComboText.textContent = '-- (fill all 7 cells)';
         }
 
-        const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
-            .map(input => input.value.trim().split('')) 
-            .filter(arr => arr.length > 0);
-        const hasRefineFilter = refineConstraints.length > 0;
-
+        // ---- Filtering pipeline ----
+        // 1. Length filter
         let results = dictionary;
-
-        // A. Length Filter
         if (charFilters.length > 0) {
             results = results.filter(word => charFilters.includes(word.word.length));
         }
 
-        // B. Text Filter (Wildcard support)
+        // 2. Text filter
         if (textFilterValue.length > 0) {
             const escaped = textFilterValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             const pattern = escaped.replace(/-/g, '.');
@@ -424,19 +707,22 @@
             results = results.filter(word => regex.test(word.word));
         }
 
-        // C. Board Placement AND Refine Calculation
+        // ---- For each candidate, compute valid offsets and adjusted combo ----
+        // We'll store meta info for each word that passes placement and comboMin
         let wordMeta = new Map(); 
         let validBoardWords = [];
 
-        results.forEach(word => {
+        const requiredBoardIndices = (requireAllBoard && hasActivePosFilter) 
+            ? inputValues.map((val, idx) => val.length > 0 ? idx : -1).filter(idx => idx !== -1)
+            : [];
+
+        for (const word of results) {
             const len = word.word.length;
             let validOffsets = [];
             
-            // 1. Calculate Board Placement
             if (hasActivePosFilter) {
                 for (let start = 0; start <= 7 - len; start++) {
                     let fits = true;
-                    // Check Character Matching
                     for (let i = 0; i < len; i++) {
                         const boardChar = inputValues[start + i];
                         const wordChar = word.word[i];
@@ -447,39 +733,53 @@
                             }
                         }
                     }
-
-                    // Check Requirement: Must use all board chars?
                     if (fits && requireAllBoard && requiredBoardIndices.length > 0) {
-                        // The word must span across ALL requiredBoardIndices.
-                        // i.e., Word Start <= First Required Index AND Word End >= Last Required Index.
-                        // Actually, simpler: Every required index must be >= start and < start + len
                         const wordStart = start;
-                        const wordEnd = start + len; // exclusive
-                        
+                        const wordEnd = start + len;
                         const coversAll = requiredBoardIndices.every(idx => idx >= wordStart && idx < wordEnd);
                         if (!coversAll) fits = false;
                     }
-
                     if (fits) validOffsets.push(start);
                 }
-                if (validOffsets.length === 0) return; // Word doesn't fit board
+                if (validOffsets.length === 0) continue;
             } else {
-                validOffsets = [-1]; 
+                // No board filter: word can be placed anywhere (use -1 as placeholder)
+                validOffsets = [-1];
             }
 
-            // 2. Calculate Refine Match (Deck)
+            // Compute adjusted combo (max over valid offsets)
+            let adjustedCombo = 0;
+            if (hasActivePosFilter) {
+                for (const offset of validOffsets) {
+                    const c = countComboForPlacement(word.word, offset, inputValues, freeFlags);
+                    if (c > adjustedCombo) adjustedCombo = c;
+                }
+            } else {
+                adjustedCombo = word.combo; // global combo
+            }
+
+            // Filter by comboMin using adjustedCombo
+            if (adjustedCombo < comboMin) continue;
+
+            // ---- Refine matching (Deck Check) ----
             let isRefineMatch = false;
-            
+            const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
+                .map(input => input.value.trim().split('')) 
+                .filter(arr => arr.length > 0);
+            const hasRefineFilter = refineConstraints.length > 0;
+
             if (hasRefineFilter) {
-                for (let offset of validOffsets) {
+                // We need to check each valid offset; if any passes, mark as match and keep all offsets?
+                // For refine matching, we keep the first offset that passes (same as before)
+                let matchedOffset = null;
+                for (const offset of validOffsets) {
                     const chars = word.word.split('');
                     let charsToSearch = [];
-                    
                     if (offset === -1) {
                         charsToSearch = [...chars];
                     } else {
                         for (let i = 0; i < chars.length; i++) {
-                            let boardIndex = offset + i;
+                            const boardIndex = offset + i;
                             if (!inputValues[boardIndex] || inputValues[boardIndex].length === 0) {
                                 charsToSearch.push(chars[i]);
                             }
@@ -487,18 +787,16 @@
                     }
 
                     let placementPasses = false;
-
                     if (currentRefineLogic === 'OR') {
                         if (charsToSearch.length > 0) {
                             placementPasses = refineConstraints.some(constraint => {
                                 return charsToSearch.some(char => constraint.includes(char));
                             });
                         }
-                    } else {
-                        // AND Logic
+                    } else { // AND
                         let currentPool = [...charsToSearch];
                         let allConstraintsMet = true;
-                        for (let constraint of refineConstraints) {
+                        for (const constraint of refineConstraints) {
                             let matchIndex = -1;
                             for (let k = 0; k < currentPool.length; k++) {
                                 if (constraint.includes(currentPool[k])) {
@@ -518,49 +816,63 @@
 
                     if (placementPasses) {
                         isRefineMatch = true;
-                        validOffsets = [offset]; 
-                        break; 
+                        matchedOffset = offset;
+                        break;
                     }
                 }
+                if (!isRefineMatch) continue; // word doesn't satisfy refine
+                // For display we only keep the matched offset
+                validOffsets = [matchedOffset];
+            } else {
+                // No refine filter: keep all offsets, but we'll just pick the first for display later
+                // We'll store all offsets in meta but for highlighting we use first one
+                // (We already have all offsets)
             }
 
-            // 3. Store Meta
-            wordMeta.set(word.word, { validOffsets, isRefineMatch });
-            
-            // 4. Strict Filter Check
-            // Since strictRefine is now always TRUE, this simply checks if refine filter exists and word doesn't match
-            if (hasRefineFilter && !isRefineMatch) {
-                return; // Skip
-            }
-
+            // Store meta
+            wordMeta.set(word.word, { 
+                validOffsets: validOffsets, 
+                isRefineMatch: isRefineMatch, 
+                combo: adjustedCombo 
+            });
             validBoardWords.push(word);
-        });
+        }
 
         results = validBoardWords;
 
-        // D. Sort
+        // ---- Sorting ----
         results.sort((a, b) => {
             const metaA = wordMeta.get(a.word);
             const metaB = wordMeta.get(b.word);
             
+            const hasRefineFilter = Array.from(document.querySelectorAll('.refine-input'))
+                .some(input => input.value.trim().length > 0);
+
+            // First priority: refine matches (if refine filter is active)
             if (hasRefineFilter) {
                 if (metaA.isRefineMatch !== metaB.isRefineMatch) {
-                    return metaA.isRefineMatch ? -1 : 1; 
+                    return metaA.isRefineMatch ? -1 : 1;
                 }
             }
 
+            // Then sort by selected order
             if (sortOrder === 'asc') {
                 return a.word.length - b.word.length;
-            } else {
+            } else if (sortOrder === 'desc') {
                 return b.word.length - a.word.length;
+            } else if (sortOrder === 'combo-asc') {
+                return (metaA.combo || 0) - (metaB.combo || 0);
+            } else if (sortOrder === 'combo-desc') {
+                return (metaB.combo || 0) - (metaA.combo || 0);
             }
+            return 0;
         });
         
         const maxResults = 300; 
         const displayResults = results.slice(0, maxResults);
         
-        // E. Update UI
-        if (!hasActivePosFilter && !hasRefineFilter && charFilters.length === 0 && textFilterValue.length === 0) {
+        // ---- Update UI ----
+        if (!hasActivePosFilter && !document.querySelector('.refine-input[value]') && charFilters.length === 0 && textFilterValue.length === 0 && comboMin === 0) {
             resultCount.textContent = `Waiting for input... (${dictionary.length} words)`;
             resultList.innerHTML = '';
             return;
@@ -594,6 +906,11 @@
                         }
                     }
                 }
+
+                const refineConstraints = Array.from(document.querySelectorAll('.refine-input'))
+                    .map(input => input.value.trim().split('')) 
+                    .filter(arr => arr.length > 0);
+                const hasRefineFilter = refineConstraints.length > 0;
 
                 if (hasRefineFilter && meta.isRefineMatch) {
                     let availIndices = [];
@@ -649,13 +966,15 @@
                 let itemClass = 'result-item';
                 if (meta.isRefineMatch) itemClass += ' refine-match';
 
+                const comboStr = hasActivePosFilter ? `${meta.combo} (adjusted)` : `${meta.combo}`;
+
                 return `
                     <div class="${itemClass}">
                         <div class="result-word">
                             <span>${displayText} <span style="font-weight:normal; font-size:0.8em; color:#666;">(${highlightedWordHTML})</span></span>
                             ${gridHtml}
                         </div>
-                        <div class="result-info">${word.word.length} chars | Combo: ${word.combo}</div>
+                        <div class="result-info">${word.word.length} chars · Combo: ${comboStr}</div>
                         ${themesText}
                     </div>
                 `;

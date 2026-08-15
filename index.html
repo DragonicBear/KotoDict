@@ -34,11 +34,26 @@
         button:active { background: #636366; transform: scale(0.97); }
         button.primary { background: #007AFF; }
         .filters { margin-bottom: 15px; padding: 0 5px; }
-        .filter-row { margin: 12px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; }
+        .filter-row { margin: 12px 0; display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+        .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; padding-top: 4px; }
         .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .combo-input { width: 70px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-        .theme-select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; font-size: 14px; max-width: 220px; }
+
+        /* Theme checklist styles */
+        .theme-checklist-container { flex: 1; min-width: 200px; position: relative; }
+        .theme-toggle-btn { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%; max-width: 280px; }
+        .theme-toggle-btn .selected-count { background: #007AFF; color: white; border-radius: 10px; padding: 1px 8px; font-size: 11px; font-weight: 600; display: none; }
+        .theme-toggle-btn .selected-count.has-selection { display: inline; }
+        .theme-dropdown { display: none; position: absolute; top: 100%; left: 0; z-index: 50; background: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); max-height: 300px; overflow-y: auto; min-width: 280px; margin-top: 4px; }
+        .theme-dropdown.open { display: block; }
+        .theme-dropdown .theme-option { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+        .theme-dropdown .theme-option:hover { background: #f5f5f5; }
+        .theme-dropdown .theme-option input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #007AFF; }
+        .theme-dropdown .theme-option .theme-count { color: #999; font-size: 11px; margin-left: auto; }
+        .theme-dropdown .theme-actions { padding: 8px 12px; display: flex; gap: 8px; border-top: 1px solid #eee; position: sticky; bottom: 0; background: white; }
+        .theme-dropdown .theme-actions button { flex: 1; padding: 6px 10px; font-size: 12px; }
+        .theme-search-input { width: 100%; padding: 8px 12px; border: none; border-bottom: 1px solid #eee; font-size: 13px; outline: none; }
+
         input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #007AFF; }
         label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
         .board-requirement-check { display: flex; align-items: center; font-size: 14px; font-weight: 500; color: #333; }
@@ -75,8 +90,8 @@
         .optimize-title { font-weight: 600; color: #28a745; font-size: 15px; }
         .optimize-item { background: white; padding: 10px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #28a745; cursor: pointer; }
         .optimize-item:active { background: #f0fff0; }
-        .optimize-item .board-layout { display: flex; justify-content: center; gap: 3px; margin-bottom: 5px; flex-wrap: wrap; }
-        .optimize-item .board-layout .char-cell { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 42px; border-radius: 6px; position: relative; border: 2px solid transparent; line-height: 1; text-align: center; }
+        .optimize-item .board-layout { display: flex; justify-content: center; gap: 3px; margin-bottom: 5px; flex-wrap: nowrap; }
+        .optimize-item .board-layout .char-cell { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 42px; border-radius: 6px; position: relative; border: 2px solid transparent; line-height: 1; text-align: center; flex-shrink: 0; }
         .optimize-item .board-layout .char-cell .char-text { font-size: 22px; }
         .optimize-item .board-layout .char-cell .char-text.small-kana { font-size: 16px; }
         .optimize-item .board-layout .char-cell.box-A { background: #fce4ec; color: #c62828; border-color: #c62828; }
@@ -99,7 +114,7 @@
         .optimize-legend .legend-box { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 2px solid; }
         .results { margin-top: 10px; }
         .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
-        .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; }
+        .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; cursor: pointer; }
         .result-item.refine-match { border-left-color: #007AFF; background: #f2f8ff; }
         .or-mode .result-item.refine-match { border-left-color: #d67a00; background: #fffcf5; }
         .result-word { font-size: 20px; font-weight: 600; margin-bottom: 6px; color: #111; display:flex; justify-content: space-between; align-items: center;}
@@ -110,15 +125,33 @@
         .mini-box { width: 18px; height: 18px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px; display: flex; align-items: center; justify-content: center; background: #fff; color: #ccc; }
         .mini-box.matched { background: #007AFF; border-color: #007AFF; color: white; }
         .mini-box.overlap { background: #e0efff; border-color: #007AFF; color: #007AFF; }
-        .words-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: white; border-radius: 12px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 100; max-width: 380px; width: 90%; max-height: 70vh; overflow-y: auto; }
+        .words-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: white; border-radius: 12px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 100; max-width: 400px; width: 90%; max-height: 70vh; overflow-y: auto; }
         .words-popup h3 { font-size: 16px; margin-bottom: 12px; color: #333; text-align: center; }
-        .words-popup .word-entry { padding: 6px 10px; margin: 3px 0; background: #f8f9fa; border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .words-popup .word-entry { padding: 8px 10px; margin: 4px 0; background: #f8f9fa; border-radius: 6px; font-size: 14px; }
+        .words-popup .word-entry .word-main { display: flex; justify-content: space-between; align-items: center; }
         .words-popup .word-entry .pos-range { font-size: 11px; color: #999; }
         .words-popup .word-entry .word-text { font-weight: 600; }
         .words-popup .word-entry.long-word .word-text { color: #28a745; }
         .words-popup .word-entry.short-word .word-text { color: #ff9800; }
+        .words-popup .word-entry .word-themes { font-size: 10px; color: #666; margin-top: 3px; }
         .words-popup .close-btn { display: block; margin: 15px auto 0; padding: 8px 24px; background: #007AFF; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 99; }
+
+        @media (max-width: 600px) {
+            .optimize-item .board-layout { gap: 2px; }
+            .optimize-item .board-layout .char-cell { width: 30px; height: 34px; }
+            .optimize-item .board-layout .char-cell .char-text { font-size: 17px; }
+            .optimize-item .board-layout .char-cell .char-text.small-kana { font-size: 13px; }
+            .optimize-item .board-layout .char-cell .box-badge { top: -5px; right: -5px; width: 12px; height: 12px; font-size: 7px; }
+            .theme-dropdown { min-width: 250px; max-width: 90vw; }
+        }
+        @media (max-width: 400px) {
+            .optimize-item .board-layout { gap: 1px; }
+            .optimize-item .board-layout .char-cell { width: 26px; height: 30px; }
+            .optimize-item .board-layout .char-cell .char-text { font-size: 15px; }
+            .optimize-item .board-layout .char-cell .char-text.small-kana { font-size: 11px; }
+            .optimize-item .board-layout .char-cell .box-badge { top: -4px; right: -4px; width: 10px; height: 10px; font-size: 6px; }
+        }
     </style>
 </head>
 <body>
@@ -132,74 +165,127 @@
             <div class="board-combo-display" id="boardComboDisplay"><span class="label">Board Combo:</span><span class="combo-value" id="boardComboText">-- (fill all 7 cells)</span><span class="bonus-wrapper"><label>+</label><input type="number" id="bonusCombo" value="0" min="0"></span></div>
             <div class="filters">
                 <div class="filter-row"><span class="filter-label">Length:</span><div class="radio-group"><label><input type="checkbox" name="chars" value="2"><span>2</span></label><label><input type="checkbox" name="chars" value="3"><span>3</span></label><label><input type="checkbox" name="chars" value="4"><span>4</span></label><label><input type="checkbox" name="chars" value="5"><span>5</span></label><label><input type="checkbox" name="chars" value="6"><span>6</span></label><label><input type="checkbox" name="chars" value="7"><span>7</span></label></div></div>
-                <div class="filter-row"><span class="filter-label">Theme:</span><select id="themeSelect" class="theme-select"><option value="">All Themes</option></select></div>
+                <div class="filter-row">
+                    <span class="filter-label">Theme:</span>
+                    <div class="theme-checklist-container" id="themeChecklistContainer">
+                        <button class="theme-toggle-btn" id="themeToggleBtn">
+                            <span>Select Themes</span>
+                            <span class="selected-count" id="themeCount">0</span>
+                        </button>
+                        <div class="theme-dropdown" id="themeDropdown">
+                            <input type="text" class="theme-search-input" id="themeSearchInput" placeholder="Search themes...">
+                            <div id="themeOptionsList"></div>
+                            <div class="theme-actions">
+                                <button id="themeSelectAll">Select All</button>
+                                <button id="themeClearAll">Clear All</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="filter-row"><span class="filter-label">Min Combo:</span><input type="number" id="comboMin" class="combo-input" value="0" min="0"></div>
             </div>
             <div class="refine-section" id="refineSection"><span class="refine-title">ABCD Boxes (each provides 1 char):</span><div class="refine-controls"><button id="clearRefineBtn" class="mini-btn" type="button">Clear All</button><div class="toggle-switch logic-toggle"><div class="toggle-option" data-logic="OR">Any (OR)</div><div class="toggle-option active" data-logic="AND">All (AND)</div></div></div><div class="refine-inputs"><div class="refine-input-wrap box-A"><input type="text" class="refine-input" placeholder="A" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-B"><input type="text" class="refine-input" placeholder="B" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-C"><input type="text" class="refine-input" placeholder="C" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-D"><input type="text" class="refine-input" placeholder="D" autocomplete="off"><button class="refine-clear">×</button></div></div></div>
             <div class="optimize-section" id="optimizeSection" style="display:none;"><div class="optimize-header"><span class="optimize-title">🎯 Board Optimization</span><div><button id="optimizeBtn" class="primary" type="button">Find Best Board</button><button id="stopOptimizeBtn" class="optimize-stop-btn" type="button" style="display:none;">Stop</button></div></div><div id="optimizeResults" class="optimize-results"></div></div>
-            <div class="text-filter-container"><span class="text-filter-label">Pattern:</span><input type="text" id="textSearch" class="text-filter-input" placeholder="--しょう (- = use ABCD boxes)" autocomplete="off"></div>
-            <div class="text-filter-hint">Use - for wildcards. Other chars must match board exactly. Length = word length.</div>
+            <div class="text-filter-container"><span class="text-filter-label">Pattern:</span><input type="text" id="textSearch" class="text-filter-input" placeholder="しょう or --しょう" autocomplete="off"></div>
+            <div class="text-filter-hint">Without - : contains substring. With - : exact position match, length = pattern length.</div>
             <div class="results"><div class="result-count" id="resultCount">Enter characters to search</div><div id="resultList"></div></div>
         </div></div>
     </div>
 <script>
 (function(){
 let d=[],cl='AND',ws=new Set(),ff=new Array(7).fill(false),io=false,so=false;const cc=new Map();
+let wordThemeMap = new Map();
+let selectedThemes = new Set();
+
 function cg(w){const m=new Map();for(const x of w){const f=new Set();for(let s=0;s<x.word.length;s++)for(let e=s+2;e<=x.word.length;e++)if(ws.has(x.word.substring(s,e)))f.add(x.word.substring(s,e));m.set(x.word,f.size);}return m;}
 function cp(w,o,b,f){const k=`${w}|${o}|${b.join(',')}|${f.join(',')}`;if(cc.has(k))return cc.get(k);let c=0;for(let s=0;s<w.length;s++)for(let e=s+2;e<=w.length;e++){let h=false;for(let i=s;i<e&&!h;i++){const bi=o+i;if(f[bi]||!b[bi])h=true;}if(h&&ws.has(w.substring(s,e)))c++;}cc.set(k,c);return c;}
 function fb(bc,f){const bs=bc.map(s=>s?s[0]:'').join('');if(bs.length!==7)return-1;let c=0;for(let s=0;s<7;s++)for(let e=s+2;e<=7;e++)if(ws.has(bs.substring(s,e)))for(let i=s;i<e;i++)if(f[i]){c++;break;}return c;}
 function ca(bs){if(bs.length!==7)return 0;let c=0;for(let s=0;s<7;s++)for(let e=s+2;e<=7;e++)if(ws.has(bs.substring(s,e)))c++;return c;}
 function fw(bs){const w=[];const sn=new Set();for(let s=0;s<7;s++)for(let e=s+2;e<=7;e++){const sub=bs.substring(s,e);const key=s+'-'+sub;if(ws.has(sub)&&!sn.has(key)){sn.add(key);w.push({word:sub,start:s,end:e-1});}}return w.sort((a,b)=>a.start-b.start||b.word.length-a.word.length);}
-
-// Updated sample dictionary with new format: themes at index 4
 function gd(){const s=[["あい","",1,["愛"],["気持ち","鳥"]],["あお","",1,["青"],["色"]],["うみ","",1,["海"],["自然","地名"]],["うそう","",1,["雨窓"],["建物","自然"]],["しょうそう","",4,["焦燥"],["気持ち"]],["うそうかい","",5,["有象海"],[]],["さいし","",3,["祭祀"],["行事"]],["さいしょ","",4,["最初"],["順番"]],["さいしょう","",5,["最小"],["順番"]],["しょうさ","",4,["勝差"],["勝負"]],["しょうさい","",5,["詳細"],[]],["さんしょう","",5,["参照"],[]],["あした","",3,["明日"],["時間"]],["あいさつ","",4,["挨拶"],["日常"]],["こう","",2,["甲"],["囲碁・将棋・麻雀","単位・通貨","地名","鳥","ボードゲーム","いきもの","動詞"]],["こうこう","",4,["高校"],["学校"]],["こうこうしゃ","",5,["高校社"],["学校"]],["こうそ","",3,["酵素"],["理科"]],["たいいく","",4,["体育"],["学校"]],["あとこうしゃく","",7,["後講釈"],[]],["こうかい","",3,["公海"],["地名"]],["こうかん","",3,["交換"],["動詞"]],["しょうかい","",4,["紹介"],["動詞"]],["しょうかん","",4,["召喚"],["動詞"]],["しょうこう","",4,["将校"],["身分"]]];return s.map(e=>({word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]}));}
+function ld(){return fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json').then(r=>{if(!r.ok)throw Error('e');return r.json();}).then(data=>{d=data.map(e=>{const w={word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]};wordThemeMap.set(w.word,w.themes);return w;});ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;}).catch(()=>{d=gd();d.forEach(w=>wordThemeMap.set(w.word,w.themes));ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;document.getElementById('loadingMsg').textContent='⚠ Sample dictionary loaded.';return new Promise(r=>setTimeout(r,300));});}
+let pi,ri,ss,ts,rab,cmin,bci,tg,rs,os,ob,stb,or2;
+let themeToggleBtn,themeDropdown,themeSearchInput,themeOptionsList,themeCount,themeSelectAllBtn,themeClearAllBtn;
 
-function ld(){return fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json').then(r=>{if(!r.ok)throw Error('e');return r.json();}).then(data=>{
-    // UPDATED: Parse the new format where themes is at index 4
-    d=data.map(e=>({word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]}));
-    ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;
-}).catch(()=>{d=gd();ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;document.getElementById('loadingMsg').textContent='⚠ Sample dictionary loaded.';return new Promise(r=>setTimeout(r,300));});}
+function init(){pi=Array.from(document.querySelectorAll('.pos-input'));ri=Array.from(document.querySelectorAll('.refine-input'));ss=document.getElementById('sortSelect');ts=document.getElementById('textSearch');rab=document.getElementById('requireAllBoard');cmin=document.getElementById('comboMin');bci=document.getElementById('bonusCombo');tg=document.querySelectorAll('.cell-toggle');rs=document.getElementById('refineSection');os=document.getElementById('optimizeSection');ob=document.getElementById('optimizeBtn');stb=document.getElementById('stopOptimizeBtn');or2=document.getElementById('optimizeResults');cl='AND';
+themeToggleBtn=document.getElementById('themeToggleBtn');themeDropdown=document.getElementById('themeDropdown');themeSearchInput=document.getElementById('themeSearchInput');themeOptionsList=document.getElementById('themeOptionsList');themeCount=document.getElementById('themeCount');themeSelectAllBtn=document.getElementById('themeSelectAll');themeClearAllBtn=document.getElementById('themeClearAll');
 
-let pi,ri,ss,ts,rab,cmin,bci,tg,rs,os,ob,stb,or2,themeSelect;
-function init(){pi=Array.from(document.querySelectorAll('.pos-input'));ri=Array.from(document.querySelectorAll('.refine-input'));ss=document.getElementById('sortSelect');ts=document.getElementById('textSearch');rab=document.getElementById('requireAllBoard');cmin=document.getElementById('comboMin');bci=document.getElementById('bonusCombo');tg=document.querySelectorAll('.cell-toggle');rs=document.getElementById('refineSection');os=document.getElementById('optimizeSection');ob=document.getElementById('optimizeBtn');stb=document.getElementById('stopOptimizeBtn');or2=document.getElementById('optimizeResults');themeSelect=document.getElementById('themeSelect');cl='AND';
 tg.forEach(t=>t.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(t.dataset.index);ff[i]=!ff[i];t.classList.toggle('free',ff[i]);t.classList.toggle('board',!ff[i]);t.textContent=ff[i]?'C':'B';cc.clear();ps();}));
 document.querySelectorAll('#posClearContainer .pos-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(b.dataset.index);pi[i].value='';pi[i].classList.remove('filled');cc.clear();ps();}));
 document.querySelectorAll('.refine-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const w=b.parentElement;const i=w.querySelector('.refine-input');i.value='';i.classList.remove('filled');ps();co();}));
 document.querySelectorAll('.logic-toggle .toggle-option').forEach(o=>o.addEventListener('click',()=>{document.querySelectorAll('.logic-toggle .toggle-option').forEach(x=>x.classList.remove('active'));o.classList.add('active');cl=o.dataset.logic;rs.classList.toggle('or-mode',cl==='OR');ps();co();}));
-document.getElementById('clearBtn').addEventListener('click',e=>{e.preventDefault();pi.forEach(i=>{i.value='';i.classList.remove('filled');});ff.fill(false);tg.forEach(t=>{t.classList.remove('free');t.classList.add('board');t.textContent='B';});ts.value='';bci.value='0';or2.innerHTML='';themeSelect.value='';cc.clear();ps();});
+document.getElementById('clearBtn').addEventListener('click',e=>{e.preventDefault();pi.forEach(i=>{i.value='';i.classList.remove('filled');});ff.fill(false);tg.forEach(t=>{t.classList.remove('free');t.classList.add('board');t.textContent='B';});ts.value='';bci.value='0';or2.innerHTML='';selectedThemes.clear();updateThemeUI();cc.clear();ps();});
 document.getElementById('clearRefineBtn').addEventListener('click',e=>{e.preventDefault();ri.forEach(i=>{i.value='';i.classList.remove('filled');});or2.innerHTML='';ps();co();});
 let st;const ds=()=>{clearTimeout(st);st=setTimeout(ps,150);};
 pi.forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);cc.clear();ds();}));
 ri.forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);ds();co();}));
 ts.addEventListener('input',ds);cmin.addEventListener('input',ds);bci.addEventListener('input',ds);
-themeSelect.addEventListener('change',ps);
 document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.addEventListener('change',ps));
 ss.addEventListener('change',ps);rab.addEventListener('change',ps);
 document.querySelectorAll('label').forEach(l=>l.addEventListener('touchend',function(e){if(e.target.tagName!=='INPUT'){e.preventDefault();const i=this.querySelector('input');if(i){i.checked=!i.checked;ps();}}}));
 ob.addEventListener('click',()=>{if(!io)so2();});stb.addEventListener('click',()=>{so=true;});
-ps();co();populateThemeDropdown();}
 
-function populateThemeDropdown(){
-    const themes=new Map(); // theme name -> count
+// Theme checklist events
+themeToggleBtn.addEventListener('click',(e)=>{e.stopPropagation();themeDropdown.classList.toggle('open');if(themeDropdown.classList.contains('open')){themeSearchInput.value='';filterThemeOptions('');themeSearchInput.focus();}});
+themeSearchInput.addEventListener('input',()=>filterThemeOptions(themeSearchInput.value));
+themeSelectAllBtn.addEventListener('click',()=>{const allThemes=getAllThemes();allThemes.forEach(t=>selectedThemes.add(t));updateThemeUI();ps();});
+themeClearAllBtn.addEventListener('click',()=>{selectedThemes.clear();updateThemeUI();ps();});
+document.addEventListener('click',(e)=>{if(!e.target.closest('#themeChecklistContainer')){themeDropdown.classList.remove('open');}});
+
+ps();co();populateThemeChecklist();
+}
+
+function getAllThemes(){
+    const themes=new Set();
     const excludeKeywords=['イベント','コラボ','コラボレーション','collab','event','イベ','期間限定','フェス','fes','復刻','ガチャ','キャンペーン','CP','限定','コラボ記念','周年'];
     for(const w of d){
         if(w.themes&&Array.isArray(w.themes)){
             for(const t of w.themes){
                 const lower=t.toLowerCase();
                 if(!excludeKeywords.some(kw=>lower.includes(kw.toLowerCase()))){
-                    themes.set(t,(themes.get(t)||0)+1);
+                    themes.add(t);
                 }
             }
         }
     }
-    // Sort by count descending, then alphabetically
-    const sorted=[...themes.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
-    for(const [t,count] of sorted){
-        const opt=document.createElement('option');
-        opt.value=t;
-        opt.textContent=`${t} (${count})`;
-        themeSelect.appendChild(opt);
+    return [...themes].sort((a,b)=>a.localeCompare(b));
+}
+
+function populateThemeChecklist(){
+    const themes=getAllThemes();
+    const themeCounts=new Map();
+    for(const w of d){
+        if(w.themes&&Array.isArray(w.themes)){
+            for(const t of w.themes){
+                themeCounts.set(t,(themeCounts.get(t)||0)+1);
+            }
+        }
     }
+    themeOptionsList.innerHTML=themes.map(t=>{
+        const count=themeCounts.get(t)||0;
+        return`<label class="theme-option"><input type="checkbox" value="${t}" class="theme-checkbox"><span>${t}</span><span class="theme-count">${count}</span></label>`;
+    }).join('');
+    document.querySelectorAll('.theme-checkbox').forEach(cb=>{
+        cb.addEventListener('change',()=>{
+            if(cb.checked){selectedThemes.add(cb.value);}else{selectedThemes.delete(cb.value);}
+            updateThemeUI();ps();
+        });
+    });
+}
+
+function filterThemeOptions(query){
+    const lower=query.toLowerCase();
+    document.querySelectorAll('.theme-option').forEach(opt=>{
+        const text=opt.textContent.toLowerCase();
+        opt.style.display=text.includes(lower)?'flex':'none';
+    });
+}
+
+function updateThemeUI(){
+    document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.checked=selectedThemes.has(cb.value);});
+    themeCount.textContent=selectedThemes.size;
+    if(selectedThemes.size>0){themeCount.classList.add('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Themes Selected';}
+    else{themeCount.classList.remove('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Select Themes';}
 }
 
 function co(){const af=ri.every(i=>i.value.trim().length>0);os.style.display=af?'block':'none';if(!af)or2.innerHTML='';}
@@ -214,16 +300,22 @@ function ps(){
     const bct=document.getElementById('boardComboText'),af=iv.every(v=>v.length>0);
     if(af){const rc2=fb(iv,ff);bct.textContent=rc2===-1?'-- (fill all 7 cells)':`${rc2} (+ ${bc2}) = ${rc2+bc2}`;}else bct.textContent='-- (fill all 7 cells)';
     const rfc=gc(),hrf=rfc.length>0;let results=d;
-    const selectedTheme=themeSelect.value;
-    if(selectedTheme){results=results.filter(w=>w.themes&&Array.isArray(w.themes)&&w.themes.includes(selectedTheme));}
+    // Multi-theme filter
+    if(selectedThemes.size>0){
+        results=results.filter(w=>w.themes&&Array.isArray(w.themes)&&[...selectedThemes].some(t=>w.themes.includes(t)));
+    }
     if(cf.length>0){const fs=new Set(cf);results=results.filter(w=>fs.has(w.word.length));}
-    if(tf.length>0){const pl=tf.length;const abc=hrf?rfc.flat():[];results=results.filter(w=>{if(w.word.length!==pl)return false;for(let i=0;i<pl;i++){const pc=tf[i],wc=w.word[i];if(pc==='-'){if(abc.length>0&&!abc.includes(wc))return false;}else if(pc!==wc)return false;}return true;});}
+    if(tf.length>0){
+        const hasWildcard=tf.includes('-');
+        if(!hasWildcard){results=results.filter(w=>w.word.includes(tf));}
+        else{const pl=tf.length;const abc=hrf?rfc.flat():[];results=results.filter(w=>{if(w.word.length!==pl)return false;for(let i=0;i<pl;i++){const pc=tf[i],wc=w.word[i];if(pc==='-'){if(abc.length>0&&!abc.includes(wc))return false;}else if(pc!==wc)return false;}return true;});}
+    }
     let wm=new Map(),vbw=[];const rbi=(rabv&&hapf)?iv.reduce((a,v,i)=>{if(v.length>0)a.push(i);return a;},[]):[];
     for(const w of results){const len=w.word.length;if(hapf&&len>7)continue;let vo=[];if(hapf){for(let s=0;s<=7-len;s++){let fits=true;for(let i=0;i<len;i++){if(iv[s+i]&&!iv[s+i].includes(w.word[i])){fits=false;break;}}if(fits&&rabv&&rbi.length>0){const we=s+len;if(!rbi.every(idx=>idx>=s&&idx<we))fits=false;}if(fits)vo.push(s);}if(vo.length===0)continue;}else vo=[-1];let ac2=0;if(hapf){for(const o of vo){const c2=cp(w.word,o,iv,ff);if(c2>ac2)ac2=c2;}}else ac2=w.combo||0;if(ac2<cmv)continue;let bo=vo[0],irm=false,mi=new Set(),rmc=0;if(hrf){let bestC=cl==='AND'?-1:0;for(const o of vo){const ch=w.word.split('');let cts=[],ci2=[];if(o===-1){cts=[...ch];ci2=ch.map((_,i)=>i);}else{for(let i=0;i<ch.length;i++){if(!iv[o+i]){cts.push(ch[i]);ci2.push(i);}}}const dx=gm(cts,ci2,rfc,cl,iv,o);if(cl==='OR'){if(dx.matched.size>0){bo=o;mi=dx.matched;rmc=dx.count;irm=true;break;}}else{if(dx.count>bestC){bestC=dx.count;bo=o;mi=dx.matched;rmc=dx.count;irm=(dx.count===rfc.length);}}}if(cl==='OR'&&!irm)continue;if(cl==='AND'&&rmc===0)continue;}wm.set(w.word,{validOffsets:[bo],isRefineMatch:irm,refineMatchedCount:rmc,matchedIndices:mi,combo:ac2,totalConstraints:rfc.length});vbw.push(w);}
     vbw.sort((a,b)=>{const ma=wm.get(a.word),mb=wm.get(b.word);if(hrf){if(ma.isRefineMatch!==mb.isRefineMatch)return ma.isRefineMatch?-1:1;if(cl==='AND'&&ma.refineMatchedCount!==mb.refineMatchedCount)return mb.refineMatchedCount-ma.refineMatchedCount;}switch(so2){case'asc':return a.word.length-b.word.length;case'desc':return b.word.length-a.word.length;case'combo-asc':return ma.combo-mb.combo;case'combo-desc':return mb.combo-ma.combo;default:return 0;}});
-    const mr=300,dr=vbw.slice(0,mr);if(!hapf&&!hrf&&cf.length===0&&tf.length===0&&cmv===0&&!selectedTheme){rc.textContent=`Waiting for input... (${d.length} words)`;rl.innerHTML='';return;}if(dr.length===0){rc.textContent="No matches found";rl.innerHTML='<div class="no-results">No words match your criteria</div>';}else{rc.textContent=`Found ${vbw.length} words${vbw.length>mr?` (Showing first ${mr})`:''}`;const hp=[];for(const w of dr){const m=wm.get(w.word),dt=w.displays[0]||w.word;const tt=w.themes&&w.themes.length>0?`<div class="result-themes">Theme: ${w.themes.join(', ')}</div>`:'';const po=m.validOffsets[0],ch=w.word.split('');let gi=new Set();if(po!==-1){for(let i=0;i<ch.length;i++){if(iv[po+i])gi.add(i);}}const hwh=ch.map((c,i)=>{const ig=gi.has(i),ir=m.matchedIndices.has(i);if(ig&&ir)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;background:#cce4ff;padding:0 1px;border-radius:2px;">${c}</span>`;if(ig)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;">${c}</span>`;if(ir)return`<span style="background:#cce4ff;padding:0 1px;border-radius:2px;color:#0051d5;">${c}</span>`;return c;}).join('');let gh='';if(po!==-1){let p=['<div class="mini-grid">'];for(let b=0;b<7;b++){let ct='',cl2='mini-box';if(b>=po&&b<po+w.word.length){ct=w.word[b-po];cl2+=iv[b]?' matched':' overlap';}p.push(`<div class="${cl2}">${ct}</div>`);}p.push('</div>');gh=p.join('');}const ic='result-item'+(m.isRefineMatch?' refine-match':''),cs=hapf?`${m.combo} (adj)`:`${m.combo}`;let mi2='';if(hrf&&cl==='AND')mi2=` | Deck: ${m.refineMatchedCount}/${m.totalConstraints||rfc.length}`;hp.push(`<div class="${ic}"><div class="result-word"><span>${dt} <span style="font-weight:normal;font-size:0.8em;color:#666;">(${hwh})</span></span>${gh}</div><div class="result-info">${w.word.length} chars · Combo: ${cs}${mi2}</div>${tt}</div>`);}rl.innerHTML=hp.join('');}}
+    const mr=300,dr=vbw.slice(0,mr);if(!hapf&&!hrf&&cf.length===0&&tf.length===0&&cmv===0&&selectedThemes.size===0){rc.textContent=`Waiting for input... (${d.length} words)`;rl.innerHTML='';return;}if(dr.length===0){rc.textContent="No matches found";rl.innerHTML='<div class="no-results">No words match your criteria</div>';}else{rc.textContent=`Found ${vbw.length} words${vbw.length>mr?` (Showing first ${mr})`:''}`;const hp=[];for(const w of dr){const m=wm.get(w.word),dt=w.displays[0]||w.word;const tt=w.themes&&w.themes.length>0?`<div class="result-themes">Theme: ${w.themes.join(', ')}</div>`:'';const po=m.validOffsets[0],ch=w.word.split('');let gi=new Set();if(po!==-1){for(let i=0;i<ch.length;i++){if(iv[po+i])gi.add(i);}}const hwh=ch.map((c,i)=>{const ig=gi.has(i),ir=m.matchedIndices.has(i);if(ig&&ir)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;background:#cce4ff;padding:0 1px;border-radius:2px;">${c}</span>`;if(ig)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;">${c}</span>`;if(ir)return`<span style="background:#cce4ff;padding:0 1px;border-radius:2px;color:#0051d5;">${c}</span>`;return c;}).join('');let gh='';if(po!==-1){let p=['<div class="mini-grid">'];for(let b=0;b<7;b++){let ct='',cl2='mini-box';if(b>=po&&b<po+w.word.length){ct=w.word[b-po];cl2+=iv[b]?' matched':' overlap';}p.push(`<div class="${cl2}">${ct}</div>`);}p.push('</div>');gh=p.join('');}const ic='result-item'+(m.isRefineMatch?' refine-match':''),cs=hapf?`${m.combo} (adj)`:`${m.combo}`;let mi2='';if(hrf&&cl==='AND')mi2=` | Deck: ${m.refineMatchedCount}/${m.totalConstraints||rfc.length}`;const boardForPopup=(()=>{if(po===-1)return w.word;const b=[...iv];for(let i=0;i<w.word.length;i++)b[po+i]=w.word[i];return b.join('');})();hp.push(`<div class="${ic}" data-board="${boardForPopup}"><div class="result-word"><span>${dt} <span style="font-weight:normal;font-size:0.8em;color:#666;">(${hwh})</span></span>${gh}</div><div class="result-info">${w.word.length} chars · Combo: ${cs}${mi2}</div>${tt}</div>`);}rl.innerHTML=hp.join('');document.querySelectorAll('#resultList .result-item').forEach(item=>{item.addEventListener('click',()=>{const boardStr=item.dataset.board;if(boardStr)swp(boardStr);});});}}
 
-function swp(bs){const words=fw(bs);const overlay=document.createElement('div');overlay.className='overlay';const popup=document.createElement('div');popup.className='words-popup';popup.innerHTML=`<h3>📖 Words Found (${words.length})</h3>${words.map(w=>`<div class="word-entry ${w.word.length>=4?'long-word':'short-word'}"><span class="word-text">${w.word}</span><span class="pos-range">Pos ${w.start+1}-${w.end+1} (${w.word.length}L)</span></div>`).join('')}<button class="close-btn" id="closeWordsPopup">Close</button>`;document.body.appendChild(overlay);document.body.appendChild(popup);overlay.addEventListener('click',()=>{overlay.remove();popup.remove();});document.getElementById('closeWordsPopup').addEventListener('click',()=>{overlay.remove();popup.remove();});}
+function swp(bs){const words=fw(bs);const overlay=document.createElement('div');overlay.className='overlay';overlay.id='wordsOverlay';const popup=document.createElement('div');popup.className='words-popup';const allThemes=new Set();let html=`<h3>📖 Words Found (${words.length})</h3>`;for(const w of words){const themes=wordThemeMap.get(w.word)||[];themes.forEach(t=>allThemes.add(t));const themeStr=themes.length?`<div class="word-themes">${themes.join(', ')}</div>`:'';html+=`<div class="word-entry ${w.word.length>=4?'long-word':'short-word'}"><div class="word-main"><span class="word-text">${w.word}</span><span class="pos-range">Pos ${w.start+1}-${w.end+1} (${w.word.length}L)</span></div>${themeStr}</div>`;}if(allThemes.size>0){html+=`<div style="margin-top:10px;font-size:11px;color:#666;">All themes: ${[...allThemes].sort().join(', ')}</div>`;}html+=`<button class="close-btn" id="closeWordsPopup">Close</button>`;popup.innerHTML=html;document.body.appendChild(overlay);document.body.appendChild(popup);overlay.addEventListener('click',()=>{overlay.remove();popup.remove();});document.getElementById('closeWordsPopup').addEventListener('click',()=>{overlay.remove();popup.remove();});}
 function glp(bs){const pos=new Set();const words=fw(bs);for(const w of words){if(w.word.length>=4){for(let i=w.start;i<=w.end;i++)pos.add(i);}}return pos;}
 function comb(arr,k){if(k===0)return[[]];if(k>arr.length)return[];const r=[];function f(s,c){if(c.length===k){r.push([...c]);return;}for(let i=s;i<arr.length;i++){c.push(arr[i]);f(i+1,c);c.pop();}}f(0,[]);return r;}
 function perm(arr){if(arr.length<=1)return[arr];const r=[];for(let i=0;i<arr.length;i++){const rest=[...arr.slice(0,i),...arr.slice(i+1)];for(const p of perm(rest))r.push([arr[i],...p]);}return r;}

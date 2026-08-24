@@ -38,8 +38,6 @@
         .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; padding-top: 4px; }
         .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .combo-input { width: 70px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-
-        /* Theme checklist styles */
         .theme-checklist-container { flex: 1; min-width: 200px; position: relative; }
         .theme-toggle-btn { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%; max-width: 280px; }
         .theme-toggle-btn .selected-count { background: #007AFF; color: white; border-radius: 10px; padding: 1px 8px; font-size: 11px; font-weight: 600; display: none; }
@@ -53,7 +51,6 @@
         .theme-dropdown .theme-actions { padding: 8px 12px; display: flex; gap: 8px; border-top: 1px solid #eee; position: sticky; bottom: 0; background: white; }
         .theme-dropdown .theme-actions button { flex: 1; padding: 6px 10px; font-size: 12px; }
         .theme-search-input { width: 100%; padding: 8px 12px; border: none; border-bottom: 1px solid #eee; font-size: 13px; outline: none; }
-
         input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #007AFF; }
         label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
         .board-requirement-check { display: flex; align-items: center; font-size: 14px; font-weight: 500; color: #333; }
@@ -136,7 +133,6 @@
         .words-popup .word-entry .word-themes { font-size: 10px; color: #666; margin-top: 3px; }
         .words-popup .close-btn { display: block; margin: 15px auto 0; padding: 8px 24px; background: #007AFF; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 99; }
-
         @media (max-width: 600px) {
             .optimize-item .board-layout { gap: 2px; }
             .optimize-item .board-layout .char-cell { width: 30px; height: 34px; }
@@ -165,20 +161,13 @@
             <div class="board-combo-display" id="boardComboDisplay"><span class="label">Board Combo:</span><span class="combo-value" id="boardComboText">-- (fill all 7 cells)</span><span class="bonus-wrapper"><label>+</label><input type="number" id="bonusCombo" value="0" min="0"></span></div>
             <div class="filters">
                 <div class="filter-row"><span class="filter-label">Length:</span><div class="radio-group"><label><input type="checkbox" name="chars" value="2"><span>2</span></label><label><input type="checkbox" name="chars" value="3"><span>3</span></label><label><input type="checkbox" name="chars" value="4"><span>4</span></label><label><input type="checkbox" name="chars" value="5"><span>5</span></label><label><input type="checkbox" name="chars" value="6"><span>6</span></label><label><input type="checkbox" name="chars" value="7"><span>7</span></label></div></div>
-                <div class="filter-row">
-                    <span class="filter-label">Theme:</span>
+                <div class="filter-row"><span class="filter-label">Theme:</span>
                     <div class="theme-checklist-container" id="themeChecklistContainer">
-                        <button class="theme-toggle-btn" id="themeToggleBtn">
-                            <span>Select Themes</span>
-                            <span class="selected-count" id="themeCount">0</span>
-                        </button>
+                        <button class="theme-toggle-btn" id="themeToggleBtn"><span>Select Themes</span><span class="selected-count" id="themeCount">0</span></button>
                         <div class="theme-dropdown" id="themeDropdown">
                             <input type="text" class="theme-search-input" id="themeSearchInput" placeholder="Search themes...">
                             <div id="themeOptionsList"></div>
-                            <div class="theme-actions">
-                                <button id="themeSelectAll">Select All</button>
-                                <button id="themeClearAll">Clear All</button>
-                            </div>
+                            <div class="theme-actions"><button id="themeSelectAll">Select All</button><button id="themeClearAll">Clear All</button></div>
                         </div>
                     </div>
                 </div>
@@ -194,22 +183,69 @@
 <script>
 (function(){
 let d=[],cl='AND',ws=new Set(),ff=new Array(7).fill(false),io=false,so=false;const cc=new Map();
-let wordThemeMap = new Map();
+let wordThemeMap = new Map(); // merged themes for popup only
 let selectedThemes = new Set();
+let themeSubwordMap = new Map(); // theme -> Set of words that contain a themed subword
 
 function cg(w){const m=new Map();for(const x of w){const f=new Set();for(let s=0;s<x.word.length;s++)for(let e=s+2;e<=x.word.length;e++)if(ws.has(x.word.substring(s,e)))f.add(x.word.substring(s,e));m.set(x.word,f.size);}return m;}
 function cp(w,o,b,f){const k=`${w}|${o}|${b.join(',')}|${f.join(',')}`;if(cc.has(k))return cc.get(k);let c=0;for(let s=0;s<w.length;s++)for(let e=s+2;e<=w.length;e++){let h=false;for(let i=s;i<e&&!h;i++){const bi=o+i;if(f[bi]||!b[bi])h=true;}if(h&&ws.has(w.substring(s,e)))c++;}cc.set(k,c);return c;}
 function fb(bc,f){const bs=bc.map(s=>s?s[0]:'').join('');if(bs.length!==7)return-1;let c=0;for(let s=0;s<7;s++)for(let e=s+2;e<=7;e++)if(ws.has(bs.substring(s,e)))for(let i=s;i<e;i++)if(f[i]){c++;break;}return c;}
 function ca(bs){if(bs.length!==7)return 0;let c=0;for(let s=0;s<7;s++)for(let e=s+2;e<=7;e++)if(ws.has(bs.substring(s,e)))c++;return c;}
-function fw(bs){const w=[];const sn=new Set();for(let s=0;s<7;s++)for(let e=s+2;e<=7;e++){const sub=bs.substring(s,e);const key=s+'-'+sub;if(ws.has(sub)&&!sn.has(key)){sn.add(key);w.push({word:sub,start:s,end:e-1});}}return w.sort((a,b)=>a.start-b.start||b.word.length-a.word.length);}
-function gd(){const s=[["あい","",1,["愛"],["気持ち","鳥"]],["あお","",1,["青"],["色"]],["うみ","",1,["海"],["自然","地名"]],["うそう","",1,["雨窓"],["建物","自然"]],["しょうそう","",4,["焦燥"],["気持ち"]],["うそうかい","",5,["有象海"],[]],["さいし","",3,["祭祀"],["行事"]],["さいしょ","",4,["最初"],["順番"]],["さいしょう","",5,["最小"],["順番"]],["しょうさ","",4,["勝差"],["勝負"]],["しょうさい","",5,["詳細"],[]],["さんしょう","",5,["参照"],[]],["あした","",3,["明日"],["時間"]],["あいさつ","",4,["挨拶"],["日常"]],["こう","",2,["甲"],["囲碁・将棋・麻雀","単位・通貨","地名","鳥","ボードゲーム","いきもの","動詞"]],["こうこう","",4,["高校"],["学校"]],["こうこうしゃ","",5,["高校社"],["学校"]],["こうそ","",3,["酵素"],["理科"]],["たいいく","",4,["体育"],["学校"]],["あとこうしゃく","",7,["後講釈"],[]],["こうかい","",3,["公海"],["地名"]],["こうかん","",3,["交換"],["動詞"]],["しょうかい","",4,["紹介"],["動詞"]],["しょうかん","",4,["召喚"],["動詞"]],["しょうこう","",4,["将校"],["身分"]]];return s.map(e=>({word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]}));}
-function ld(){return fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json').then(r=>{if(!r.ok)throw Error('e');return r.json();}).then(data=>{d=data.map(e=>{const w={word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]};wordThemeMap.set(w.word,w.themes);return w;});ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;}).catch(()=>{d=gd();d.forEach(w=>wordThemeMap.set(w.word,w.themes));ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;document.getElementById('loadingMsg').textContent='⚠ Sample dictionary loaded.';return new Promise(r=>setTimeout(r,300));});}
+function fw(bs){const w=[];const sn=new Set();for(let s=0;s<7;s++){for(let e=s+2;e<=7;e++){const sub=bs.substring(s,e);const key=s+'-'+sub;if(ws.has(sub)&&!sn.has(key)){sn.add(key);w.push({word:sub,start:s,end:e-1,length:sub.length});}}}return w.sort((a,b)=>a.start-b.start||a.length-b.length||a.word.localeCompare(b.word));}
+function gd(){const s=[["あい","",1,["愛"],["気持ち","鳥"]],["あお","",1,["青"],["色"]],["うみ","",1,["海"],["自然","地名"]],["うそう","",1,["雨窓"],["建物","自然"]],["しょうそう","",4,["焦燥"],["気持ち"]],["うそうかい","",5,["有象海"],[]],["さいし","",3,["祭祀"],["行事"]],["さいしょ","",4,["最初"],["順番"]],["さいしょう","",5,["最小"],["順番"]],["しょうさ","",4,["勝差"],["勝負"]],["しょうさい","",5,["詳細"],[]],["さんしょう","",5,["参照"],[]],["あした","",3,["明日"],["時間"]],["あいさつ","",4,["挨拶"],["日常"]],["こう","",2,["甲"],["囲碁・将棋・麻雀","単位・通貨","地名","鳥","ボードゲーム","いきもの","動詞"]],["こうこう","",4,["高校"],["学校"]],["こうこうしゃ","",5,["高校社"],["学校"]],["こうそ","",3,["酵素"],["理科"]],["たいいく","",4,["体育"],["学校"]],["たいしょう","",4,["大正"],["コラボ","コラボクイズ","元号","地名","日本史"]],["あとこうしゃく","",7,["後講釈"],[]],["こうかい","",3,["公海"],["地名"]],["こうかん","",3,["交換"],["動詞"]],["しょうかい","",4,["紹介"],["動詞"]],["しょうかん","",4,["召喚"],["動詞"]],["しょうこう","",4,["将校"],["身分"]]];return s.map(e=>({word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]}));}
+function ld(){return fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json').then(r=>{if(!r.ok)throw Error('e');return r.json();}).then(data=>{
+    const tempMap = new Map();
+    d=data.map(e=>{const w={word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]};
+        if(tempMap.has(w.word)){tempMap.set(w.word,[...new Set([...tempMap.get(w.word),...w.themes])]);}
+        else{tempMap.set(w.word,[...w.themes]);}
+        return w;});
+    wordThemeMap=tempMap;
+    ws=new Set(d.map(w=>w.word));
+    const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;
+    buildThemeSubwordMap();
+}).catch(()=>{d=gd();const tempMap=new Map();d.forEach(w=>{if(tempMap.has(w.word)){tempMap.set(w.word,[...new Set([...tempMap.get(w.word),...w.themes])]);}else{tempMap.set(w.word,[...w.themes]);}});wordThemeMap=tempMap;ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;buildThemeSubwordMap();document.getElementById('loadingMsg').textContent='⚠ Sample dictionary loaded.';return new Promise(r=>setTimeout(r,300));});}
+
+// Build theme -> Set of words that contain a themed subword (or have the theme themselves)
+function buildThemeSubwordMap(){
+    themeSubwordMap.clear();
+    // First, map each theme to the words that directly have it
+    const themeToWords = new Map();
+    for(const w of d){
+        if(w.themes&&Array.isArray(w.themes)){
+            for(const t of w.themes){
+                if(!themeToWords.has(t))themeToWords.set(t,new Set());
+                themeToWords.get(t).add(w.word);
+            }
+        }
+    }
+    // Now for each theme, find all words that CONTAIN any of the directly-themed words as substrings
+    for(const [theme, directWords] of themeToWords){
+        const resultSet = new Set();
+        for(const directWord of directWords){
+            for(const w of d){
+                if(w.word.includes(directWord)){
+                    resultSet.add(w.word);
+                }
+            }
+        }
+        themeSubwordMap.set(theme, resultSet);
+    }
+}
+
+// Check if a word matches the selected themes (direct or via subword)
+function wordMatchesThemes(word, selectedArr){
+    for(const t of selectedArr){
+        const set = themeSubwordMap.get(t);
+        if(set && set.has(word))return true;
+    }
+    return false;
+}
+
 let pi,ri,ss,ts,rab,cmin,bci,tg,rs,os,ob,stb,or2;
 let themeToggleBtn,themeDropdown,themeSearchInput,themeOptionsList,themeCount,themeSelectAllBtn,themeClearAllBtn;
 
 function init(){pi=Array.from(document.querySelectorAll('.pos-input'));ri=Array.from(document.querySelectorAll('.refine-input'));ss=document.getElementById('sortSelect');ts=document.getElementById('textSearch');rab=document.getElementById('requireAllBoard');cmin=document.getElementById('comboMin');bci=document.getElementById('bonusCombo');tg=document.querySelectorAll('.cell-toggle');rs=document.getElementById('refineSection');os=document.getElementById('optimizeSection');ob=document.getElementById('optimizeBtn');stb=document.getElementById('stopOptimizeBtn');or2=document.getElementById('optimizeResults');cl='AND';
 themeToggleBtn=document.getElementById('themeToggleBtn');themeDropdown=document.getElementById('themeDropdown');themeSearchInput=document.getElementById('themeSearchInput');themeOptionsList=document.getElementById('themeOptionsList');themeCount=document.getElementById('themeCount');themeSelectAllBtn=document.getElementById('themeSelectAll');themeClearAllBtn=document.getElementById('themeClearAll');
-
 tg.forEach(t=>t.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(t.dataset.index);ff[i]=!ff[i];t.classList.toggle('free',ff[i]);t.classList.toggle('board',!ff[i]);t.textContent=ff[i]?'C':'B';cc.clear();ps();}));
 document.querySelectorAll('#posClearContainer .pos-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(b.dataset.index);pi[i].value='';pi[i].classList.remove('filled');cc.clear();ps();}));
 document.querySelectorAll('.refine-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const w=b.parentElement;const i=w.querySelector('.refine-input');i.value='';i.classList.remove('filled');ps();co();}));
@@ -224,69 +260,18 @@ document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.addEventListene
 ss.addEventListener('change',ps);rab.addEventListener('change',ps);
 document.querySelectorAll('label').forEach(l=>l.addEventListener('touchend',function(e){if(e.target.tagName!=='INPUT'){e.preventDefault();const i=this.querySelector('input');if(i){i.checked=!i.checked;ps();}}}));
 ob.addEventListener('click',()=>{if(!io)so2();});stb.addEventListener('click',()=>{so=true;});
-
-// Theme checklist events
 themeToggleBtn.addEventListener('click',(e)=>{e.stopPropagation();themeDropdown.classList.toggle('open');if(themeDropdown.classList.contains('open')){themeSearchInput.value='';filterThemeOptions('');themeSearchInput.focus();}});
 themeSearchInput.addEventListener('input',()=>filterThemeOptions(themeSearchInput.value));
 themeSelectAllBtn.addEventListener('click',()=>{const allThemes=getAllThemes();allThemes.forEach(t=>selectedThemes.add(t));updateThemeUI();ps();});
 themeClearAllBtn.addEventListener('click',()=>{selectedThemes.clear();updateThemeUI();ps();});
 document.addEventListener('click',(e)=>{if(!e.target.closest('#themeChecklistContainer')){themeDropdown.classList.remove('open');}});
-
 ps();co();populateThemeChecklist();
 }
 
-function getAllThemes(){
-    const themes=new Set();
-    const excludeKeywords=['イベント','コラボ','コラボレーション','collab','event','イベ','期間限定','フェス','fes','復刻','ガチャ','キャンペーン','CP','限定','コラボ記念','周年'];
-    for(const w of d){
-        if(w.themes&&Array.isArray(w.themes)){
-            for(const t of w.themes){
-                const lower=t.toLowerCase();
-                if(!excludeKeywords.some(kw=>lower.includes(kw.toLowerCase()))){
-                    themes.add(t);
-                }
-            }
-        }
-    }
-    return [...themes].sort((a,b)=>a.localeCompare(b));
-}
-
-function populateThemeChecklist(){
-    const themes=getAllThemes();
-    const themeCounts=new Map();
-    for(const w of d){
-        if(w.themes&&Array.isArray(w.themes)){
-            for(const t of w.themes){
-                themeCounts.set(t,(themeCounts.get(t)||0)+1);
-            }
-        }
-    }
-    themeOptionsList.innerHTML=themes.map(t=>{
-        const count=themeCounts.get(t)||0;
-        return`<label class="theme-option"><input type="checkbox" value="${t}" class="theme-checkbox"><span>${t}</span><span class="theme-count">${count}</span></label>`;
-    }).join('');
-    document.querySelectorAll('.theme-checkbox').forEach(cb=>{
-        cb.addEventListener('change',()=>{
-            if(cb.checked){selectedThemes.add(cb.value);}else{selectedThemes.delete(cb.value);}
-            updateThemeUI();ps();
-        });
-    });
-}
-
-function filterThemeOptions(query){
-    const lower=query.toLowerCase();
-    document.querySelectorAll('.theme-option').forEach(opt=>{
-        const text=opt.textContent.toLowerCase();
-        opt.style.display=text.includes(lower)?'flex':'none';
-    });
-}
-
-function updateThemeUI(){
-    document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.checked=selectedThemes.has(cb.value);});
-    themeCount.textContent=selectedThemes.size;
-    if(selectedThemes.size>0){themeCount.classList.add('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Themes Selected';}
-    else{themeCount.classList.remove('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Select Themes';}
-}
+function getAllThemes(){const themes=new Set();const excludeKeywords=['イベント','コラボ','コラボレーション','collab','event','イベ','期間限定','フェス','fes','復刻','ガチャ','キャンペーン','CP','限定','コラボ記念','周年'];for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){const lower=t.toLowerCase();if(!excludeKeywords.some(kw=>lower.includes(kw.toLowerCase()))){themes.add(t);}}}}return [...themes].sort((a,b)=>a.localeCompare(b));}
+function populateThemeChecklist(){const themes=getAllThemes();const themeCounts=new Map();for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){themeCounts.set(t,(themeCounts.get(t)||0)+1);}}}themeOptionsList.innerHTML=themes.map(t=>{const count=themeCounts.get(t)||0;return`<label class="theme-option"><input type="checkbox" value="${t}" class="theme-checkbox"><span>${t}</span><span class="theme-count">${count}</span></label>`;}).join('');document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.addEventListener('change',()=>{if(cb.checked){selectedThemes.add(cb.value);}else{selectedThemes.delete(cb.value);}updateThemeUI();ps();});});}
+function filterThemeOptions(query){const lower=query.toLowerCase();document.querySelectorAll('.theme-option').forEach(opt=>{const text=opt.textContent.toLowerCase();opt.style.display=text.includes(lower)?'flex':'none';});}
+function updateThemeUI(){document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.checked=selectedThemes.has(cb.value);});themeCount.textContent=selectedThemes.size;if(selectedThemes.size>0){themeCount.classList.add('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Themes Selected';}else{themeCount.classList.remove('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Select Themes';}}
 
 function co(){const af=ri.every(i=>i.value.trim().length>0);os.style.display=af?'block':'none';if(!af)or2.innerHTML='';}
 function gc(){return ri.map(i=>i.value.trim().split('')).filter(a=>a.length>0);}
@@ -300,16 +285,14 @@ function ps(){
     const bct=document.getElementById('boardComboText'),af=iv.every(v=>v.length>0);
     if(af){const rc2=fb(iv,ff);bct.textContent=rc2===-1?'-- (fill all 7 cells)':`${rc2} (+ ${bc2}) = ${rc2+bc2}`;}else bct.textContent='-- (fill all 7 cells)';
     const rfc=gc(),hrf=rfc.length>0;let results=d;
-    // Multi-theme filter
+    
+    // Optimized theme filter using pre-computed map
     if(selectedThemes.size>0){
-        results=results.filter(w=>w.themes&&Array.isArray(w.themes)&&[...selectedThemes].some(t=>w.themes.includes(t)));
+        const selectedArr=[...selectedThemes];
+        results=results.filter(w=>wordMatchesThemes(w.word,selectedArr));
     }
     if(cf.length>0){const fs=new Set(cf);results=results.filter(w=>fs.has(w.word.length));}
-    if(tf.length>0){
-        const hasWildcard=tf.includes('-');
-        if(!hasWildcard){results=results.filter(w=>w.word.includes(tf));}
-        else{const pl=tf.length;const abc=hrf?rfc.flat():[];results=results.filter(w=>{if(w.word.length!==pl)return false;for(let i=0;i<pl;i++){const pc=tf[i],wc=w.word[i];if(pc==='-'){if(abc.length>0&&!abc.includes(wc))return false;}else if(pc!==wc)return false;}return true;});}
-    }
+    if(tf.length>0){const hasWildcard=tf.includes('-');if(!hasWildcard){results=results.filter(w=>w.word.includes(tf));}else{const pl=tf.length;const abc=hrf?rfc.flat():[];results=results.filter(w=>{if(w.word.length!==pl)return false;for(let i=0;i<pl;i++){const pc=tf[i],wc=w.word[i];if(pc==='-'){if(abc.length>0&&!abc.includes(wc))return false;}else if(pc!==wc)return false;}return true;});}}
     let wm=new Map(),vbw=[];const rbi=(rabv&&hapf)?iv.reduce((a,v,i)=>{if(v.length>0)a.push(i);return a;},[]):[];
     for(const w of results){const len=w.word.length;if(hapf&&len>7)continue;let vo=[];if(hapf){for(let s=0;s<=7-len;s++){let fits=true;for(let i=0;i<len;i++){if(iv[s+i]&&!iv[s+i].includes(w.word[i])){fits=false;break;}}if(fits&&rabv&&rbi.length>0){const we=s+len;if(!rbi.every(idx=>idx>=s&&idx<we))fits=false;}if(fits)vo.push(s);}if(vo.length===0)continue;}else vo=[-1];let ac2=0;if(hapf){for(const o of vo){const c2=cp(w.word,o,iv,ff);if(c2>ac2)ac2=c2;}}else ac2=w.combo||0;if(ac2<cmv)continue;let bo=vo[0],irm=false,mi=new Set(),rmc=0;if(hrf){let bestC=cl==='AND'?-1:0;for(const o of vo){const ch=w.word.split('');let cts=[],ci2=[];if(o===-1){cts=[...ch];ci2=ch.map((_,i)=>i);}else{for(let i=0;i<ch.length;i++){if(!iv[o+i]){cts.push(ch[i]);ci2.push(i);}}}const dx=gm(cts,ci2,rfc,cl,iv,o);if(cl==='OR'){if(dx.matched.size>0){bo=o;mi=dx.matched;rmc=dx.count;irm=true;break;}}else{if(dx.count>bestC){bestC=dx.count;bo=o;mi=dx.matched;rmc=dx.count;irm=(dx.count===rfc.length);}}}if(cl==='OR'&&!irm)continue;if(cl==='AND'&&rmc===0)continue;}wm.set(w.word,{validOffsets:[bo],isRefineMatch:irm,refineMatchedCount:rmc,matchedIndices:mi,combo:ac2,totalConstraints:rfc.length});vbw.push(w);}
     vbw.sort((a,b)=>{const ma=wm.get(a.word),mb=wm.get(b.word);if(hrf){if(ma.isRefineMatch!==mb.isRefineMatch)return ma.isRefineMatch?-1:1;if(cl==='AND'&&ma.refineMatchedCount!==mb.refineMatchedCount)return mb.refineMatchedCount-ma.refineMatchedCount;}switch(so2){case'asc':return a.word.length-b.word.length;case'desc':return b.word.length-a.word.length;case'combo-asc':return ma.combo-mb.combo;case'combo-desc':return mb.combo-ma.combo;default:return 0;}});

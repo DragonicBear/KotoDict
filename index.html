@@ -173,8 +173,8 @@
                 </div>
                 <div class="filter-row"><span class="filter-label">Min Combo:</span><input type="number" id="comboMin" class="combo-input" value="0" min="0"></div>
             </div>
-            <div class="refine-section" id="refineSection"><span class="refine-title">ABCD Boxes (each provides 1 char):</span><div class="refine-controls"><button id="clearRefineBtn" class="mini-btn" type="button">Clear All</button><div class="toggle-switch logic-toggle"><div class="toggle-option" data-logic="OR">Any (OR)</div><div class="toggle-option active" data-logic="AND">All (AND)</div></div></div><div class="refine-inputs"><div class="refine-input-wrap box-A"><input type="text" class="refine-input" placeholder="A" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-B"><input type="text" class="refine-input" placeholder="B" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-C"><input type="text" class="refine-input" placeholder="C" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-D"><input type="text" class="refine-input" placeholder="D" autocomplete="off"><button class="refine-clear">×</button></div></div></div>
-            <div class="optimize-section" id="optimizeSection" style="display:none;"><div class="optimize-header"><span class="optimize-title">🎯 Board Optimization</span><div><button id="optimizeBtn" class="primary" type="button">Find Best Board</button><button id="stopOptimizeBtn" class="optimize-stop-btn" type="button" style="display:none;">Stop</button></div></div><div id="optimizeResults" class="optimize-results"></div></div>
+            <div class="refine-section" id="refineSection"><span class="refine-title">ABCD Boxes (optional - each provides 1 char):</span><div class="refine-controls"><button id="clearRefineBtn" class="mini-btn" type="button">Clear All</button><div class="toggle-switch logic-toggle"><div class="toggle-option" data-logic="OR">Any (OR)</div><div class="toggle-option active" data-logic="AND">All (AND)</div></div></div><div class="refine-inputs"><div class="refine-input-wrap box-A"><input type="text" class="refine-input" placeholder="A" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-B"><input type="text" class="refine-input" placeholder="B" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-C"><input type="text" class="refine-input" placeholder="C" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-D"><input type="text" class="refine-input" placeholder="D" autocomplete="off"><button class="refine-clear">×</button></div></div></div>
+            <div class="optimize-section" id="optimizeSection" style="display:block;"><div class="optimize-header"><span class="optimize-title">🎯 Board Optimization</span><div><button id="optimizeBtn" class="primary" type="button">Find Best Board</button><button id="stopOptimizeBtn" class="optimize-stop-btn" type="button" style="display:none;">Stop</button></div></div><div id="optimizeResults" class="optimize-results"></div></div>
             <div class="text-filter-container"><span class="text-filter-label">Pattern:</span><input type="text" id="textSearch" class="text-filter-input" placeholder="しょう or --しょう" autocomplete="off"></div>
             <div class="text-filter-hint">Without - : contains substring. With - : exact position match, length = pattern length.</div>
             <div class="results"><div class="result-count" id="resultCount">Enter characters to search</div><div id="resultList"></div></div>
@@ -183,9 +183,7 @@
 <script>
 (function(){
 let d=[],cl='AND',ws=new Set(),ff=new Array(7).fill(false),io=false,so=false;const cc=new Map();
-let wordThemeMap = new Map(); // merged themes for popup only
-let selectedThemes = new Set();
-let themeSubwordMap = new Map(); // theme -> Set of words that contain a themed subword
+let wordThemeMap=new Map(),selectedThemes=new Set(),themeSubwordMap=new Map(),themeSubwordMapBuilt=false;
 
 function cg(w){const m=new Map();for(const x of w){const f=new Set();for(let s=0;s<x.word.length;s++)for(let e=s+2;e<=x.word.length;e++)if(ws.has(x.word.substring(s,e)))f.add(x.word.substring(s,e));m.set(x.word,f.size);}return m;}
 function cp(w,o,b,f){const k=`${w}|${o}|${b.join(',')}|${f.join(',')}`;if(cc.has(k))return cc.get(k);let c=0;for(let s=0;s<w.length;s++)for(let e=s+2;e<=w.length;e++){let h=false;for(let i=s;i<e&&!h;i++){const bi=o+i;if(f[bi]||!b[bi])h=true;}if(h&&ws.has(w.substring(s,e)))c++;}cc.set(k,c);return c;}
@@ -194,86 +192,57 @@ function ca(bs){if(bs.length!==7)return 0;let c=0;for(let s=0;s<7;s++)for(let e=
 function fw(bs){const w=[];const sn=new Set();for(let s=0;s<7;s++){for(let e=s+2;e<=7;e++){const sub=bs.substring(s,e);const key=s+'-'+sub;if(ws.has(sub)&&!sn.has(key)){sn.add(key);w.push({word:sub,start:s,end:e-1,length:sub.length});}}}return w.sort((a,b)=>a.start-b.start||a.length-b.length||a.word.localeCompare(b.word));}
 function gd(){const s=[["あい","",1,["愛"],["気持ち","鳥"]],["あお","",1,["青"],["色"]],["うみ","",1,["海"],["自然","地名"]],["うそう","",1,["雨窓"],["建物","自然"]],["しょうそう","",4,["焦燥"],["気持ち"]],["うそうかい","",5,["有象海"],[]],["さいし","",3,["祭祀"],["行事"]],["さいしょ","",4,["最初"],["順番"]],["さいしょう","",5,["最小"],["順番"]],["しょうさ","",4,["勝差"],["勝負"]],["しょうさい","",5,["詳細"],[]],["さんしょう","",5,["参照"],[]],["あした","",3,["明日"],["時間"]],["あいさつ","",4,["挨拶"],["日常"]],["こう","",2,["甲"],["囲碁・将棋・麻雀","単位・通貨","地名","鳥","ボードゲーム","いきもの","動詞"]],["こうこう","",4,["高校"],["学校"]],["こうこうしゃ","",5,["高校社"],["学校"]],["こうそ","",3,["酵素"],["理科"]],["たいいく","",4,["体育"],["学校"]],["たいしょう","",4,["大正"],["コラボ","コラボクイズ","元号","地名","日本史"]],["あとこうしゃく","",7,["後講釈"],[]],["こうかい","",3,["公海"],["地名"]],["こうかん","",3,["交換"],["動詞"]],["しょうかい","",4,["紹介"],["動詞"]],["しょうかん","",4,["召喚"],["動詞"]],["しょうこう","",4,["将校"],["身分"]]];return s.map(e=>({word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]}));}
 function ld(){return fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json').then(r=>{if(!r.ok)throw Error('e');return r.json();}).then(data=>{
-    const tempMap = new Map();
+    const tempMap=new Map();
     d=data.map(e=>{const w={word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]};
         if(tempMap.has(w.word)){tempMap.set(w.word,[...new Set([...tempMap.get(w.word),...w.themes])]);}
         else{tempMap.set(w.word,[...w.themes]);}
         return w;});
-    wordThemeMap=tempMap;
-    ws=new Set(d.map(w=>w.word));
+    wordThemeMap=tempMap;ws=new Set(d.map(w=>w.word));
     const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;
-    buildThemeSubwordMap();
-}).catch(()=>{d=gd();const tempMap=new Map();d.forEach(w=>{if(tempMap.has(w.word)){tempMap.set(w.word,[...new Set([...tempMap.get(w.word),...w.themes])]);}else{tempMap.set(w.word,[...w.themes]);}});wordThemeMap=tempMap;ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;buildThemeSubwordMap();document.getElementById('loadingMsg').textContent='⚠ Sample dictionary loaded.';return new Promise(r=>setTimeout(r,300));});}
-
-// Build theme -> Set of words that contain a themed subword (or have the theme themselves)
-function buildThemeSubwordMap(){
-    themeSubwordMap.clear();
-    // First, map each theme to the words that directly have it
-    const themeToWords = new Map();
-    for(const w of d){
-        if(w.themes&&Array.isArray(w.themes)){
-            for(const t of w.themes){
-                if(!themeToWords.has(t))themeToWords.set(t,new Set());
-                themeToWords.get(t).add(w.word);
-            }
-        }
-    }
-    // Now for each theme, find all words that CONTAIN any of the directly-themed words as substrings
-    for(const [theme, directWords] of themeToWords){
-        const resultSet = new Set();
-        for(const directWord of directWords){
-            for(const w of d){
-                if(w.word.includes(directWord)){
-                    resultSet.add(w.word);
-                }
-            }
-        }
-        themeSubwordMap.set(theme, resultSet);
-    }
-}
-
-// Check if a word matches the selected themes (direct or via subword)
-function wordMatchesThemes(word, selectedArr){
-    for(const t of selectedArr){
-        const set = themeSubwordMap.get(t);
-        if(set && set.has(word))return true;
-    }
-    return false;
-}
+}).catch(()=>{d=gd();const tempMap=new Map();d.forEach(w=>{if(tempMap.has(w.word)){tempMap.set(w.word,[...new Set([...tempMap.get(w.word),...w.themes])]);}else{tempMap.set(w.word,[...w.themes]);}});wordThemeMap=tempMap;ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;document.getElementById('loadingMsg').textContent='⚠ Sample dictionary loaded.';return new Promise(r=>setTimeout(r,300));});}
+function buildThemeSubwordMap(){if(themeSubwordMapBuilt)return;themeSubwordMapBuilt=true;themeSubwordMap.clear();const themeToWords=new Map();for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){if(!themeToWords.has(t))themeToWords.set(t,new Set());themeToWords.get(t).add(w.word);}}}for(const [theme,directWords] of themeToWords){const resultSet=new Set();for(const dw of directWords){resultSet.add(dw);for(const w of d){if(w.word!==dw&&w.word.includes(dw)){resultSet.add(w.word);}}}themeSubwordMap.set(theme,resultSet);}}
+function wordMatchesThemes(word,selectedArr){if(!themeSubwordMapBuilt)buildThemeSubwordMap();for(const t of selectedArr){const set=themeSubwordMap.get(t);if(set&&set.has(word))return true;}return false;}
 
 let pi,ri,ss,ts,rab,cmin,bci,tg,rs,os,ob,stb,or2;
 let themeToggleBtn,themeDropdown,themeSearchInput,themeOptionsList,themeCount,themeSelectAllBtn,themeClearAllBtn;
 
-function init(){pi=Array.from(document.querySelectorAll('.pos-input'));ri=Array.from(document.querySelectorAll('.refine-input'));ss=document.getElementById('sortSelect');ts=document.getElementById('textSearch');rab=document.getElementById('requireAllBoard');cmin=document.getElementById('comboMin');bci=document.getElementById('bonusCombo');tg=document.querySelectorAll('.cell-toggle');rs=document.getElementById('refineSection');os=document.getElementById('optimizeSection');ob=document.getElementById('optimizeBtn');stb=document.getElementById('stopOptimizeBtn');or2=document.getElementById('optimizeResults');cl='AND';
-themeToggleBtn=document.getElementById('themeToggleBtn');themeDropdown=document.getElementById('themeDropdown');themeSearchInput=document.getElementById('themeSearchInput');themeOptionsList=document.getElementById('themeOptionsList');themeCount=document.getElementById('themeCount');themeSelectAllBtn=document.getElementById('themeSelectAll');themeClearAllBtn=document.getElementById('themeClearAll');
-tg.forEach(t=>t.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(t.dataset.index);ff[i]=!ff[i];t.classList.toggle('free',ff[i]);t.classList.toggle('board',!ff[i]);t.textContent=ff[i]?'C':'B';cc.clear();ps();}));
-document.querySelectorAll('#posClearContainer .pos-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(b.dataset.index);pi[i].value='';pi[i].classList.remove('filled');cc.clear();ps();}));
-document.querySelectorAll('.refine-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const w=b.parentElement;const i=w.querySelector('.refine-input');i.value='';i.classList.remove('filled');ps();co();}));
-document.querySelectorAll('.logic-toggle .toggle-option').forEach(o=>o.addEventListener('click',()=>{document.querySelectorAll('.logic-toggle .toggle-option').forEach(x=>x.classList.remove('active'));o.classList.add('active');cl=o.dataset.logic;rs.classList.toggle('or-mode',cl==='OR');ps();co();}));
-document.getElementById('clearBtn').addEventListener('click',e=>{e.preventDefault();pi.forEach(i=>{i.value='';i.classList.remove('filled');});ff.fill(false);tg.forEach(t=>{t.classList.remove('free');t.classList.add('board');t.textContent='B';});ts.value='';bci.value='0';or2.innerHTML='';selectedThemes.clear();updateThemeUI();cc.clear();ps();});
-document.getElementById('clearRefineBtn').addEventListener('click',e=>{e.preventDefault();ri.forEach(i=>{i.value='';i.classList.remove('filled');});or2.innerHTML='';ps();co();});
-let st;const ds=()=>{clearTimeout(st);st=setTimeout(ps,150);};
-pi.forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);cc.clear();ds();}));
-ri.forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);ds();co();}));
-ts.addEventListener('input',ds);cmin.addEventListener('input',ds);bci.addEventListener('input',ds);
-document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.addEventListener('change',ps));
-ss.addEventListener('change',ps);rab.addEventListener('change',ps);
-document.querySelectorAll('label').forEach(l=>l.addEventListener('touchend',function(e){if(e.target.tagName!=='INPUT'){e.preventDefault();const i=this.querySelector('input');if(i){i.checked=!i.checked;ps();}}}));
-ob.addEventListener('click',()=>{if(!io)so2();});stb.addEventListener('click',()=>{so=true;});
-themeToggleBtn.addEventListener('click',(e)=>{e.stopPropagation();themeDropdown.classList.toggle('open');if(themeDropdown.classList.contains('open')){themeSearchInput.value='';filterThemeOptions('');themeSearchInput.focus();}});
-themeSearchInput.addEventListener('input',()=>filterThemeOptions(themeSearchInput.value));
-themeSelectAllBtn.addEventListener('click',()=>{const allThemes=getAllThemes();allThemes.forEach(t=>selectedThemes.add(t));updateThemeUI();ps();});
-themeClearAllBtn.addEventListener('click',()=>{selectedThemes.clear();updateThemeUI();ps();});
-document.addEventListener('click',(e)=>{if(!e.target.closest('#themeChecklistContainer')){themeDropdown.classList.remove('open');}});
-ps();co();populateThemeChecklist();
+function init(){
+    pi=Array.from(document.querySelectorAll('.pos-input'));ri=Array.from(document.querySelectorAll('.refine-input'));
+    ss=document.getElementById('sortSelect');ts=document.getElementById('textSearch');rab=document.getElementById('requireAllBoard');
+    cmin=document.getElementById('comboMin');bci=document.getElementById('bonusCombo');tg=document.querySelectorAll('.cell-toggle');
+    rs=document.getElementById('refineSection');os=document.getElementById('optimizeSection');
+    ob=document.getElementById('optimizeBtn');stb=document.getElementById('stopOptimizeBtn');or2=document.getElementById('optimizeResults');
+    cl='AND';
+    themeToggleBtn=document.getElementById('themeToggleBtn');themeDropdown=document.getElementById('themeDropdown');
+    themeSearchInput=document.getElementById('themeSearchInput');themeOptionsList=document.getElementById('themeOptionsList');
+    themeCount=document.getElementById('themeCount');themeSelectAllBtn=document.getElementById('themeSelectAll');themeClearAllBtn=document.getElementById('themeClearAll');
+    
+    tg.forEach(t=>t.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(t.dataset.index);ff[i]=!ff[i];t.classList.toggle('free',ff[i]);t.classList.toggle('board',!ff[i]);t.textContent=ff[i]?'C':'B';cc.clear();ps();}));
+    document.querySelectorAll('#posClearContainer .pos-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(b.dataset.index);pi[i].value='';pi[i].classList.remove('filled');cc.clear();ps();}));
+    document.querySelectorAll('.refine-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const w=b.parentElement;const i=w.querySelector('.refine-input');i.value='';i.classList.remove('filled');ps();}));
+    document.querySelectorAll('.logic-toggle .toggle-option').forEach(o=>o.addEventListener('click',()=>{document.querySelectorAll('.logic-toggle .toggle-option').forEach(x=>x.classList.remove('active'));o.classList.add('active');cl=o.dataset.logic;rs.classList.toggle('or-mode',cl==='OR');ps();}));
+    document.getElementById('clearBtn').addEventListener('click',e=>{e.preventDefault();pi.forEach(i=>{i.value='';i.classList.remove('filled');});ff.fill(false);tg.forEach(t=>{t.classList.remove('free');t.classList.add('board');t.textContent='B';});ts.value='';bci.value='0';or2.innerHTML='';selectedThemes.clear();updateThemeUI();cc.clear();ps();});
+    document.getElementById('clearRefineBtn').addEventListener('click',e=>{e.preventDefault();ri.forEach(i=>{i.value='';i.classList.remove('filled');});or2.innerHTML='';ps();});
+    let st;const ds=()=>{clearTimeout(st);st=setTimeout(ps,150);};
+    pi.forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);cc.clear();ds();}));
+    ri.forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);ds();}));
+    ts.addEventListener('input',ds);cmin.addEventListener('input',ds);bci.addEventListener('input',ds);
+    document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.addEventListener('change',ps));
+    ss.addEventListener('change',ps);rab.addEventListener('change',ps);
+    document.querySelectorAll('label').forEach(l=>l.addEventListener('touchend',function(e){if(e.target.tagName!=='INPUT'){e.preventDefault();const i=this.querySelector('input');if(i){i.checked=!i.checked;ps();}}}));
+    ob.addEventListener('click',()=>{if(!io)so2();});stb.addEventListener('click',()=>{so=true;});
+    themeToggleBtn.addEventListener('click',(e)=>{e.stopPropagation();themeDropdown.classList.toggle('open');if(themeDropdown.classList.contains('open')){themeSearchInput.value='';filterThemeOptions('');themeSearchInput.focus();}});
+    themeSearchInput.addEventListener('input',()=>filterThemeOptions(themeSearchInput.value));
+    themeSelectAllBtn.addEventListener('click',()=>{const allThemes=getAllThemes();allThemes.forEach(t=>selectedThemes.add(t));updateThemeUI();ps();});
+    themeClearAllBtn.addEventListener('click',()=>{selectedThemes.clear();updateThemeUI();ps();});
+    document.addEventListener('click',(e)=>{if(!e.target.closest('#themeChecklistContainer')){themeDropdown.classList.remove('open');}});
+    ps();populateThemeChecklist();
 }
 
 function getAllThemes(){const themes=new Set();const excludeKeywords=['イベント','コラボ','コラボレーション','collab','event','イベ','期間限定','フェス','fes','復刻','ガチャ','キャンペーン','CP','限定','コラボ記念','周年'];for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){const lower=t.toLowerCase();if(!excludeKeywords.some(kw=>lower.includes(kw.toLowerCase()))){themes.add(t);}}}}return [...themes].sort((a,b)=>a.localeCompare(b));}
 function populateThemeChecklist(){const themes=getAllThemes();const themeCounts=new Map();for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){themeCounts.set(t,(themeCounts.get(t)||0)+1);}}}themeOptionsList.innerHTML=themes.map(t=>{const count=themeCounts.get(t)||0;return`<label class="theme-option"><input type="checkbox" value="${t}" class="theme-checkbox"><span>${t}</span><span class="theme-count">${count}</span></label>`;}).join('');document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.addEventListener('change',()=>{if(cb.checked){selectedThemes.add(cb.value);}else{selectedThemes.delete(cb.value);}updateThemeUI();ps();});});}
 function filterThemeOptions(query){const lower=query.toLowerCase();document.querySelectorAll('.theme-option').forEach(opt=>{const text=opt.textContent.toLowerCase();opt.style.display=text.includes(lower)?'flex':'none';});}
 function updateThemeUI(){document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.checked=selectedThemes.has(cb.value);});themeCount.textContent=selectedThemes.size;if(selectedThemes.size>0){themeCount.classList.add('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Themes Selected';}else{themeCount.classList.remove('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Select Themes';}}
-
-function co(){const af=ri.every(i=>i.value.trim().length>0);os.style.display=af?'block':'none';if(!af)or2.innerHTML='';}
 function gc(){return ri.map(i=>i.value.trim().split('')).filter(a=>a.length>0);}
 function gm(ca2,ci2,co2,lo,iv,o){const ac=[],ai=[];for(let i=0;i<ca2.length;i++){const bp=o===-1?-1:o+ci2[i];if(bp===-1||!iv[bp]){ac.push(ca2[i]);ai.push(ci2[i]);}}if(lo==='OR'){const m=new Set();co2.forEach(c=>{for(let i=0;i<ac.length;i++)if(c.includes(ac[i]))m.add(ai[i]);});return{matched:m,count:m.size>0?1:0};}else{let p=[...ac],pi2=[...ai],m=new Set(),count=0;for(const c of co2){const idx=p.findIndex(ch=>c.includes(ch));if(idx!==-1){m.add(pi2[idx]);p.splice(idx,1);pi2.splice(idx,1);count++;}}return{matched:m,count};}}
 
@@ -285,12 +254,7 @@ function ps(){
     const bct=document.getElementById('boardComboText'),af=iv.every(v=>v.length>0);
     if(af){const rc2=fb(iv,ff);bct.textContent=rc2===-1?'-- (fill all 7 cells)':`${rc2} (+ ${bc2}) = ${rc2+bc2}`;}else bct.textContent='-- (fill all 7 cells)';
     const rfc=gc(),hrf=rfc.length>0;let results=d;
-    
-    // Optimized theme filter using pre-computed map
-    if(selectedThemes.size>0){
-        const selectedArr=[...selectedThemes];
-        results=results.filter(w=>wordMatchesThemes(w.word,selectedArr));
-    }
+    if(selectedThemes.size>0){const selectedArr=[...selectedThemes];results=results.filter(w=>wordMatchesThemes(w.word,selectedArr));}
     if(cf.length>0){const fs=new Set(cf);results=results.filter(w=>fs.has(w.word.length));}
     if(tf.length>0){const hasWildcard=tf.includes('-');if(!hasWildcard){results=results.filter(w=>w.word.includes(tf));}else{const pl=tf.length;const abc=hrf?rfc.flat():[];results=results.filter(w=>{if(w.word.length!==pl)return false;for(let i=0;i<pl;i++){const pc=tf[i],wc=w.word[i];if(pc==='-'){if(abc.length>0&&!abc.includes(wc))return false;}else if(pc!==wc)return false;}return true;});}}
     let wm=new Map(),vbw=[];const rbi=(rabv&&hapf)?iv.reduce((a,v,i)=>{if(v.length>0)a.push(i);return a;},[]):[];
@@ -303,10 +267,88 @@ function glp(bs){const pos=new Set();const words=fw(bs);for(const w of words){if
 function comb(arr,k){if(k===0)return[[]];if(k>arr.length)return[];const r=[];function f(s,c){if(c.length===k){r.push([...c]);return;}for(let i=s;i<arr.length;i++){c.push(arr[i]);f(i+1,c);c.pop();}}f(0,[]);return r;}
 function perm(arr){if(arr.length<=1)return[arr];const r=[];for(let i=0;i<arr.length;i++){const rest=[...arr.slice(0,i),...arr.slice(i+1)];for(const p of perm(rest))r.push([arr[i],...p]);}return r;}
 function cart(arrays){if(arrays.length===0)return[[]];return arrays.reduce((a,b)=>a.flatMap(x=>b.map(y=>[...x,y])),[[]]);}
-function so2(){if(io)return;io=true;so=false;ob.style.display='none';stb.style.display='inline-block';const boxes=gc();if(boxes.length!==4){fo([]);return;}const curB=pi.map(i=>i.value.trim());const es=[];for(let i=0;i<7;i++)if(!curB[i])es.push(i);if(es.length===0){fo([{board:curB.join(''),combo:ca(curB.join(''))}]);return;}const k=es.length;const bcombos=(k<=4)?comb([0,1,2,3],k):[[0,1,2,3]];const results=[];or2.innerHTML=`<div class="optimize-loading">🔍 Testing ${bcombos.length} box combinations...</div>`;setTimeout(()=>{for(const combo of bcombos){if(so||results.length>5000)break;const charArrays=combo.map(b=>boxes[b]);const charCombos=cart(charArrays);for(const chars of charCombos){if(results.length>5000)break;const pairs=chars.map((c,i)=>({char:c,boxIdx:combo[i]}));const pairPerms=perm(pairs);for(const pp of pairPerms){const board=[...curB];const assignments=[];const n=Math.min(pp.length,k);for(let i=0;i<n;i++){board[es[i]]=pp[i].char;assignments.push({pos:es[i],boxIdx:pp[i].boxIdx});}const ac=boxes.flat();for(let i=n;i<k;i++){board[es[i]]=ac[Math.floor(Math.random()*ac.length)];assignments.push({pos:es[i],boxIdx:-1});}const bs=board.join('');results.push({board:bs,combo:ca(bs),assignments});}}}results.sort((a,b)=>b.combo-a.combo);const unique=[],seen=new Set();for(const r of results){if(!seen.has(r.board)){seen.add(r.board);unique.push(r);if(unique.length>=15)break;}}if(unique.length===0){const board=[...curB];const ac=boxes.flat();for(const s of es)board[s]=ac[Math.floor(Math.random()*ac.length)];unique.push({board:board.join(''),combo:ca(board.join('')),assignments:[]});}fo(unique);},10);}
+
+// FIXED: Proper optimizer with exhaustive search when boxes filled, random when not
+function so2(){
+    if(io)return;io=true;so=false;ob.style.display='none';stb.style.display='inline-block';
+    const boxes=gc();const curB=pi.map(i=>i.value.trim());const es=[];for(let i=0;i<7;i++)if(!curB[i])es.push(i);
+    const k=es.length;
+    if(k===0){fo([{board:curB.join(''),combo:ca(curB.join('')),assignments:[]}]);return;}
+    const results=[];
+    
+    if(boxes.length>=1){
+        const bcombos=(k<=boxes.length)?comb([...Array(boxes.length).keys()],k):[[...Array(boxes.length).keys()]];
+        or2.innerHTML=`<div class="optimize-loading">🔍 Testing ${bcombos.length} box combinations...</div>`;
+        setTimeout(()=>{
+            for(const combo of bcombos){
+                if(so||results.length>5000)break;
+                const charArrays=combo.map(b=>boxes[b]);
+                const charCombos=cart(charArrays);
+                for(const chars of charCombos){
+                    if(results.length>5000)break;
+                    const pairs=chars.map((c,i)=>({char:c,boxIdx:combo[i]}));
+                    const pairPerms=perm(pairs);
+                    for(const pp of pairPerms){
+                        const board=[...curB];
+                        const assignments=[];
+                        const n=Math.min(pp.length,k);
+                        for(let i=0;i<n;i++){
+                            board[es[i]]=pp[i].char;
+                            assignments.push({pos:es[i],boxIdx:pp[i].boxIdx});
+                        }
+                        const allBoxChars=boxes.flat();
+                        for(let i=n;i<k;i++){
+                            board[es[i]]=allBoxChars[Math.floor(Math.random()*allBoxChars.length)];
+                            assignments.push({pos:es[i],boxIdx:-1});
+                        }
+                        const bs=board.join('');
+                        results.push({board:bs,combo:ca(bs),assignments});
+                    }
+                }
+            }
+            finalizeResults(results,curB,es,boxes);
+        },10);
+    } else {
+        const charSet=new Set();
+        for(const w of d){for(const c of w.word)charSet.add(c);if(charSet.size>=100)break;}
+        const availableChars=[...charSet];
+        or2.innerHTML=`<div class="optimize-loading">🔍 Generating boards using ${availableChars.length} available characters...</div>`;
+        setTimeout(()=>{
+            const iterations=Math.min(10000,Math.max(2000,availableChars.length*100));
+            for(let iter=0;iter<iterations;iter++){
+                if(so||results.length>2000)break;
+                const board=[...curB];
+                for(let i=0;i<k;i++)board[es[i]]=availableChars[Math.floor(Math.random()*availableChars.length)];
+                for(let j=0;j<7;j++)if(!board[j])board[j]=availableChars[Math.floor(Math.random()*availableChars.length)];
+                const bs=board.join('');
+                const combo=ca(bs);
+                if(combo>0)results.push({board:bs,combo:combo,assignments:[]});
+            }
+            finalizeResults(results,curB,es,boxes);
+        },10);
+    }
+}
+
+function finalizeResults(results,curB,es,boxes){
+    results.sort((a,b)=>b.combo-a.combo);
+    const unique=[],seen=new Set();
+    for(const r of results){if(!seen.has(r.board)){seen.add(r.board);unique.push(r);if(unique.length>=15)break;}}
+    if(unique.length===0){
+        const board=[...curB];
+        const fallbackChars=['あ','い','う','え','お','か','き','く','け','こ','さ','し','す','せ','そ','た','ち','つ','て','と','な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ','ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ','わ','を','ん'];
+        for(const s of es)board[s]=fallbackChars[Math.floor(Math.random()*fallbackChars.length)];
+        for(let j=0;j<7;j++)if(!board[j])board[j]=fallbackChars[Math.floor(Math.random()*fallbackChars.length)];
+        unique.push({board:board.join(''),combo:ca(board.join('')),assignments:[]});
+    }
+    fo(unique);
+}
+
 function isSmallKana(c){return'ゃゅょっャュョッ'.includes(c);}
-function fo(best){io=false;ob.style.display='inline-block';stb.style.display='none';if(!best||best.length===0){or2.innerHTML='<div class="no-results">No boards found.</div>';return;}const boxes=gc();const curB=pi.map(i=>i.value.trim());const bcl=['box-A','box-B','box-C','box-D'];or2.innerHTML=best.map(item=>{const words=fw(item.board);const lwp=glp(item.board);const dw=words.slice(0,6).map(w=>w.word);const bl=new Array(7).fill('');if(item.assignments){for(const a of item.assignments){if(a.boxIdx>=0&&a.boxIdx<4){bl[a.pos]=String.fromCharCode(65+a.boxIdx);}}}const chars=item.board.split('');const cc2=chars.map((c,i)=>{let cls='char-cell';const label=bl[i];const wob=!!curB[i];if(label){cls+=' '+bcl[label.charCodeAt(0)-65];}else if(wob){cls+=' existing';}if(!lwp.has(i)){cls+=' dead';}const badge=label?`<span class="box-badge">${label}</span>`:'';const sk=isSmallKana(c)?' small-kana':'';return`<span class="${cls}"><span class="char-text${sk}">${c}</span>${badge}</span>`;}).join('');const ub=[...new Set(bl.filter(l=>l))].sort().join(',');const tw=words.length;const lw=words.filter(w=>w.word.length>=4).length;return`<div class="optimize-item" data-board="${item.board}"><div class="board-layout">${cc2}</div><div class="board-details">Combo: ${item.combo} | ${tw} words (${lw} long) | Boxes used: ${ub||'none'}</div><div class="board-words-display">${dw.join(', ')}${words.length>6?' +'+(words.length-6)+' more':''}</div></div>`;}).join('');or2.innerHTML+=`<div class="optimize-legend"><span><span class="legend-box" style="background:#fce4ec;border-color:#c62828;"></span> Box A</span><span><span class="legend-box" style="background:#e3f2fd;border-color:#1565c0;"></span> Box B</span><span><span class="legend-box" style="background:#e8f5e9;border-color:#2e7d32;"></span> Box C</span><span><span class="legend-box" style="background:#fff3e0;border-color:#e65100;"></span> Box D</span><span><span class="legend-box" style="background:#f5f5f5;border-color:#ddd;"></span> Existing</span><span>Dotted = not in 4+ letter word</span></div>`;document.querySelectorAll('.optimize-item').forEach(item=>item.addEventListener('click',()=>{const chars=item.dataset.board.split('');const sf=[...ff];pi.forEach((inp,idx)=>{inp.value=chars[idx]||'';inp.classList.toggle('filled',inp.value.length>0);});sf.forEach((wc,idx)=>{if(wc||!curB[idx]){ff[idx]=true;tg[idx].classList.add('free');tg[idx].classList.remove('board');tg[idx].textContent='C';}else{ff[idx]=false;tg[idx].classList.remove('free');tg[idx].classList.add('board');tg[idx].textContent='B';}});cc.clear();ps();swp(item.dataset.board);document.querySelector('.input-section').scrollIntoView({behavior:'smooth'});}));}
-document.getElementById('loadingMsg').style.display='block';ld().then(()=>{document.getElementById('loadingMsg').style.display='none';document.getElementById('mainContent').style.display='block';init();});
+function fo(best){io=false;ob.style.display='inline-block';stb.style.display='none';if(!best||best.length===0){or2.innerHTML='<div class="no-results">No boards found.</div>';return;}const boxes=gc();const curB=pi.map(i=>i.value.trim());const bcl=['box-A','box-B','box-C','box-D'];or2.innerHTML=best.map(item=>{const words=fw(item.board);const lwp=glp(item.board);const dw=words.slice(0,6).map(w=>w.word);const bl=new Array(7).fill('');if(item.assignments){for(const a of item.assignments){if(a.boxIdx>=0&&a.boxIdx<4){bl[a.pos]=String.fromCharCode(65+a.boxIdx);}}}const chars=item.board.split('');const cc2=chars.map((c,i)=>{let cls='char-cell';const label=bl[i];const wob=!!curB[i];if(label){cls+=' '+bcl[label.charCodeAt(0)-65];}else if(wob){cls+=' existing';}if(!lwp.has(i)){cls+=' dead';}const badge=label?`<span class="box-badge">${label}</span>`:'';const sk=isSmallKana(c)?' small-kana':'';return`<span class="${cls}"><span class="char-text${sk}">${c}</span>${badge}</span>`;}).join('');const tw=words.length;const lw=words.filter(w=>w.word.length>=4).length;return`<div class="optimize-item" data-board="${item.board}"><div class="board-layout">${cc2}</div><div class="board-details">Combo: ${item.combo} | ${tw} words (${lw} long)</div><div class="board-words-display">${dw.join(', ')}${words.length>6?' +'+(words.length-6)+' more':''}</div></div>`;}).join('');or2.innerHTML+=`<div class="optimize-legend"><span><span class="legend-box" style="background:#fce4ec;border-color:#c62828;"></span> Box A</span><span><span class="legend-box" style="background:#e3f2fd;border-color:#1565c0;"></span> Box B</span><span><span class="legend-box" style="background:#e8f5e9;border-color:#2e7d32;"></span> Box C</span><span><span class="legend-box" style="background:#fff3e0;border-color:#e65100;"></span> Box D</span><span><span class="legend-box" style="background:#f5f5f5;border-color:#ddd;"></span> Existing</span><span>Dotted = not in 4+ letter word</span></div>`;document.querySelectorAll('.optimize-item').forEach(item=>item.addEventListener('click',()=>{const chars=item.dataset.board.split('');const sf=[...ff];pi.forEach((inp,idx)=>{inp.value=chars[idx]||'';inp.classList.toggle('filled',inp.value.length>0);});sf.forEach((wc,idx)=>{if(wc||!curB[idx]){ff[idx]=true;tg[idx].classList.add('free');tg[idx].classList.remove('board');tg[idx].textContent='C';}else{ff[idx]=false;tg[idx].classList.remove('free');tg[idx].classList.add('board');tg[idx].textContent='B';}});cc.clear();ps();swp(item.dataset.board);document.querySelector('.input-section').scrollIntoView({behavior:'smooth'});}));}
+
+document.getElementById('loadingMsg').style.display='block';
+ld().then(()=>{document.getElementById('loadingMsg').style.display='none';document.getElementById('mainContent').style.display='block';init();})
+.catch(err=>{console.error('Load error:',err);document.getElementById('loadingMsg').textContent='⚠ Error loading dictionary.';});
 })();
 </script>
 </body>

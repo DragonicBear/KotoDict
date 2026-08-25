@@ -268,14 +268,18 @@ function comb(arr,k){if(k===0)return[[]];if(k>arr.length)return[];const r=[];fun
 function perm(arr){if(arr.length<=1)return[arr];const r=[];for(let i=0;i<arr.length;i++){const rest=[...arr.slice(0,i),...arr.slice(i+1)];for(const p of perm(rest))r.push([arr[i],...p]);}return r;}
 function cart(arrays){if(arrays.length===0)return[[]];return arrays.reduce((a,b)=>a.flatMap(x=>b.map(y=>[...x,y])),[[]]);}
 
-// FIXED: Proper optimizer with exhaustive search when boxes filled, random when not
+// SMART OPTIMIZER - ABCD boxes take priority, then dictionary matching
 function so2(){
     if(io)return;io=true;so=false;ob.style.display='none';stb.style.display='inline-block';
-    const boxes=gc();const curB=pi.map(i=>i.value.trim());const es=[];for(let i=0;i<7;i++)if(!curB[i])es.push(i);
+    const curB=pi.map(i=>i.value.trim());
+    const es=[];for(let i=0;i<7;i++)if(!curB[i])es.push(i);
     const k=es.length;
     if(k===0){fo([{board:curB.join(''),combo:ca(curB.join('')),assignments:[]}]);return;}
-    const results=[];
     
+    const results=[];
+    const boxes=gc();
+    
+    // If ABCD boxes are filled, use exhaustive search FIRST
     if(boxes.length>=1){
         const bcombos=(k<=boxes.length)?comb([...Array(boxes.length).keys()],k):[[...Array(boxes.length).keys()]];
         or2.innerHTML=`<div class="optimize-loading">🔍 Testing ${bcombos.length} box combinations...</div>`;
@@ -308,25 +312,62 @@ function so2(){
             }
             finalizeResults(results,curB,es,boxes);
         },10);
-    } else {
-        const charSet=new Set();
-        for(const w of d){for(const c of w.word)charSet.add(c);if(charSet.size>=100)break;}
-        const availableChars=[...charSet];
-        or2.innerHTML=`<div class="optimize-loading">🔍 Generating boards using ${availableChars.length} available characters...</div>`;
+        return;
+    }
+    
+    // No ABCD boxes - use dictionary word matching
+    const pattern = curB.map(c => c ? c : '-').join('');
+    
+    // Find exact 7-char dictionary words matching the pattern
+    const exactMatches = d.filter(w => {
+        if(w.word.length !== 7) return false;
+        for(let i = 0; i < 7; i++){
+            if(pattern[i] !== '-' && pattern[i] !== w.word[i]) return false;
+        }
+        return true;
+    });
+    
+    if(exactMatches.length > 0){
+        or2.innerHTML=`<div class="optimize-loading">🔍 Found ${exactMatches.length} matching 7-char words...</div>`;
         setTimeout(()=>{
-            const iterations=Math.min(10000,Math.max(2000,availableChars.length*100));
-            for(let iter=0;iter<iterations;iter++){
-                if(so||results.length>2000)break;
-                const board=[...curB];
-                for(let i=0;i<k;i++)board[es[i]]=availableChars[Math.floor(Math.random()*availableChars.length)];
-                for(let j=0;j<7;j++)if(!board[j])board[j]=availableChars[Math.floor(Math.random()*availableChars.length)];
-                const bs=board.join('');
-                const combo=ca(bs);
-                if(combo>0)results.push({board:bs,combo:combo,assignments:[]});
+            const sorted=exactMatches.sort((a,b)=>(b.combo||0)-(a.combo||0));
+            for(const w of sorted.slice(0,20)){
+                results.push({board:w.word,combo:ca(w.word),assignments:[]});
             }
             finalizeResults(results,curB,es,boxes);
         },10);
+        return;
     }
+    
+    // No exact match - try partial matches from dictionary
+    or2.innerHTML=`<div class="optimize-loading">🔍 Searching for best matching words...</div>`;
+    setTimeout(()=>{
+        const partialMatches = d.filter(w => {
+            if(w.word.length > 7) return false;
+            for(let i = 0; i < Math.min(w.word.length, 7); i++){
+                if(curB[i] && !curB[i].includes(w.word[i])) return false;
+            }
+            return true;
+        }).sort((a,b)=>(b.combo||0)-(a.combo||0));
+        
+        const charFreq=new Map();
+        for(const w of partialMatches.slice(0,200)){for(const c of w.word){charFreq.set(c,(charFreq.get(c)||0)+1);}}
+        const weightedChars=[];
+        for(const [c,freq] of charFreq){const weight=Math.max(1,Math.ceil(freq/20));for(let i=0;i<weight;i++)weightedChars.push(c);}
+        if(weightedChars.length===0){weightedChars.push('あ','い','う','え','お','か','き','く','け','こ','さ','し','す','せ','そ');}
+        
+        for(const w of partialMatches.slice(0,100)){
+            if(so||results.length>3000)break;
+            const board=[...curB];
+            for(let i=0;i<w.word.length&&i<7;i++){
+                if(!board[i])board[i]=w.word[i];
+            }
+            for(let j=0;j<7;j++){if(!board[j])board[j]=weightedChars[Math.floor(Math.random()*weightedChars.length)];}
+            const bs=board.join('');
+            results.push({board:bs,combo:ca(bs),assignments:[]});
+        }
+        finalizeResults(results,curB,es,boxes);
+    },10);
 }
 
 function finalizeResults(results,curB,es,boxes){

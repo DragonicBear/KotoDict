@@ -15,7 +15,6 @@
         h1 { font-size: 24px; margin-bottom: 20px; color: #333; font-weight: 600; text-align: center; }
         .loading { text-align: center; padding: 40px; color: #666; }
         .input-section { background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid #e0e0e0; margin-bottom: 15px; }
-        .instruction-text { font-size: 13px; color: #666; margin-bottom: 15px; text-align: center; line-height: 1.4; }
         .pos-filter-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 2px; width: 100%; }
         .pos-filter-container > div { position: relative; width: 100%; aspect-ratio: 1/1; min-width: 0; }
         .pos-labels-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 0; }
@@ -34,10 +33,23 @@
         button:active { background: #636366; transform: scale(0.97); }
         button.primary { background: #007AFF; }
         .filters { margin-bottom: 15px; padding: 0 5px; }
-        .filter-row { margin: 12px 0; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; }
+        .filter-row { margin: 12px 0; display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+        .filter-label { font-weight: 600; color: #333; min-width: 60px; font-size: 15px; padding-top: 4px; }
         .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
         .combo-input { width: 70px; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        .theme-checklist-container { flex: 1; min-width: 200px; position: relative; }
+        .theme-toggle-btn { padding: 8px 12px; border-radius: 6px; border: 1px solid #ccc; background: white; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%; max-width: 280px; }
+        .theme-toggle-btn .selected-count { background: #007AFF; color: white; border-radius: 10px; padding: 1px 8px; font-size: 11px; font-weight: 600; display: none; }
+        .theme-toggle-btn .selected-count.has-selection { display: inline; }
+        .theme-dropdown { display: none; position: absolute; top: 100%; left: 0; z-index: 50; background: white; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); max-height: 300px; overflow-y: auto; min-width: 280px; margin-top: 4px; }
+        .theme-dropdown.open { display: block; }
+        .theme-dropdown .theme-option { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+        .theme-dropdown .theme-option:hover { background: #f5f5f5; }
+        .theme-dropdown .theme-option input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #007AFF; }
+        .theme-dropdown .theme-option .theme-count { color: #999; font-size: 11px; margin-left: auto; }
+        .theme-dropdown .theme-actions { padding: 8px 12px; display: flex; gap: 8px; border-top: 1px solid #eee; position: sticky; bottom: 0; background: white; }
+        .theme-dropdown .theme-actions button { flex: 1; padding: 6px 10px; font-size: 12px; }
+        .theme-search-input { width: 100%; padding: 8px 12px; border: none; border-bottom: 1px solid #eee; font-size: 13px; outline: none; }
         input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: #007AFF; }
         label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 15px; padding: 4px 0; touch-action: manipulation; }
         .board-requirement-check { display: flex; align-items: center; font-size: 14px; font-weight: 500; color: #333; }
@@ -50,36 +62,59 @@
         .toggle-option { padding: 4px 10px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; color: #666; user-select: none; white-space: nowrap; }
         .toggle-option.active { background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.1); color: #007AFF; }
         .logic-toggle .toggle-option[data-logic="OR"].active { color: #d67a00; }
-        .refine-inputs { display: flex; gap: 10px; }
-        .refine-input-wrap { position: relative; flex: 1; min-width: 0; max-width: 60px; }
-        .refine-input-wrap.box-A .refine-input { border-color: #c62828; background: #fce4ec; }
-        .refine-input-wrap.box-B .refine-input { border-color: #1565c0; background: #e3f2fd; }
-        .refine-input-wrap.box-C .refine-input { border-color: #2e7d32; background: #e8f5e9; }
-        .refine-input-wrap.box-D .refine-input { border-color: #e65100; background: #fff3e0; }
-        .refine-input { width: 100%; height: 40px; padding: 0 20px 0 0; border: 2px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 18px; background: white; }
+
+        /* Deck grid */
+        .deck-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .refine-input-wrap { position: relative; }
+        .refine-input { width: 100%; height: 40px; padding: 0 8px 0 22px; border: 2px solid #e0e0e0; border-radius: 6px; text-align: center; font-size: 15px; background: white; }
         .refine-input:focus { outline: none; }
         .refine-input.filled { font-weight: bold; }
-        .refine-clear { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; border-radius: 50%; background: #ff3b30; color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; padding: 0; line-height: 1; }
-        .text-filter-container { background: #fff; border: 2px solid #eee; border-radius: 8px; padding: 10px 15px; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; }
+        .deck-role { position: absolute; left: 2px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; border-radius: 50%; background: #e0e0e0; color: #999; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 3; user-select: none; border: 1px solid #ccc; transition: 0.15s; }
+        .deck-role:active { transform: translateY(-50%) scale(0.9); }
+        .friend-badge { position: absolute; left: 2px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; border-radius: 50%; background: #6a1b9a; color: white; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; z-index: 3; user-select: none; border: 1px solid #6a1b9a; }
+
+        .refine-input-wrap.role-A .refine-input { border-color: #c62828; background: #fce4ec; }
+        .refine-input-wrap.role-B .refine-input { border-color: #1565c0; background: #e3f2fd; }
+        .refine-input-wrap.role-C .refine-input { border-color: #2e7d32; background: #e8f5e9; }
+        .refine-input-wrap.role-D .refine-input { border-color: #e65100; background: #fff3e0; }
+        .refine-input-wrap.role-E .refine-input { border-color: #6a1b9a; background: #f3e5f5; }
+        .refine-input-wrap.role-A .deck-role { background: #c62828; color: white; border-color: #c62828; }
+        .refine-input-wrap.role-B .deck-role { background: #1565c0; color: white; border-color: #1565c0; }
+        .refine-input-wrap.role-C .deck-role { background: #2e7d32; color: white; border-color: #2e7d32; }
+        .refine-input-wrap.role-D .deck-role { background: #e65100; color: white; border-color: #e65100; }
+
+        /* Friend row */
+        .friend-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #ddd; }
+        .friend-label { font-weight: 600; font-size: 14px; color: #6a1b9a; white-space: nowrap; }
+        .friend-box { flex: 1; max-width: 250px; }
+
+        /* Character autocomplete dropdown */
+        .char-autocomplete { display: none; position: absolute; top: calc(100% + 2px); left: 0; min-width: 180px; max-width: 260px; background: white; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.15); max-height: 200px; overflow-y: auto; z-index: 70; }
+        .char-autocomplete.open { display: block; }
+        .char-option { padding: 6px 10px; cursor: pointer; font-size: 12px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .char-option:last-child { border-bottom: none; }
+        .char-option:hover, .char-option.selected { background: #f0f8ff; }
+        .char-option .char-name { flex: 1; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .char-option .char-hira { color: #007AFF; font-weight: 600; white-space: nowrap; font-size: 11px; }
+
+        .sort-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 0 5px; }
+        .sort-row .sort-label { font-weight: 600; font-size: 14px; color: #333; }
+        .text-filter-container { background: #fff; border: 2px solid #eee; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
         .text-filter-label { font-weight: 600; font-size: 14px; color: #333; white-space: nowrap; }
         .text-filter-input { flex: 1; border: none; font-size: 16px; padding: 5px; outline: none; color: #333; background: transparent; }
-        .text-filter-hint { font-size: 11px; color: #999; padding: 0 15px 15px; }
-        .board-combo-display { background: #f0f8ff; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; width: 100%; font-size: 16px; font-weight: 500; color: #333; gap: 10px; }
-        .board-combo-display .label { font-weight: 600; color: #007AFF; }
-        .board-combo-display .combo-value { flex: 1; text-align: center; min-width: 80px; }
-        .board-combo-display .bonus-wrapper { display: inline-flex; align-items: center; gap: 6px; }
-        .board-combo-display .bonus-wrapper input { width: 50px; padding: 4px 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; text-align: center; background: white; }
         .optimize-section { background: #f0fff0; border: 1px solid #cce4cc; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
         .optimize-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
         .optimize-title { font-weight: 600; color: #28a745; font-size: 15px; }
-        .optimize-item { background: white; padding: 10px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #28a745; cursor: pointer; }
-        .optimize-item:active { background: #f0fff0; }
-        .optimize-item .board-layout { display: flex; justify-content: center; gap: 4px; margin-bottom: 5px; flex-wrap: wrap; }
-        .optimize-item .board-layout .char-cell { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 6px; position: relative; font-size: 18px; border: 2px solid transparent; line-height: 1; text-align: center; }
+        .optimize-item { background: white; padding: 10px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #28a745; }
+        .optimize-item .board-layout { display: flex; justify-content: center; gap: 3px; margin-bottom: 5px; flex-wrap: nowrap; }
+        .optimize-item .board-layout .char-cell { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 42px; border-radius: 6px; position: relative; border: 2px solid transparent; line-height: 1; text-align: center; flex-shrink: 0; }
+        .optimize-item .board-layout .char-cell .char-text { font-size: 22px; }
+        .optimize-item .board-layout .char-cell .char-text.small-kana { font-size: 16px; }
         .optimize-item .board-layout .char-cell.box-A { background: #fce4ec; color: #c62828; border-color: #c62828; }
         .optimize-item .board-layout .char-cell.box-B { background: #e3f2fd; color: #1565c0; border-color: #1565c0; }
         .optimize-item .board-layout .char-cell.box-C { background: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
         .optimize-item .board-layout .char-cell.box-D { background: #fff3e0; color: #e65100; border-color: #e65100; }
+        .optimize-item .board-layout .char-cell.box-E { background: #f3e5f5; color: #6a1b9a; border-color: #6a1b9a; }
         .optimize-item .board-layout .char-cell.existing { background: #f5f5f5; color: #999; border-color: #ddd; }
         .optimize-item .board-layout .char-cell.dead { border-style: dotted !important; }
         .optimize-item .board-layout .char-cell .box-badge { position: absolute; top: -7px; right: -7px; width: 16px; height: 16px; border-radius: 50%; font-size: 9px; font-weight: 700; display: flex; align-items: center; justify-content: center; color: white; line-height: 1; }
@@ -87,6 +122,7 @@
         .optimize-item .board-layout .char-cell.box-B .box-badge { background: #1565c0; }
         .optimize-item .board-layout .char-cell.box-C .box-badge { background: #2e7d32; }
         .optimize-item .board-layout .char-cell.box-D .box-badge { background: #e65100; }
+        .optimize-item .board-layout .char-cell.box-E .box-badge { background: #6a1b9a; }
         .optimize-item .board-details { font-size: 12px; color: #666; text-align: center; }
         .optimize-item .board-words-display { font-size: 11px; color: #28a745; text-align: center; margin-top: 3px; line-height: 1.4; }
         .optimize-loading { text-align: center; color: #28a745; padding: 15px; font-size: 13px; }
@@ -96,7 +132,7 @@
         .optimize-legend .legend-box { display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 2px solid; }
         .results { margin-top: 10px; }
         .result-count { font-size: 15px; color: #666; margin-bottom: 15px; padding-left: 10px; }
-        .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; }
+        .result-item { padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #ddd; cursor: pointer; }
         .result-item.refine-match { border-left-color: #007AFF; background: #f2f8ff; }
         .or-mode .result-item.refine-match { border-left-color: #d67a00; background: #fffcf5; }
         .result-word { font-size: 20px; font-weight: 600; margin-bottom: 6px; color: #111; display:flex; justify-content: space-between; align-items: center;}
@@ -107,58 +143,374 @@
         .mini-box { width: 18px; height: 18px; border: 1px solid #ddd; border-radius: 2px; font-size: 10px; display: flex; align-items: center; justify-content: center; background: #fff; color: #ccc; }
         .mini-box.matched { background: #007AFF; border-color: #007AFF; color: white; }
         .mini-box.overlap { background: #e0efff; border-color: #007AFF; color: #007AFF; }
-        .words-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: white; border-radius: 12px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 100; max-width: 380px; width: 90%; max-height: 70vh; overflow-y: auto; }
+        .words-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); background: white; border-radius: 12px; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3); z-index: 100; max-width: 400px; width: 90%; max-height: 70vh; overflow-y: auto; }
         .words-popup h3 { font-size: 16px; margin-bottom: 12px; color: #333; text-align: center; }
-        .words-popup .word-entry { padding: 6px 10px; margin: 3px 0; background: #f8f9fa; border-radius: 6px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .words-popup .word-entry { padding: 8px 10px; margin: 4px 0; background: #f8f9fa; border-radius: 6px; font-size: 14px; }
+        .words-popup .word-entry .word-main { display: flex; justify-content: space-between; align-items: center; }
         .words-popup .word-entry .pos-range { font-size: 11px; color: #999; }
         .words-popup .word-entry .word-text { font-weight: 600; }
         .words-popup .word-entry.long-word .word-text { color: #28a745; }
         .words-popup .word-entry.short-word .word-text { color: #ff9800; }
+        .words-popup .word-entry .word-themes { font-size: 10px; color: #666; margin-top: 3px; }
         .words-popup .close-btn { display: block; margin: 15px auto 0; padding: 8px 24px; background: #007AFF; color: white; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 99; }
+        @media (max-width: 600px) {
+            .deck-grid { grid-template-columns: repeat(3, 1fr); }
+            .optimize-item .board-layout { gap: 2px; }
+            .optimize-item .board-layout .char-cell { width: 30px; height: 34px; }
+            .optimize-item .board-layout .char-cell .char-text { font-size: 17px; }
+            .optimize-item .board-layout .char-cell .char-text.small-kana { font-size: 13px; }
+            .optimize-item .board-layout .char-cell .box-badge { top: -5px; right: -5px; width: 12px; height: 12px; font-size: 7px; }
+            .theme-dropdown { min-width: 250px; max-width: 90vw; }
+        }
+        @media (max-width: 400px) {
+            .deck-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+            .refine-input { font-size: 13px; height: 36px; }
+            .optimize-item .board-layout { gap: 1px; }
+            .optimize-item .board-layout .char-cell { width: 26px; height: 30px; }
+            .optimize-item .board-layout .char-cell .char-text { font-size: 15px; }
+            .optimize-item .board-layout .char-cell .char-text.small-kana { font-size: 11px; }
+            .optimize-item .board-layout .char-cell .box-badge { top: -4px; right: -4px; width: 10px; height: 10px; font-size: 6px; }
+        }
     </style>
 </head>
 <body>
     <div id="app">
         <div class="container"><h1>Kotodaman Board Solver</h1><div class="loading" id="loadingMsg">Loading dictionary...</div><div id="mainContent" style="display:none;">
-            <div class="input-section"><div class="instruction-text">Place hiragana. Tap B/C toggle. Click optimized result to fill all slots.</div>
+            <div class="input-section">
             <div class="pos-filter-container" id="boardContainer"><div data-index="0"><input type="text" class="pos-input" data-index="0" autocomplete="off"><span class="cell-toggle board" data-index="0">B</span></div><div data-index="1"><input type="text" class="pos-input" data-index="1" autocomplete="off"><span class="cell-toggle board" data-index="1">B</span></div><div data-index="2"><input type="text" class="pos-input" data-index="2" autocomplete="off"><span class="cell-toggle board" data-index="2">B</span></div><div data-index="3"><input type="text" class="pos-input" data-index="3" autocomplete="off"><span class="cell-toggle board" data-index="3">B</span></div><div data-index="4"><input type="text" class="pos-input" data-index="4" autocomplete="off"><span class="cell-toggle board" data-index="4">B</span></div><div data-index="5"><input type="text" class="pos-input" data-index="5" autocomplete="off"><span class="cell-toggle board" data-index="5">B</span></div><div data-index="6"><input type="text" class="pos-input" data-index="6" autocomplete="off"><span class="cell-toggle board" data-index="6">B</span></div></div>
             <div class="pos-clear-container" id="posClearContainer"><button class="pos-clear" data-index="0">×</button><button class="pos-clear" data-index="1">×</button><button class="pos-clear" data-index="2">×</button><button class="pos-clear" data-index="3">×</button><button class="pos-clear" data-index="4">×</button><button class="pos-clear" data-index="5">×</button><button class="pos-clear" data-index="6">×</button></div>
             <div class="pos-labels-container"><div class="pos-label">1</div><div class="pos-label">2</div><div class="pos-label">3</div><div class="pos-label">4</div><div class="pos-label">5</div><div class="pos-label">6</div><div class="pos-label">7</div></div>
-            <div class="action-row"><select id="sortSelect" class="sort-select"><option value="combo-desc" selected>Combo (High→Low)</option><option value="combo-asc">Combo (Low→High)</option><option value="asc">Length (Low→High)</option><option value="desc">Length (High→Low)</option></select><label class="board-requirement-check"><input type="checkbox" id="requireAllBoard"> Must use all board chars</label><button id="clearBtn" type="button">Reset Grid</button></div></div>
-            <div class="board-combo-display" id="boardComboDisplay"><span class="label">Board Combo:</span><span class="combo-value" id="boardComboText">-- (fill all 7 cells)</span><span class="bonus-wrapper"><label>+</label><input type="number" id="bonusCombo" value="0" min="0"></span></div>
-            <div class="filters"><div class="filter-row"><span class="filter-label">Length:</span><div class="radio-group"><label><input type="checkbox" name="chars" value="2"><span>2</span></label><label><input type="checkbox" name="chars" value="3"><span>3</span></label><label><input type="checkbox" name="chars" value="4"><span>4</span></label><label><input type="checkbox" name="chars" value="5"><span>5</span></label><label><input type="checkbox" name="chars" value="6"><span>6</span></label><label><input type="checkbox" name="chars" value="7"><span>7</span></label></div></div><div class="filter-row"><span class="filter-label">Min Combo:</span><input type="number" id="comboMin" class="combo-input" value="0" min="0"></div></div>
-            <div class="refine-section" id="refineSection"><span class="refine-title">ABCD Boxes (each provides 1 char):</span><div class="refine-controls"><button id="clearRefineBtn" class="mini-btn" type="button">Clear All</button><div class="toggle-switch logic-toggle"><div class="toggle-option" data-logic="OR">Any (OR)</div><div class="toggle-option active" data-logic="AND">All (AND)</div></div></div><div class="refine-inputs"><div class="refine-input-wrap box-A"><input type="text" class="refine-input" placeholder="A" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-B"><input type="text" class="refine-input" placeholder="B" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-C"><input type="text" class="refine-input" placeholder="C" autocomplete="off"><button class="refine-clear">×</button></div><div class="refine-input-wrap box-D"><input type="text" class="refine-input" placeholder="D" autocomplete="off"><button class="refine-clear">×</button></div></div></div>
-            <div class="optimize-section" id="optimizeSection" style="display:none;"><div class="optimize-header"><span class="optimize-title">🎯 Board Optimization</span><div><button id="optimizeBtn" class="primary" type="button">Find Best Board</button><button id="stopOptimizeBtn" class="optimize-stop-btn" type="button" style="display:none;">Stop</button></div></div><div id="optimizeResults" class="optimize-results"></div></div>
-            <div class="text-filter-container"><span class="text-filter-label">Pattern:</span><input type="text" id="textSearch" class="text-filter-input" placeholder="--しょう (- = use ABCD boxes)" autocomplete="off"></div>
-            <div class="text-filter-hint">Use - for wildcards. Other chars must match board exactly. Length = word length.</div>
+            <div class="action-row"><label class="board-requirement-check"><input type="checkbox" id="requireAllBoard"> Must use all board chars</label><button id="clearBtn" type="button">Reset Grid</button></div></div>
+            
+            <!-- Board Optimization -->
+            <div class="optimize-section" id="optimizeSection" style="display:block;"><div class="optimize-header"><span class="optimize-title">🎯 Board Optimization</span><div><button id="optimizeBtn" class="primary" type="button">Find Best Board</button><button id="stopOptimizeBtn" class="optimize-stop-btn" type="button" style="display:none;">Stop</button></div></div><div id="optimizeResults" class="optimize-results"></div></div>
+            
+            <div class="filters">
+                <div class="filter-row"><span class="filter-label">Length:</span><div class="radio-group"><label><input type="checkbox" name="chars" value="2"><span>2</span></label><label><input type="checkbox" name="chars" value="3"><span>3</span></label><label><input type="checkbox" name="chars" value="4"><span>4</span></label><label><input type="checkbox" name="chars" value="5"><span>5</span></label><label><input type="checkbox" name="chars" value="6"><span>6</span></label><label><input type="checkbox" name="chars" value="7"><span>7</span></label></div></div>
+                <div class="filter-row"><span class="filter-label">Theme:</span>
+                    <div class="theme-checklist-container" id="themeChecklistContainer">
+                        <button class="theme-toggle-btn" id="themeToggleBtn"><span>Select Themes</span><span class="selected-count" id="themeCount">0</span></button>
+                        <div class="theme-dropdown" id="themeDropdown">
+                            <input type="text" class="theme-search-input" id="themeSearchInput" placeholder="Search themes...">
+                            <div id="themeOptionsList"></div>
+                            <div class="theme-actions"><button id="themeSelectAll">Select All</button><button id="themeClearAll">Clear All</button></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="filter-row"><span class="filter-label">Min Combo:</span><input type="number" id="comboMin" class="combo-input" value="0" min="0"></div>
+            </div>
+            <div class="refine-section" id="refineSection"><span class="refine-title">Deck (tap circle to assign A/B/C/D):</span><div class="refine-controls"><button id="clearRefineBtn" class="mini-btn" type="button">Clear All</button><div class="toggle-switch logic-toggle"><div class="toggle-option" data-logic="OR">Any (OR)</div><div class="toggle-option active" data-logic="AND">All (AND)</div></div></div><div class="deck-grid" id="deckGrid"></div>
+            <div class="friend-row"><span class="friend-label">Friend (E):</span><div class="refine-input-wrap role-E friend-box"><span class="friend-badge">E</span><input type="text" class="refine-input" id="friendInput" autocomplete="off" placeholder="Friend hiragana"></div></div>
+            </div>
+            <div class="sort-row"><span class="sort-label">Sort by:</span><select id="sortSelect" class="sort-select"><option value="combo-desc" selected>Combo (High→Low)</option><option value="combo-asc">Combo (Low→High)</option><option value="asc">Length (Low→High)</option><option value="desc">Length (High→Low)</option></select></div>
+            <div class="text-filter-container"><span class="text-filter-label">Pattern:</span><input type="text" id="textSearch" class="text-filter-input" placeholder="しょう or --しょう" autocomplete="off"></div>
             <div class="results"><div class="result-count" id="resultCount">Enter characters to search</div><div id="resultList"></div></div>
         </div></div>
     </div>
 <script>
 (function(){
 let d=[],cl='AND',ws=new Set(),ff=new Array(7).fill(false),io=false,so=false;const cc=new Map();
+let wordThemeMap=new Map(),selectedThemes=new Set(),themeSubwordMap=new Map(),themeSubwordMapBuilt=false;
+let characters=[];
+const NUM_DECK_BOXES = 12;
+let boxRoles = new Array(NUM_DECK_BOXES).fill('');
+
 function cg(w){const m=new Map();for(const x of w){const f=new Set();for(let s=0;s<x.word.length;s++)for(let e=s+2;e<=x.word.length;e++)if(ws.has(x.word.substring(s,e)))f.add(x.word.substring(s,e));m.set(x.word,f.size);}return m;}
 function cp(w,o,b,f){const k=`${w}|${o}|${b.join(',')}|${f.join(',')}`;if(cc.has(k))return cc.get(k);let c=0;for(let s=0;s<w.length;s++)for(let e=s+2;e<=w.length;e++){let h=false;for(let i=s;i<e&&!h;i++){const bi=o+i;if(f[bi]||!b[bi])h=true;}if(h&&ws.has(w.substring(s,e)))c++;}cc.set(k,c);return c;}
-function fb(bc,f){const bs=bc.map(s=>s?s[0]:'').join('');if(bs.length!==7)return-1;let c=0;for(let s=0;s<7;s++)for(let e=s+2;e<=7;e++)if(ws.has(bs.substring(s,e)))for(let i=s;i<e;i++)if(f[i]){c++;break;}return c;}
 function ca(bs){if(bs.length!==7)return 0;let c=0;for(let s=0;s<7;s++)for(let e=s+2;e<=7;e++)if(ws.has(bs.substring(s,e)))c++;return c;}
-function fw(bs){const w=[];const sn=new Set();for(let s=0;s<7;s++)for(let e=s+2;e<=7;e++){const sub=bs.substring(s,e);const key=s+'-'+sub;if(ws.has(sub)&&!sn.has(key)){sn.add(key);w.push({word:sub,start:s,end:e-1});}}return w.sort((a,b)=>a.start-b.start||b.word.length-a.word.length);}
-function gd(){const s=[["あい","",1,["愛"],[]],["あお","",1,["青"],[]],["うみ","",1,["海"],[]],["うそう","",1,["雨窓"],[]],["しょうそう","",4,["焦燥"],[]],["うそうかい","",5,["有象海"],[]],["さいし","",3,["祭祀"],[]],["さいしょ","",4,["最初"],[]],["さいしょう","",5,["最小"],[]],["しょうさ","",4,["勝差"],[]],["しょうさい","",5,["詳細"],[]],["さんしょう","",5,["参照"],[]],["あした","",3,["明日"],[]],["あいさつ","",4,["挨拶"],[]],["こう","",2,["甲"],[]],["こうこう","",4,["高校"],[]],["こうこうしゃ","",5,["高校社"],[]],["こうそ","",3,["酵素"],[]],["たいいく","",4,["体育"],[]],["あとこうしゃく","",7,["後講釈"],[]],["こうかい","",3,["公海"],[]],["こうかん","",3,["交換"],[]],["しょうかい","",4,["紹介"],[]],["しょうかん","",4,["召喚"],[]],["しょうこう","",4,["将校"],[]]];return s.map(e=>({word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]}));}
-function ld(){return fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json').then(r=>{if(!r.ok)throw Error('e');return r.json();}).then(data=>{d=data.map(e=>({word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]}));ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;}).catch(()=>{d=gd();ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;document.getElementById('loadingMsg').textContent='⚠ Sample dictionary loaded.';return new Promise(r=>setTimeout(r,300));});}
-let pi,ri,ss,ts,rab,cmin,bci,tg,rs,os,ob,stb,or2;
-function init(){pi=Array.from(document.querySelectorAll('.pos-input'));ri=Array.from(document.querySelectorAll('.refine-input'));ss=document.getElementById('sortSelect');ts=document.getElementById('textSearch');rab=document.getElementById('requireAllBoard');cmin=document.getElementById('comboMin');bci=document.getElementById('bonusCombo');tg=document.querySelectorAll('.cell-toggle');rs=document.getElementById('refineSection');os=document.getElementById('optimizeSection');ob=document.getElementById('optimizeBtn');stb=document.getElementById('stopOptimizeBtn');or2=document.getElementById('optimizeResults');cl='AND';tg.forEach(t=>t.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(t.dataset.index);ff[i]=!ff[i];t.classList.toggle('free',ff[i]);t.classList.toggle('board',!ff[i]);t.textContent=ff[i]?'C':'B';cc.clear();ps();}));document.querySelectorAll('#posClearContainer .pos-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(b.dataset.index);pi[i].value='';pi[i].classList.remove('filled');cc.clear();ps();}));document.querySelectorAll('.refine-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const w=b.parentElement;const i=w.querySelector('.refine-input');i.value='';i.classList.remove('filled');ps();co();}));document.querySelectorAll('.logic-toggle .toggle-option').forEach(o=>o.addEventListener('click',()=>{document.querySelectorAll('.logic-toggle .toggle-option').forEach(x=>x.classList.remove('active'));o.classList.add('active');cl=o.dataset.logic;rs.classList.toggle('or-mode',cl==='OR');ps();co();}));document.getElementById('clearBtn').addEventListener('click',e=>{e.preventDefault();pi.forEach(i=>{i.value='';i.classList.remove('filled');});ff.fill(false);tg.forEach(t=>{t.classList.remove('free');t.classList.add('board');t.textContent='B';});ts.value='';bci.value='0';or2.innerHTML='';cc.clear();ps();});document.getElementById('clearRefineBtn').addEventListener('click',e=>{e.preventDefault();ri.forEach(i=>{i.value='';i.classList.remove('filled');});or2.innerHTML='';ps();co();});let st;const ds=()=>{clearTimeout(st);st=setTimeout(ps,150);};pi.forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);cc.clear();ds();}));ri.forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);ds();co();}));ts.addEventListener('input',ds);cmin.addEventListener('input',ds);bci.addEventListener('input',ds);document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.addEventListener('change',ps));ss.addEventListener('change',ps);rab.addEventListener('change',ps);document.querySelectorAll('label').forEach(l=>l.addEventListener('touchend',function(e){if(e.target.tagName!=='INPUT'){e.preventDefault();const i=this.querySelector('input');if(i){i.checked=!i.checked;ps();}}}));ob.addEventListener('click',()=>{if(!io)so2();});stb.addEventListener('click',()=>{so=true;});ps();co();}
-function co(){const af=ri.every(i=>i.value.trim().length>0);os.style.display=af?'block':'none';if(!af)or2.innerHTML='';}
-function gc(){return ri.map(i=>i.value.trim().split('')).filter(a=>a.length>0);}
+function fw(bs){const w=[];const sn=new Set();for(let s=0;s<7;s++){for(let e=s+2;e<=7;e++){const sub=bs.substring(s,e);const key=s+'-'+sub;if(ws.has(sub)&&!sn.has(key)){sn.add(key);w.push({word:sub,start:s,end:e-1,length:sub.length});}}}return w.sort((a,b)=>a.start-b.start||a.length-b.length||a.word.localeCompare(b.word));}
+function gd(){const s=[["あい","",1,["愛"],["気持ち","鳥"]],["あお","",1,["青"],["色"]],["うみ","",1,["海"],["自然","地名"]],["うそう","",1,["雨窓"],["建物","自然"]],["しょうそう","",4,["焦燥"],["気持ち"]],["うそうかい","",5,["有象海"],[]],["さいし","",3,["祭祀"],["行事"]],["さいしょ","",4,["最初"],["順番"]],["さいしょう","",5,["最小"],["順番"]],["しょうさ","",4,["勝差"],["勝負"]],["しょうさい","",5,["詳細"],[]],["さんしょう","",5,["参照"],[]],["あした","",3,["明日"],["時間"]],["あいさつ","",4,["挨拶"],["日常"]],["こう","",2,["甲"],["囲碁・将棋・麻雀","単位・通貨","地名","鳥","ボードゲーム","いきもの","動詞"]],["こうこう","",4,["高校"],["学校"]],["こうこうしゃ","",5,["高校社"],["学校"]],["こうそ","",3,["酵素"],["理科"]],["たいいく","",4,["体育"],["学校"]],["たいしょう","",4,["大正"],["コラボ","コラボクイズ","元号","地名","日本史"]],["あとこうしゃく","",7,["後講釈"],[]],["こうかい","",3,["公海"],["地名"]],["こうかん","",3,["交換"],["動詞"]],["しょうかい","",4,["紹介"],["動詞"]],["しょうかん","",4,["召喚"],["動詞"]],["しょうこう","",4,["将校"],["身分"]]];return s.map(e=>({word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]}));}
+function ld(){return fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/refs/heads/main/words.json').then(r=>{if(!r.ok)throw Error('e');return r.json();}).then(data=>{
+    const tempMap=new Map();
+    d=data.map(e=>{const w={word:e[0],chars:e[1]||e[0],displays:e[3],themes:e[4]||[]};
+        if(tempMap.has(w.word)){tempMap.set(w.word,[...new Set([...tempMap.get(w.word),...w.themes])]);}
+        else{tempMap.set(w.word,[...w.themes]);}
+        return w;});
+    wordThemeMap=tempMap;ws=new Set(d.map(w=>w.word));
+    const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;
+}).catch(()=>{d=gd();const tempMap=new Map();d.forEach(w=>{if(tempMap.has(w.word)){tempMap.set(w.word,[...new Set([...tempMap.get(w.word),...w.themes])]);}else{tempMap.set(w.word,[...w.themes]);}});wordThemeMap=tempMap;ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;document.getElementById('loadingMsg').textContent='⚠ Sample dictionary loaded.';return new Promise(r=>setTimeout(r,300));});}
+function buildThemeSubwordMap(){if(themeSubwordMapBuilt)return;themeSubwordMapBuilt=true;themeSubwordMap.clear();const themeToWords=new Map();for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){if(!themeToWords.has(t))themeToWords.set(t,new Set());themeToWords.get(t).add(w.word);}}}for(const [theme,directWords] of themeToWords){const resultSet=new Set();for(const dw of directWords){resultSet.add(dw);for(const w of d){if(w.word!==dw&&w.word.includes(dw)){resultSet.add(w.word);}}}themeSubwordMap.set(theme,resultSet);}}
+function wordMatchesThemes(word,selectedArr){if(!themeSubwordMapBuilt)buildThemeSubwordMap();for(const t of selectedArr){const set=themeSubwordMap.get(t);if(set&&set.has(word))return true;}return false;}
+
+let pi,ri,ss,ts,rab,cmin,tg,rs,os,ob,stb,or2;
+let themeToggleBtn,themeDropdown,themeSearchInput,themeOptionsList,themeCount,themeSelectAllBtn,themeClearAllBtn;
+let friendInput;
+
+function buildDeckGrid(){
+    const grid = document.getElementById('deckGrid');
+    grid.innerHTML = '';
+    for (let i = 0; i < NUM_DECK_BOXES; i++) {
+        const wrap = document.createElement('div');
+        wrap.className = 'refine-input-wrap';
+        wrap.innerHTML = `<span class="deck-role" data-idx="${i}">-</span><input type="text" class="refine-input" autocomplete="off">`;
+        grid.appendChild(wrap);
+    }
+    boxRoles = new Array(NUM_DECK_BOXES).fill('');
+    for (let i = 0; i < 4; i++) {
+        boxRoles[i] = String.fromCharCode(65 + i);
+    }
+    for (let i = 0; i < NUM_DECK_BOXES; i++) updateRoleBadge(i);
+}
+
+function updateRoleBadge(idx){
+    const badge = document.querySelector(`.deck-role[data-idx="${idx}"]`);
+    if (!badge) return;
+    const wrap = badge.parentElement;
+    const role = boxRoles[idx];
+    badge.textContent = role || '-';
+    wrap.classList.remove('role-A','role-B','role-C','role-D');
+    if (role === 'A') wrap.classList.add('role-A');
+    else if (role === 'B') wrap.classList.add('role-B');
+    else if (role === 'C') wrap.classList.add('role-C');
+    else if (role === 'D') wrap.classList.add('role-D');
+}
+
+function cycleRole(idx){
+    const current = boxRoles[idx];
+    const letters = ['A','B','C','D'];
+    const startIdx = current ? letters.indexOf(current) + 1 : 0;
+
+    let next = '';
+    for (let i = startIdx; i < letters.length; i++) {
+        const candidate = letters[i];
+        const takenByOther = boxRoles.some((r, j) => j !== idx && r === candidate);
+        if (!takenByOther) {
+            next = candidate;
+            break;
+        }
+    }
+    boxRoles[idx] = next;
+    updateRoleBadge(idx);
+    cc.clear();
+    ps();
+}
+
+function getAssignedBoxes(){
+    const result = [];
+    // A, B, C, D from deck
+    for (let letterIdx = 0; letterIdx < 4; letterIdx++) {
+        const letter = String.fromCharCode(65 + letterIdx);
+        const boxIdx = boxRoles.indexOf(letter);
+        if (boxIdx >= 0 && ri[boxIdx] && ri[boxIdx].value.trim()) {
+            result.push({
+                letter: letter,
+                letterIndex: letterIdx,
+                chars: ri[boxIdx].value.trim().split('')
+            });
+        }
+    }
+    // E from friend (always included if filled)
+    if (friendInput && friendInput.value.trim()) {
+        result.push({
+            letter: 'E',
+            letterIndex: 4,
+            chars: friendInput.value.trim().split('')
+        });
+    }
+    return result;
+}
+
+function gc(){
+    return getAssignedBoxes().map(b => b.chars);
+}
+
+function init(){
+    buildDeckGrid();
+    pi=Array.from(document.querySelectorAll('.pos-input'));
+    ri=Array.from(document.querySelectorAll('.refine-input'));
+    ss=document.getElementById('sortSelect');ts=document.getElementById('textSearch');rab=document.getElementById('requireAllBoard');
+    cmin=document.getElementById('comboMin');tg=document.querySelectorAll('.cell-toggle');
+    rs=document.getElementById('refineSection');os=document.getElementById('optimizeSection');
+    ob=document.getElementById('optimizeBtn');stb=document.getElementById('stopOptimizeBtn');or2=document.getElementById('optimizeResults');
+    friendInput = document.getElementById('friendInput');
+    cl='AND';
+    themeToggleBtn=document.getElementById('themeToggleBtn');themeDropdown=document.getElementById('themeDropdown');
+    themeSearchInput=document.getElementById('themeSearchInput');themeOptionsList=document.getElementById('themeOptionsList');
+    themeCount=document.getElementById('themeCount');themeSelectAllBtn=document.getElementById('themeSelectAll');themeClearAllBtn=document.getElementById('themeClearAll');
+
+    document.querySelectorAll('.deck-role').forEach(badge => {
+        badge.addEventListener('click', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const idx = parseInt(badge.dataset.idx, 10);
+            cycleRole(idx);
+        });
+    });
+
+    tg.forEach(t=>t.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(t.dataset.index);ff[i]=!ff[i];t.classList.toggle('free',ff[i]);t.classList.toggle('board',!ff[i]);t.textContent=ff[i]?'C':'B';cc.clear();ps();}));
+    document.querySelectorAll('#posClearContainer .pos-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(b.dataset.index);pi[i].value='';pi[i].classList.remove('filled');cc.clear();ps();}));
+    document.querySelectorAll('.logic-toggle .toggle-option').forEach(o=>o.addEventListener('click',()=>{document.querySelectorAll('.logic-toggle .toggle-option').forEach(x=>x.classList.remove('active'));o.classList.add('active');cl=o.dataset.logic;rs.classList.toggle('or-mode',cl==='OR');ps();}));
+    document.getElementById('clearBtn').addEventListener('click',e=>{e.preventDefault();pi.forEach(i=>{i.value='';i.classList.remove('filled');});ff.fill(false);tg.forEach(t=>{t.classList.remove('free');t.classList.add('board');t.textContent='B';});ts.value='';or2.innerHTML='';selectedThemes.clear();updateThemeUI();cc.clear();ps();});
+    document.getElementById('clearRefineBtn').addEventListener('click',e=>{e.preventDefault();ri.forEach(i=>{i.value='';i.classList.remove('filled');});boxRoles.fill('');for(let i=0;i<NUM_DECK_BOXES;i++)updateRoleBadge(i);if(friendInput){friendInput.value='';friendInput.classList.remove('filled');}or2.innerHTML='';cc.clear();ps();});
+    let st;const ds=()=>{clearTimeout(st);st=setTimeout(ps,150);};
+    pi.forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);cc.clear();ds();}));
+    ri.forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);cc.clear();ds();}));
+    ts.addEventListener('input',ds);cmin.addEventListener('input',ds);
+    document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.addEventListener('change',ps));
+    ss.addEventListener('change',ps);rab.addEventListener('change',ps);
+    document.querySelectorAll('label').forEach(l=>l.addEventListener('touchend',function(e){if(e.target.tagName!=='INPUT'){e.preventDefault();const i=this.querySelector('input');if(i){i.checked=!i.checked;ps();}}}));
+    ob.addEventListener('click',()=>{if(!io)so2();});stb.addEventListener('click',()=>{so=true;});
+    themeToggleBtn.addEventListener('click',(e)=>{e.stopPropagation();themeDropdown.classList.toggle('open');if(themeDropdown.classList.contains('open')){themeSearchInput.value='';filterThemeOptions('');themeSearchInput.focus();}});
+    themeSearchInput.addEventListener('input',()=>filterThemeOptions(themeSearchInput.value));
+    themeSelectAllBtn.addEventListener('click',()=>{const allThemes=getAllThemes();allThemes.forEach(t=>selectedThemes.add(t));updateThemeUI();ps();});
+    themeClearAllBtn.addEventListener('click',()=>{selectedThemes.clear();updateThemeUI();ps();});
+    document.addEventListener('click',(e)=>{if(!e.target.closest('#themeChecklistContainer')){themeDropdown.classList.remove('open');}});
+    setupCharAutocomplete();
+    ps();populateThemeChecklist();
+}
+function getAllThemes(){const themes=new Set();const excludeKeywords=['イベント','コラボ','コラボレーション','collab','event','イベ','期間限定','フェス','fes','復刻','ガチャ','キャンペーン','CP','限定','コラボ記念','周年'];for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){const lower=t.toLowerCase();if(!excludeKeywords.some(kw=>lower.includes(kw.toLowerCase()))){themes.add(t);}}}}return [...themes].sort((a,b)=>a.localeCompare(b));}
+function populateThemeChecklist(){const themes=getAllThemes();const themeCounts=new Map();for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){themeCounts.set(t,(themeCounts.get(t)||0)+1);}}}themeOptionsList.innerHTML=themes.map(t=>{const count=themeCounts.get(t)||0;return`<label class="theme-option"><input type="checkbox" value="${t}" class="theme-checkbox"><span>${t}</span><span class="theme-count">${count}</span></label>`;}).join('');document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.addEventListener('change',()=>{if(cb.checked){selectedThemes.add(cb.value);}else{selectedThemes.delete(cb.value);}updateThemeUI();ps();});});}
+function filterThemeOptions(query){const lower=query.toLowerCase();document.querySelectorAll('.theme-option').forEach(opt=>{const text=opt.textContent.toLowerCase();opt.style.display=text.includes(lower)?'flex':'none';});}
+function updateThemeUI(){document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.checked=selectedThemes.has(cb.value);});themeCount.textContent=selectedThemes.size;if(selectedThemes.size>0){themeCount.classList.add('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Themes Selected';}else{themeCount.classList.remove('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Select Themes';}}
 function gm(ca2,ci2,co2,lo,iv,o){const ac=[],ai=[];for(let i=0;i<ca2.length;i++){const bp=o===-1?-1:o+ci2[i];if(bp===-1||!iv[bp]){ac.push(ca2[i]);ai.push(ci2[i]);}}if(lo==='OR'){const m=new Set();co2.forEach(c=>{for(let i=0;i<ac.length;i++)if(c.includes(ac[i]))m.add(ai[i]);});return{matched:m,count:m.size>0?1:0};}else{let p=[...ac],pi2=[...ai],m=new Set(),count=0;for(const c of co2){const idx=p.findIndex(ch=>c.includes(ch));if(idx!==-1){m.add(pi2[idx]);p.splice(idx,1);pi2.splice(idx,1);count++;}}return{matched:m,count};}}
-function ps(){const rc=document.getElementById('resultCount'),rl=document.getElementById('resultList');const so2=ss.value;const cf=Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(c=>parseInt(c.value));const tf=ts.value.trim(),cmv=parseInt(cmin.value)||0,rabv=rab.checked;const bc2=parseInt(bci.value)||0,iv=pi.map(i=>i.value.trim()),hapf=iv.some(v=>v.length>0);const bct=document.getElementById('boardComboText'),af=iv.every(v=>v.length>0);if(af){const rc2=fb(iv,ff);bct.textContent=rc2===-1?'-- (fill all 7 cells)':`${rc2} (+ ${bc2}) = ${rc2+bc2}`;}else bct.textContent='-- (fill all 7 cells)';const rfc=gc(),hrf=rfc.length>0;let results=d;if(cf.length>0){const fs=new Set(cf);results=results.filter(w=>fs.has(w.word.length));}if(tf.length>0){const pl=tf.length;const abc=hrf?rfc.flat():[];results=results.filter(w=>{if(w.word.length!==pl)return false;for(let i=0;i<pl;i++){const pc=tf[i],wc=w.word[i];if(pc==='-'){if(abc.length>0&&!abc.includes(wc))return false;}else if(pc!==wc)return false;}return true;});}let wm=new Map(),vbw=[];const rbi=(rabv&&hapf)?iv.reduce((a,v,i)=>{if(v.length>0)a.push(i);return a;},[]):[];for(const w of results){const len=w.word.length;if(hapf&&len>7)continue;let vo=[];if(hapf){for(let s=0;s<=7-len;s++){let fits=true;for(let i=0;i<len;i++){if(iv[s+i]&&!iv[s+i].includes(w.word[i])){fits=false;break;}}if(fits&&rabv&&rbi.length>0){const we=s+len;if(!rbi.every(idx=>idx>=s&&idx<we))fits=false;}if(fits)vo.push(s);}if(vo.length===0)continue;}else vo=[-1];let ac2=0;if(hapf){for(const o of vo){const c2=cp(w.word,o,iv,ff);if(c2>ac2)ac2=c2;}}else ac2=w.combo||0;if(ac2<cmv)continue;let bo=vo[0],irm=false,mi=new Set(),rmc=0;if(hrf){let bestC=cl==='AND'?-1:0;for(const o of vo){const ch=w.word.split('');let cts=[],ci2=[];if(o===-1){cts=[...ch];ci2=ch.map((_,i)=>i);}else{for(let i=0;i<ch.length;i++){if(!iv[o+i]){cts.push(ch[i]);ci2.push(i);}}}const dx=gm(cts,ci2,rfc,cl,iv,o);if(cl==='OR'){if(dx.matched.size>0){bo=o;mi=dx.matched;rmc=dx.count;irm=true;break;}}else{if(dx.count>bestC){bestC=dx.count;bo=o;mi=dx.matched;rmc=dx.count;irm=(dx.count===rfc.length);}}}if(cl==='OR'&&!irm)continue;if(cl==='AND'&&rmc===0)continue;}wm.set(w.word,{validOffsets:[bo],isRefineMatch:irm,refineMatchedCount:rmc,matchedIndices:mi,combo:ac2,totalConstraints:rfc.length});vbw.push(w);}vbw.sort((a,b)=>{const ma=wm.get(a.word),mb=wm.get(b.word);if(hrf){if(ma.isRefineMatch!==mb.isRefineMatch)return ma.isRefineMatch?-1:1;if(cl==='AND'&&ma.refineMatchedCount!==mb.refineMatchedCount)return mb.refineMatchedCount-ma.refineMatchedCount;}switch(so2){case'asc':return a.word.length-b.word.length;case'desc':return b.word.length-a.word.length;case'combo-asc':return ma.combo-mb.combo;case'combo-desc':return mb.combo-ma.combo;default:return 0;}});const mr=300,dr=vbw.slice(0,mr);if(!hapf&&!hrf&&cf.length===0&&tf.length===0&&cmv===0){rc.textContent=`Waiting for input... (${d.length} words)`;rl.innerHTML='';return;}if(dr.length===0){rc.textContent="No matches found";rl.innerHTML='<div class="no-results">No words match your criteria</div>';}else{rc.textContent=`Found ${vbw.length} words${vbw.length>mr?` (Showing first ${mr})`:''}`;const hp=[];for(const w of dr){const m=wm.get(w.word),dt=w.displays[0]||w.word;const tt=w.themes.length>0?`<div class="result-themes">Theme: ${w.themes.join(', ')}</div>`:'';const po=m.validOffsets[0],ch=w.word.split('');let gi=new Set();if(po!==-1){for(let i=0;i<ch.length;i++){if(iv[po+i])gi.add(i);}}const hwh=ch.map((c,i)=>{const ig=gi.has(i),ir=m.matchedIndices.has(i);if(ig&&ir)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;background:#cce4ff;padding:0 1px;border-radius:2px;">${c}</span>`;if(ig)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;">${c}</span>`;if(ir)return`<span style="background:#cce4ff;padding:0 1px;border-radius:2px;color:#0051d5;">${c}</span>`;return c;}).join('');let gh='';if(po!==-1){let p=['<div class="mini-grid">'];for(let b=0;b<7;b++){let ct='',cl2='mini-box';if(b>=po&&b<po+w.word.length){ct=w.word[b-po];cl2+=iv[b]?' matched':' overlap';}p.push(`<div class="${cl2}">${ct}</div>`);}p.push('</div>');gh=p.join('');}const ic='result-item'+(m.isRefineMatch?' refine-match':''),cs=hapf?`${m.combo} (adj)`:`${m.combo}`;let mi2='';if(hrf&&cl==='AND')mi2=` | Deck: ${m.refineMatchedCount}/${m.totalConstraints||rfc.length}`;hp.push(`<div class="${ic}"><div class="result-word"><span>${dt} <span style="font-weight:normal;font-size:0.8em;color:#666;">(${hwh})</span></span>${gh}</div><div class="result-info">${w.word.length} chars · Combo: ${cs}${mi2}</div>${tt}</div>`);}rl.innerHTML=hp.join('');}}
-function swp(bs){const words=fw(bs);const overlay=document.createElement('div');overlay.className='overlay';const popup=document.createElement('div');popup.className='words-popup';popup.innerHTML=`<h3>📖 Words Found (${words.length})</h3>${words.map(w=>`<div class="word-entry ${w.word.length>=4?'long-word':'short-word'}"><span class="word-text">${w.word}</span><span class="pos-range">Pos ${w.start+1}-${w.end+1} (${w.word.length}L)</span></div>`).join('')}<button class="close-btn" id="closeWordsPopup">Close</button>`;document.body.appendChild(overlay);document.body.appendChild(popup);overlay.addEventListener('click',()=>{overlay.remove();popup.remove();});document.getElementById('closeWordsPopup').addEventListener('click',()=>{overlay.remove();popup.remove();});}
+
+function setupCharAutocomplete(){
+    const allInputs = [...ri];
+    if (friendInput) allInputs.push(friendInput);
+    allInputs.forEach((input)=>{
+        const wrap=input.parentElement;
+        const dropdown=document.createElement('div');
+        dropdown.className='char-autocomplete';
+        wrap.appendChild(dropdown);
+        let selectedIndex=-1;
+        let filteredChars=[];
+        const closeDropdown=()=>{dropdown.classList.remove('open');selectedIndex=-1;};
+        const updateDropdown=()=>{
+            const query=input.value.trim().toLowerCase();
+            if(!query||characters.length===0){closeDropdown();return;}
+            filteredChars=characters.filter(c=>c.name.toLowerCase().includes(query)).slice(0,15);
+            if(filteredChars.length===0){closeDropdown();return;}
+            if(selectedIndex>=filteredChars.length)selectedIndex=filteredChars.length-1;
+            dropdown.innerHTML=filteredChars.map((c,i)=>`<div class="char-option${i===selectedIndex?' selected':''}" data-index="${i}"><span class="char-name">${c.name}</span><span class="char-hira">${c.hiragana}</span></div>`).join('');
+            dropdown.classList.add('open');
+            dropdown.querySelectorAll('.char-option').forEach(opt=>{
+                const handler=(e)=>{
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const c=filteredChars[parseInt(opt.dataset.index)];
+                    input.value=c.hiragana;
+                    input.classList.add('filled');
+                    closeDropdown();
+                    cc.clear();
+                    ps();
+                };
+                opt.addEventListener('mousedown',handler);
+                opt.addEventListener('touchstart',handler,{passive:false});
+            });
+        };
+        input.addEventListener('input',()=>{selectedIndex=-1;updateDropdown();});
+        input.addEventListener('focus',()=>{if(input.value.trim())updateDropdown();});
+        input.addEventListener('blur',()=>{setTimeout(closeDropdown,200);});
+        input.addEventListener('keydown',(e)=>{
+            if(!dropdown.classList.contains('open'))return;
+            if(e.key==='ArrowDown'){e.preventDefault();selectedIndex=Math.min(selectedIndex+1,filteredChars.length-1);updateDropdown();}
+            else if(e.key==='ArrowUp'){e.preventDefault();selectedIndex=Math.max(selectedIndex-1,0);updateDropdown();}
+            else if(e.key==='Enter'&&selectedIndex>=0){e.preventDefault();const c=filteredChars[selectedIndex];input.value=c.hiragana;input.classList.add('filled');closeDropdown();cc.clear();ps();}
+            else if(e.key==='Escape'){closeDropdown();}
+        });
+    });
+}
+
+function ps(){
+    const rc=document.getElementById('resultCount'),rl=document.getElementById('resultList');
+    const so2=ss.value;const cf=Array.from(document.querySelectorAll('input[name="chars"]:checked')).map(c=>parseInt(c.value));
+    const tf=ts.value.trim(),cmv=parseInt(cmin.value)||0,rabv=rab.checked;
+    const iv=pi.map(i=>i.value.trim()),hapf=iv.some(v=>v.length>0);
+    const rfc=gc(),hrf=rfc.length>0;let results=d;
+    if(selectedThemes.size>0){const selectedArr=[...selectedThemes];results=results.filter(w=>wordMatchesThemes(w.word,selectedArr));}
+    if(cf.length>0){const fs=new Set(cf);results=results.filter(w=>fs.has(w.word.length));}
+    if(tf.length>0){
+        const hasWildcard=tf.includes('-');
+        if(!hasWildcard){results=results.filter(w=>w.word.includes(tf));}
+        else{
+            const pl=tf.length;const filledBoxes=rfc;const numBoxes=filledBoxes.length;
+            const nonWC=[];const wcPositions=[];
+            for(let i=0;i<pl;i++){if(tf[i]==='-')wcPositions.push(i);else nonWC.push({pos:i,ch:tf[i]});}
+            results=results.filter(w=>{
+                if(w.word.length!==pl)return false;
+                for(const n of nonWC){if(w.word[n.pos]!==n.ch)return false;}
+                if(numBoxes===0)return true;
+                const availWc=[...wcPositions];let matched=0;
+                for(const box of filledBoxes){if(availWc.length===0)break;for(let i=0;i<availWc.length;i++){const pos=availWc[i];if(box.includes(w.word[pos])){availWc.splice(i,1);matched++;break;}}}
+                const required=Math.min(numBoxes,wcPositions.length);return matched>=required;
+            });
+        }
+    }
+    let wm=new Map(),vbw=[];const rbi=(rabv&&hapf)?iv.reduce((a,v,i)=>{if(v.length>0)a.push(i);return a;},[]):[];
+    for(const w of results){const len=w.word.length;if(hapf&&len>7)continue;let vo=[];if(hapf){for(let s=0;s<=7-len;s++){let fits=true;for(let i=0;i<len;i++){if(iv[s+i]&&!iv[s+i].includes(w.word[i])){fits=false;break;}}if(fits&&rabv&&rbi.length>0){const we=s+len;if(!rbi.every(idx=>idx>=s&&idx<we))fits=false;}if(fits)vo.push(s);}if(vo.length===0)continue;}else vo=[-1];let ac2=0;if(hapf){for(const o of vo){const c2=cp(w.word,o,iv,ff);if(c2>ac2)ac2=c2;}}else ac2=w.combo||0;if(ac2<cmv)continue;let bo=vo[0],irm=false,mi=new Set(),rmc=0;if(hrf){let bestC=cl==='AND'?-1:0;for(const o of vo){const ch=w.word.split('');let cts=[],ci2=[];if(o===-1){cts=[...ch];ci2=ch.map((_,i)=>i);}else{for(let i=0;i<ch.length;i++){if(!iv[o+i]){cts.push(ch[i]);ci2.push(i);}}}const dx=gm(cts,ci2,rfc,cl,iv,o);if(cl==='OR'){if(dx.matched.size>0){bo=o;mi=dx.matched;rmc=dx.count;irm=true;break;}}else{if(dx.count>bestC){bestC=dx.count;bo=o;mi=dx.matched;rmc=dx.count;irm=(dx.count===rfc.length);}}}if(cl==='OR'&&!irm)continue;if(cl==='AND'&&rmc===0)continue;}wm.set(w.word,{validOffsets:[bo],isRefineMatch:irm,refineMatchedCount:rmc,matchedIndices:mi,combo:ac2,totalConstraints:rfc.length});vbw.push(w);}
+    vbw.sort((a,b)=>{const ma=wm.get(a.word),mb=wm.get(b.word);if(hrf){if(ma.isRefineMatch!==mb.isRefineMatch)return ma.isRefineMatch?-1:1;if(cl==='AND'&&ma.refineMatchedCount!==mb.refineMatchedCount)return mb.refineMatchedCount-ma.refineMatchedCount;}switch(so2){case'asc':return a.word.length-b.word.length;case'desc':return b.word.length-a.word.length;case'combo-asc':return ma.combo-mb.combo;case'combo-desc':return mb.combo-ma.combo;default:return 0;}});
+    const mr=300,dr=vbw.slice(0,mr);if(!hapf&&!hrf&&cf.length===0&&tf.length===0&&cmv===0&&selectedThemes.size===0){rc.textContent=`Waiting for input... (${d.length} words)`;rl.innerHTML='';return;}if(dr.length===0){rc.textContent="No matches found";rl.innerHTML='<div class="no-results">No words match your criteria</div>';}else{rc.textContent=`Found ${vbw.length} words${vbw.length>mr?` (Showing first ${mr})`:''}`;const hp=[];for(const w of dr){const m=wm.get(w.word),dt=w.displays[0]||w.word;const tt=w.themes&&w.themes.length>0?`<div class="result-themes">Theme: ${w.themes.join(', ')}</div>`:'';const po=m.validOffsets[0],ch=w.word.split('');let gi=new Set();if(po!==-1){for(let i=0;i<ch.length;i++){if(iv[po+i])gi.add(i);}}const hwh=ch.map((c,i)=>{const ig=gi.has(i),ir=m.matchedIndices.has(i);if(ig&&ir)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;background:#cce4ff;padding:0 1px;border-radius:2px;">${c}</span>`;if(ig)return`<span style="font-weight:bold;text-decoration:underline;color:#007AFF;">${c}</span>`;if(ir)return`<span style="background:#cce4ff;padding:0 1px;border-radius:2px;color:#0051d5;">${c}</span>`;return c;}).join('');let gh='';if(po!==-1){let p=['<div class="mini-grid">'];for(let b=0;b<7;b++){let ct='',cl2='mini-box';if(b>=po&&b<po+w.word.length){ct=w.word[b-po];cl2+=iv[b]?' matched':' overlap';}p.push(`<div class="${cl2}">${ct}</div>`);}p.push('</div>');gh=p.join('');}const ic='result-item'+(m.isRefineMatch?' refine-match':''),cs=hapf?`${m.combo} (adj)`:`${m.combo}`;let mi2='';if(hrf&&cl==='AND')mi2=` | Deck: ${m.refineMatchedCount}/${m.totalConstraints||rfc.length}`;const boardForPopup=(()=>{if(po===-1)return w.word;const b=[...iv];for(let i=0;i<w.word.length;i++)b[po+i]=w.word[i];return b.join('');})();hp.push(`<div class="${ic}" data-board="${boardForPopup}"><div class="result-word"><span>${dt} <span style="font-weight:normal;font-size:0.8em;color:#666;">(${hwh})</span></span>${gh}</div><div class="result-info">${w.word.length} chars · Combo: ${cs}${mi2}</div>${tt}</div>`);}rl.innerHTML=hp.join('');document.querySelectorAll('#resultList .result-item').forEach(item=>{item.addEventListener('click',()=>{const boardStr=item.dataset.board;if(boardStr)swp(boardStr);});});}}
+function swp(bs){const words=fw(bs);const overlay=document.createElement('div');overlay.className='overlay';overlay.id='wordsOverlay';const popup=document.createElement('div');popup.className='words-popup';const allThemes=new Set();let html=`<h3>📖 Words Found (${words.length})</h3>`;for(const w of words){const themes=wordThemeMap.get(w.word)||[];themes.forEach(t=>allThemes.add(t));const themeStr=themes.length?`<div class="word-themes">${themes.join(', ')}</div>`:'';html+=`<div class="word-entry ${w.word.length>=4?'long-word':'short-word'}"><div class="word-main"><span class="word-text">${w.word}</span><span class="pos-range">Pos ${w.start+1}-${w.end+1} (${w.word.length}L)</span></div>${themeStr}</div>`;}if(allThemes.size>0){html+=`<div style="margin-top:10px;font-size:11px;color:#666;">All themes: ${[...allThemes].sort().join(', ')}</div>`;}html+=`<button class="close-btn" id="closeWordsPopup">Close</button>`;popup.innerHTML=html;document.body.appendChild(overlay);document.body.appendChild(popup);overlay.addEventListener('click',()=>{overlay.remove();popup.remove();});document.getElementById('closeWordsPopup').addEventListener('click',()=>{overlay.remove();popup.remove();});}
 function glp(bs){const pos=new Set();const words=fw(bs);for(const w of words){if(w.word.length>=4){for(let i=w.start;i<=w.end;i++)pos.add(i);}}return pos;}
 function comb(arr,k){if(k===0)return[[]];if(k>arr.length)return[];const r=[];function f(s,c){if(c.length===k){r.push([...c]);return;}for(let i=s;i<arr.length;i++){c.push(arr[i]);f(i+1,c);c.pop();}}f(0,[]);return r;}
 function perm(arr){if(arr.length<=1)return[arr];const r=[];for(let i=0;i<arr.length;i++){const rest=[...arr.slice(0,i),...arr.slice(i+1)];for(const p of perm(rest))r.push([arr[i],...p]);}return r;}
 function cart(arrays){if(arrays.length===0)return[[]];return arrays.reduce((a,b)=>a.flatMap(x=>b.map(y=>[...x,y])),[[]]);}
-function so2(){if(io)return;io=true;so=false;ob.style.display='none';stb.style.display='inline-block';const boxes=gc();if(boxes.length!==4){fo([]);return;}const curB=pi.map(i=>i.value.trim());const es=[];for(let i=0;i<7;i++)if(!curB[i])es.push(i);if(es.length===0){fo([{board:curB.join(''),combo:ca(curB.join(''))}]);return;}const k=es.length;const bcombos=(k<=4)?comb([0,1,2,3],k):[[0,1,2,3]];const results=[];or2.innerHTML=`<div class="optimize-loading">🔍 Testing ${bcombos.length} box combinations...</div>`;setTimeout(()=>{for(const combo of bcombos){if(so||results.length>5000)break;const charArrays=combo.map(b=>boxes[b]);const charCombos=cart(charArrays);for(const chars of charCombos){if(results.length>5000)break;const pairs=chars.map((c,i)=>({char:c,boxIdx:combo[i]}));const pairPerms=perm(pairs);for(const pp of pairPerms){const board=[...curB];const assignments=[];const n=Math.min(pp.length,k);for(let i=0;i<n;i++){board[es[i]]=pp[i].char;assignments.push({pos:es[i],boxIdx:pp[i].boxIdx});}const ac=boxes.flat();for(let i=n;i<k;i++){board[es[i]]=ac[Math.floor(Math.random()*ac.length)];assignments.push({pos:es[i],boxIdx:-1});}const bs=board.join('');results.push({board:bs,combo:ca(bs),assignments});}}}results.sort((a,b)=>b.combo-a.combo);const unique=[],seen=new Set();for(const r of results){if(!seen.has(r.board)){seen.add(r.board);unique.push(r);if(unique.length>=15)break;}}if(unique.length===0){const board=[...curB];const ac=boxes.flat();for(const s of es)board[s]=ac[Math.floor(Math.random()*ac.length)];unique.push({board:board.join(''),combo:ca(board.join('')),assignments:[]});}fo(unique);},10);}
-function fo(best){io=false;ob.style.display='inline-block';stb.style.display='none';if(!best||best.length===0){or2.innerHTML='<div class="no-results">No boards found.</div>';return;}const boxes=gc();const curB=pi.map(i=>i.value.trim());const bcl=['box-A','box-B','box-C','box-D'];or2.innerHTML=best.map(item=>{const words=fw(item.board);const lwp=glp(item.board);const dw=words.slice(0,6).map(w=>w.word);const bl=new Array(7).fill('');if(item.assignments){for(const a of item.assignments){if(a.boxIdx>=0&&a.boxIdx<4){bl[a.pos]=String.fromCharCode(65+a.boxIdx);}}}const chars=item.board.split('');const cc2=chars.map((c,i)=>{let cls='char-cell';const label=bl[i];const wob=!!curB[i];if(label){cls+=' '+bcl[label.charCodeAt(0)-65];}else if(wob){cls+=' existing';}if(!lwp.has(i)){cls+=' dead';}const badge=label?`<span class="box-badge">${label}</span>`:'';return`<span class="${cls}">${c}${badge}</span>`;}).join('');const ub=[...new Set(bl.filter(l=>l))].sort().join(',');const tw=words.length;const lw=words.filter(w=>w.word.length>=4).length;return`<div class="optimize-item" data-board="${item.board}"><div class="board-layout">${cc2}</div><div class="board-details">Combo: ${item.combo} | ${tw} words (${lw} long) | Boxes used: ${ub||'none'}</div><div class="board-words-display">${dw.join(', ')}${words.length>6?' +'+(words.length-6)+' more':''}</div></div>`;}).join('');or2.innerHTML+=`<div class="optimize-legend"><span><span class="legend-box" style="background:#fce4ec;border-color:#c62828;"></span> Box A</span><span><span class="legend-box" style="background:#e3f2fd;border-color:#1565c0;"></span> Box B</span><span><span class="legend-box" style="background:#e8f5e9;border-color:#2e7d32;"></span> Box C</span><span><span class="legend-box" style="background:#fff3e0;border-color:#e65100;"></span> Box D</span><span><span class="legend-box" style="background:#f5f5f5;border-color:#ddd;"></span> Existing</span><span>Dotted = not in 4+ letter word</span></div>`;document.querySelectorAll('.optimize-item').forEach(item=>item.addEventListener('click',()=>{const chars=item.dataset.board.split('');const sf=[...ff];pi.forEach((inp,idx)=>{inp.value=chars[idx]||'';inp.classList.toggle('filled',inp.value.length>0);});sf.forEach((wc,idx)=>{if(wc||!curB[idx]){ff[idx]=true;tg[idx].classList.add('free');tg[idx].classList.remove('board');tg[idx].textContent='C';}else{ff[idx]=false;tg[idx].classList.remove('free');tg[idx].classList.add('board');tg[idx].textContent='B';}});cc.clear();ps();swp(item.dataset.board);document.querySelector('.input-section').scrollIntoView({behavior:'smooth'});}));}
-document.getElementById('loadingMsg').style.display='block';ld().then(()=>{document.getElementById('loadingMsg').style.display='none';document.getElementById('mainContent').style.display='block';init();});
+
+function so2(){
+    if(io)return;io=true;so=false;ob.style.display='none';stb.style.display='inline-block';
+    const curB=pi.map(i=>i.value.trim());
+    const es=[];for(let i=0;i<7;i++)if(!curB[i])es.push(i);
+    const k=es.length;
+    if(k===0){fo([{board:curB.join(''),combo:ca(curB.join('')),assignments:[]}]);return;}
+    const results=[];
+    const assignedBoxes = getAssignedBoxes();
+    const pattern=curB.map(c=>c?c:'-').join('');
+
+    if(assignedBoxes.length===0){
+        const matchingWords=d.filter(w=>{if(w.word.length!==7)return false;for(let i=0;i<7;i++){if(pattern[i]!=='-'&&pattern[i]!==w.word[i])return false;}return true;}).sort((a,b)=>(b.combo||0)-(a.combo||0));
+        or2.innerHTML=`<div class="optimize-loading">🔍 Found ${matchingWords.length} matching words...</div>`;
+        setTimeout(()=>{if(matchingWords.length>0){for(const w of matchingWords.slice(0,20)){results.push({board:w.word,combo:ca(w.word),assignments:[]});}}finalizeResults(results,curB,es,assignedBoxes);},10);
+        return;
+    }
+    const numBoxes=assignedBoxes.length;
+    const charArrays=assignedBoxes.map(b=>b.chars);
+    const charCombos=cart(charArrays);
+    or2.innerHTML=`<div class="optimize-loading">🔍 Testing ${numBoxes} filled box${numBoxes>1?'es':''}...</div>`;
+    setTimeout(()=>{
+        for(const chars of charCombos){
+            if(so||results.length>5000)break;
+            const pairs=chars.map((c,i)=>({char:c,boxIdx:assignedBoxes[i].letterIndex}));
+            const pairPerms=perm(pairs);
+            for(const pp of pairPerms){
+                const board=[...curB];const assignments=[];const n=Math.min(pp.length,k);
+                for(let i=0;i<n;i++){board[es[i]]=pp[i].char;assignments.push({pos:es[i],boxIdx:pp[i].boxIdx});}
+                const remainingPairs=pp.slice(n);const usedPositions=new Set(assignments.map(a=>a.pos));
+                for(const rp of remainingPairs){for(let pos=0;pos<7;pos++){if(!usedPositions.has(pos)&&(!curB[pos]||curB[pos].includes(rp.char))){board[pos]=rp.char;assignments.push({pos:pos,boxIdx:rp.boxIdx});usedPositions.add(pos);break;}}}
+                const remainingEmpty=[];for(let i=0;i<7;i++)if(!board[i])remainingEmpty.push(i);
+                if(remainingEmpty.length>0){
+                    const patt=board.map(c=>c?c:'-').join('');
+                    const matchingWords=d.filter(w=>{if(w.word.length!==7)return false;for(let i=0;i<7;i++){if(patt[i]!=='-'&&patt[i]!==w.word[i])return false;}return true;});
+                    if(matchingWords.length>0){const bw=matchingWords[Math.floor(Math.random()*matchingWords.length)];for(const pos of remainingEmpty){board[pos]=bw.word[pos];}}
+                    else{const allChars=assignedBoxes.flatMap(b=>b.chars);for(const pos of remainingEmpty){board[pos]=allChars[Math.floor(Math.random()*allChars.length)];}}
+                }
+                const bs=board.join('');results.push({board:bs,combo:ca(bs),assignments});
+            }
+        }
+        finalizeResults(results,curB,es,assignedBoxes);
+    },10);
+}
+function finalizeResults(results,curB,es,assignedBoxes){
+    results.sort((a,b)=>b.combo-a.combo);
+    const unique=[],seen=new Set();
+    for(const r of results){if(!seen.has(r.board)){seen.add(r.board);unique.push(r);if(unique.length>=15)break;}}
+    if(unique.length===0){
+        const board=[...curB];
+        const fallbackChars=['あ','い','う','え','お','か','き','く','け','こ','さ','し','す','せ','そ','た','ち','つ','て','と','な','に','ぬ','ね','の','は','ひ','ふ','へ','ほ','ま','み','む','め','も','や','ゆ','よ','ら','り','る','れ','ろ','わ','を','ん'];
+        for(const s of es)board[s]=fallbackChars[Math.floor(Math.random()*fallbackChars.length)];
+        for(let j=0;j<7;j++)if(!board[j])board[j]=fallbackChars[Math.floor(Math.random()*fallbackChars.length)];
+        unique.push({board:board.join(''),combo:ca(board.join('')),assignments:[]});
+    }
+    fo(unique);
+}
+function isSmallKana(c){return'ゃゅょっャュョッ'.includes(c);}
+function fo(best){io=false;ob.style.display='inline-block';stb.style.display='none';if(!best||best.length===0){or2.innerHTML='<div class="no-results">No boards found.</div>';return;}const curB=pi.map(i=>i.value.trim());const bcl=['box-A','box-B','box-C','box-D','box-E'];or2.innerHTML=best.map(item=>{const words=fw(item.board);const lwp=glp(item.board);const dw=words.slice(0,6).map(w=>w.word);const bl=new Array(7).fill('');if(item.assignments){for(const a of item.assignments){if(a.boxIdx>=0&&a.boxIdx<=4){bl[a.pos]=String.fromCharCode(65+a.boxIdx);}}}const chars=item.board.split('');const cc2=chars.map((c,i)=>{let cls='char-cell';const label=bl[i];const wob=!!curB[i];if(label){cls+=' '+bcl[label.charCodeAt(0)-65];}else if(wob){cls+=' existing';}if(!lwp.has(i)){cls+=' dead';}const badge=label?`<span class="box-badge">${label}</span>`:'';const sk=isSmallKana(c)?' small-kana':'';return`<span class="${cls}"><span class="char-text${sk}">${c}</span>${badge}</span>`;}).join('');const tw=words.length;const lw=words.filter(w=>w.word.length>=4).length;return`<div class="optimize-item" data-board="${item.board}"><div class="board-layout">${cc2}</div><div class="board-details">Combo: ${item.combo} | ${tw} words (${lw} long)</div><div class="board-words-display">${dw.join(', ')}${words.length>6?' +'+(words.length-6)+' more':''}</div></div>`;}).join('');or2.innerHTML+=`<div class="optimize-legend"><span><span class="legend-box" style="background:#fce4ec;border-color:#c62828;"></span> Box A</span><span><span class="legend-box" style="background:#e3f2fd;border-color:#1565c0;"></span> Box B</span><span><span class="legend-box" style="background:#e8f5e9;border-color:#2e7d32;"></span> Box C</span><span><span class="legend-box" style="background:#fff3e0;border-color:#e65100;"></span> Box D</span><span><span class="legend-box" style="background:#f3e5f5;border-color:#6a1b9a;"></span> Box E (Friend)</span><span><span class="legend-box" style="background:#f5f5f5;border-color:#ddd;"></span> Existing</span><span>Dotted = not in 4+ letter word</span></div>`;document.querySelectorAll('.optimize-item').forEach(item=>item.addEventListener('click',()=>{swp(item.dataset.board);}));}
+document.getElementById('loadingMsg').style.display='block';
+Promise.all([
+    ld(),
+    fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/main/characters.json').then(r=>{if(!r.ok)throw Error('e');return r.json();}).then(data=>{characters=data;}).catch(()=>{characters=[];})
+]).then(()=>{document.getElementById('loadingMsg').style.display='none';document.getElementById('mainContent').style.display='block';init();})
+.catch(err=>{console.error('Load error:',err);document.getElementById('loadingMsg').textContent='⚠ Error loading dictionary.';});
 })();
 </script>
 </body>

@@ -199,7 +199,7 @@
             </div>
             <div class="refine-section" id="refineSection"><span class="refine-title">Deck:</span><div class="refine-controls"><button id="clearRefineBtn" class="mini-btn" type="button">Clear All</button><div class="toggle-switch logic-toggle"><div class="toggle-option" data-logic="OR">Any (OR)</div><div class="toggle-option active" data-logic="AND">All (AND)</div></div></div><div class="deck-grid" id="deckGrid"></div>
             <div class="friend-row"><span class="friend-label">Friend (E):</span><div class="refine-input-wrap role-E friend-box"><span class="friend-badge">E</span><input type="text" class="refine-input" id="friendInput" autocomplete="off"></div></div>
-            <div class="pool-toggle-row"><label class="board-requirement-check" title="Wildcard patterns: fixed pattern chars are treated as board chars (they don't consume deck), and only wildcard slots need to be fillable from the deck. Plain searches: only show words whose kana all exist in the deck pool."><input type="checkbox" id="useAllDeckBoxes" checked> Only use deck</label></div>
+            <div class="pool-toggle-row"><label class="board-requirement-check" title="'Only use deck' checks that non-board characters come from the deck pool. Board characters count as already available."><input type="checkbox" id="useAllDeckBoxes" checked> Only use deck</label></div>
             </div>
             <div class="sort-row"><span class="sort-label">Sort by:</span><select id="sortSelect" class="sort-select"><option value="combo-desc" selected>Combo (High→Low)</option><option value="combo-asc">Combo (Low→High)</option><option value="asc">Length (Low→High)</option><option value="desc">Length (High→Low)</option></select></div>
             <div class="text-filter-container"><span class="text-filter-label">Pattern:</span><input type="text" id="textSearch" class="text-filter-input" autocomplete="off"></div>
@@ -494,38 +494,77 @@ function ps(){
         }
     }
 
+    // CHANGED: pattern pre-filter now only checks shape + fixed chars.
+    // The pool/board availability is enforced inside the offset loop below.
     if(tf.length>0){
         const hasWildcard=tf.includes('-');
         if(!hasWildcard){results=results.filter(w=>w.word.includes(tf));}
         else{
             const pl=tf.length;
             const nonWC=[];
-            const wcPositions=[];
             for(let i=0;i<pl;i++){
-                if(tf[i]==='-')wcPositions.push(i);
-                else nonWC.push({pos:i,ch:tf[i]});
+                if(tf[i]!=='-')nonWC.push({pos:i,ch:tf[i]});
             }
             results=results.filter(w=>{
                 if(w.word.length!==pl)return false;
                 for(const n of nonWC){if(w.word[n.pos]!==n.ch)return false;}
-                if(!uabv)return true;
-                if(!poolMap||wcPositions.length===0)return true;
-                const need=new Map();
-                for(const pos of wcPositions){
-                    const ch=w.word[pos];
-                    need.set(ch,(need.get(ch)||0)+1);
-                }
-                for(const [ch,n] of need){
-                    if((poolMap.get(ch)||0)<n)return false;
-                }
                 return true;
             });
         }
     }
-    if(poolMap && !tf.includes('-')) results=results.filter(w=>isFormableFromPool(w.word,poolMap));
 
     let wm=new Map(),vbw=[];const rbi=(rabv&&hapf)?iv.reduce((a,v,i)=>{if(v.length>0)a.push(i);return a;},[]):[];
-    for(const w of results){const len=w.word.length;if(hapf&&len>7)continue;let vo=[];if(hapf){for(let s=0;s<=7-len;s++){let fits=true;for(let i=0;i<len;i++){if(iv[s+i]&&!iv[s+i].includes(w.word[i])){fits=false;break;}}if(fits&&rabv&&rbi.length>0){const we=s+len;if(!rbi.every(idx=>idx>=s&&idx<we))fits=false;}if(fits)vo.push(s);}if(vo.length===0)continue;}else vo=[-1];let ac2=0;if(hapf){for(const o of vo){const c2=cp(w.word,o,iv,ff);if(c2>ac2)ac2=c2;}}else ac2=w.combo||0;
+    for(const w of results){
+        const len=w.word.length;
+        if(hapf&&len>7)continue;
+        let vo=[];
+        if(hapf){
+            // CHANGED: board-match + pool-availability checked per offset.
+            for(let s=0;s<=7-len;s++){
+                let fits=true;
+                const need=new Map();
+                for(let i=0;i<len;i++){
+                    if(iv[s+i]){
+                        if(!iv[s+i].includes(w.word[i])){fits=false;break;}
+                    } else if(poolMap){
+                        need.set(w.word[i],(need.get(w.word[i])||0)+1);
+                    }
+                }
+                if(fits&&poolMap){
+                    for(const [ch,n] of need){
+                        if((poolMap.get(ch)||0)<n){fits=false;break;}
+                    }
+                }
+                if(fits&&rabv&&rbi.length>0){
+                    const we=s+len;
+                    if(!rbi.every(idx=>idx>=s&&idx<we))fits=false;
+                }
+                if(fits)vo.push(s);
+            }
+            if(vo.length===0)continue;
+        } else {
+            // CHANGED: board-empty case.
+            if(poolMap){
+                if(tf.includes('-')){
+                    // Wildcard: fixed pattern chars treated as board chars (free),
+                    // wildcard positions must come from the deck pool.
+                    const need=new Map();
+                    let ok=true;
+                    for(let i=0;i<len;i++){
+                        if(patternFixedPositions && patternFixedPositions.has(i))continue;
+                        need.set(w.word[i],(need.get(w.word[i])||0)+1);
+                    }
+                    for(const [ch,n] of need){
+                        if((poolMap.get(ch)||0)<n){ok=false;break;}
+                    }
+                    if(!ok)continue;
+                } else {
+                    if(!isFormableFromPool(w.word,poolMap))continue;
+                }
+            }
+            vo=[-1];
+        }
+        let ac2=0;if(hapf){for(const o of vo){const c2=cp(w.word,o,iv,ff);if(c2>ac2)ac2=c2;}}else ac2=w.combo||0;
         let bo=vo[0],irm=false,mi=new Set(),rmc=0,bmap=new Map();
         if(hrf){let bestC=cl==='AND'?-1:0;for(const o of vo){const ch=w.word.split('');let cts=[],ci2=[];if(o===-1){cts=[...ch];ci2=ch.map((_,i)=>i);}else{for(let i=0;i<ch.length;i++){if(!iv[o+i]){cts.push(ch[i]);ci2.push(i);}}}const dx=gm(cts,ci2,rfcBoxes,cl,iv,o,patternFixedPositions);if(cl==='OR'){if(dx.matched.size>0){bo=o;mi=dx.matched;rmc=dx.count;irm=true;bmap=dx.boxMap;break;}}else{if(dx.count>bestC){bestC=dx.count;bo=o;mi=dx.matched;rmc=dx.count;irm=(dx.count>=maxBoxes);bmap=dx.boxMap;}}}if(cl==='OR'&&!irm)continue;if(cl==='AND'&&rmc===0)continue;}
         wm.set(w.word,{validOffsets:[bo],isRefineMatch:irm,refineMatchedCount:rmc,matchedIndices:mi,combo:ac2,totalConstraints:maxBoxes,boxMap:bmap});vbw.push(w);}
@@ -559,7 +598,8 @@ function ps(){
                 }
                 const bx=(m.boxMap&&m.boxMap.has(i))?m.boxMap.get(i):undefined;
                 if(bx!==undefined){
-                    return`<span style="color:${boxColors[bx]||'#333'};background:${boxBgs[bx]||'#f5f5f5'};padding:0 3px;border-radius:3px;font-weight:bold;">${c}</span>`;
+                    const ci2 = bx % 5;
+                    return`<span style="color:${boxColors[ci2]||'#333'};background:${boxBgs[ci2]||'#f5f5f5'};padding:0 3px;border-radius:3px;font-weight:bold;">${c}</span>`;
                 }
                 return c;
             }).join('');
@@ -573,7 +613,7 @@ function ps(){
                         if(iv[b]){cl2+=' matched';}
                         else{
                             const bx=(m.boxMap&&m.boxMap.has(b-po))?m.boxMap.get(b-po):undefined;
-                            if(bx!==undefined){st=`background:${boxBgs[bx]};border-color:${boxColors[bx]};color:${boxColors[bx]};`;}
+                            if(bx!==undefined){const ci2 = bx % 5; st=`background:${boxBgs[ci2]};border-color:${boxColors[ci2]};color:${boxColors[ci2]};`;}
                             else{cl2+=' overlap';}
                         }
                     }
@@ -597,6 +637,31 @@ function comb(arr,k){if(k===0)return[[]];if(k>arr.length)return[];const r=[];fun
 function perm(arr){if(arr.length<=1)return[arr];const r=[];for(let i=0;i<arr.length;i++){const rest=[...arr.slice(0,i),...arr.slice(i+1)];for(const p of perm(rest))r.push([arr[i],...p]);}return r;}
 function cart(arrays){if(arrays.length===0)return[[]];return arrays.reduce((a,b)=>a.flatMap(x=>b.map(y=>[...x,y])),[[]]);}
 
+function countBoxesFromAssignments(assignments){
+    const roles = new Set();
+    for(const a of assignments){
+        if(a.boxIdx >= 0 && a.boxIdx <= 4) roles.add(a.boxIdx);
+    }
+    return roles.size;
+}
+function countBoxesUsed(r){
+    if(!r.assignments || !r.assignments.length) return 0;
+    return countBoxesFromAssignments(r.assignments);
+}
+function countDeadCells(board){
+    const lwp = glp(board);
+    let c = 0;
+    for(let i=0;i<board.length;i++) if(!lwp.has(i)) c++;
+    return c;
+}
+function getMaxWordLength(board){
+    const words = fw(board);
+    if(!words.length) return 0;
+    let m = 0;
+    for(const w of words) if(w.word.length > m) m = w.word.length;
+    return m;
+}
+
 function so2(){
     if(io)return;io=true;so=false;ob.style.display='none';stb.style.display='inline-block';
     const curB=pi.map(i=>i.value.trim());
@@ -604,44 +669,143 @@ function so2(){
     const k=es.length;
     if(k===0){fo([{board:curB.join(''),combo:ca(curB.join('')),assignments:[]}]);return;}
     const results=[];
-    const assignedBoxes = getAssignedBoxes();
-    const pattern=curB.map(c=>c?c:'-').join('');
 
-    if(assignedBoxes.length===0){
-        const matchingWords=d.filter(w=>{if(w.word.length!==7)return false;for(let i=0;i<7;i++){if(pattern[i]!=='-'&&pattern[i]!==w.word[i])return false;}return true;}).sort((a,b)=>(b.combo||0)-(a.combo||0));
-        or2.innerHTML=`<div class="optimize-loading">🔍 Found ${matchingWords.length} matching words...</div>`;
-        setTimeout(()=>{if(matchingWords.length>0){for(const w of matchingWords.slice(0,20)){results.push({board:w.word,combo:ca(w.word),assignments:[]});}}finalizeResults(results,curB,es,assignedBoxes);},10);
-        return;
-    }
-    const numBoxes=assignedBoxes.length;
-    const charArrays=assignedBoxes.map(b=>b.chars);
-    const charCombos=cart(charArrays);
-    or2.innerHTML=`<div class="optimize-loading">🔍 Testing ${numBoxes} filled box${numBoxes>1?'es':''}...</div>`;
-    setTimeout(()=>{
-        for(const chars of charCombos){
-            if(so||results.length>5000)break;
-            const pairs=chars.map((c,i)=>({char:c,boxIdx:assignedBoxes[i].letterIndex}));
-            const pairPerms=perm(pairs);
-            for(const pp of pairPerms){
-                const board=[...curB];const assignments=[];const n=Math.min(pp.length,k);
-                for(let i=0;i<n;i++){board[es[i]]=pp[i].char;assignments.push({pos:es[i],boxIdx:pp[i].boxIdx});}
-                const remainingPairs=pp.slice(n);const usedPositions=new Set(assignments.map(a=>a.pos));
-                for(const rp of remainingPairs){for(let pos=0;pos<7;pos++){if(!usedPositions.has(pos)&&(!curB[pos]||curB[pos].includes(rp.char))){board[pos]=rp.char;assignments.push({pos:pos,boxIdx:rp.boxIdx});usedPositions.add(pos);break;}}}
-                const remainingEmpty=[];for(let i=0;i<7;i++)if(!board[i])remainingEmpty.push(i);
-                if(remainingEmpty.length>0){
-                    const patt=board.map(c=>c?c:'-').join('');
-                    const matchingWords=d.filter(w=>{if(w.word.length!==7)return false;for(let i=0;i<7;i++){if(patt[i]!=='-'&&patt[i]!==w.word[i])return false;}return true;});
-                    if(matchingWords.length>0){const bw=matchingWords[Math.floor(Math.random()*matchingWords.length)];for(const pos of remainingEmpty){board[pos]=bw.word[pos];}}
-                    else{const allChars=assignedBoxes.flatMap(b=>b.chars);for(const pos of remainingEmpty){board[pos]=allChars[Math.floor(Math.random()*allChars.length)];}}
-                }
-                const bs=board.join('');results.push({board:bs,combo:ca(bs),assignments});
+    const uabv = !!(uad && uad.checked);
+
+    let sources;
+    if(uabv){
+        sources = [];
+        const slotRole = new Map();
+        for(let letterIdx=0; letterIdx<4; letterIdx++){
+            const letter = String.fromCharCode(65+letterIdx);
+            const slotIdx = boxRoles.indexOf(letter);
+            if(slotIdx >= 0 && ri[slotIdx] && ri[slotIdx].value.trim()){
+                slotRole.set(slotIdx, letterIdx);
             }
         }
-        finalizeResults(results,curB,es,assignedBoxes);
-    },10);
+        for(let i=0;i<ri.length;i++){
+            const v = ri[i].value.trim();
+            if(v){
+                sources.push({chars: v.split(''), letterIndex: slotRole.has(i) ? slotRole.get(i) : -1});
+            }
+        }
+        if(friendInput && friendInput.value.trim()){
+            sources.push({chars: friendInput.value.trim().split(''), letterIndex: 4});
+        }
+    } else {
+        sources = getAssignedBoxes().map(b=>({chars: b.chars, letterIndex: b.letterIndex}));
+    }
+
+    const pattern=curB.map(c=>c?c:'-').join('');
+
+    if(sources.length===0){
+        const matchingWords=d.filter(w=>{if(w.word.length!==7)return false;for(let i=0;i<7;i++){if(pattern[i]!=='-'&&pattern[i]!==w.word[i])return false;}return true;}).sort((a,b)=>(b.combo||0)-(a.combo||0));
+        or2.innerHTML=`<div class="optimize-loading">🔍 Found ${matchingWords.length} matching words...</div>`;
+        setTimeout(()=>{if(matchingWords.length>0){for(const w of matchingWords.slice(0,20)){results.push({board:w.word,combo:ca(w.word),assignments:[]});}}finalizeResults(results,curB,es,sources);},10);
+        return;
+    }
+
+    or2.innerHTML=`<div class="optimize-loading">🔍 Testing ${sources.length} source${sources.length>1?'s':''}...</div>`;
+
+    setTimeout(()=>{
+        const numToUse = Math.min(sources.length, es.length);
+        const avgChars = sources.reduce((s,src)=>s+src.chars.length,0)/sources.length;
+        let estimate = 1;
+        for(let i=0;i<numToUse;i++) estimate *= (sources.length - i) * avgChars;
+
+        if(estimate <= 100000){
+            const seen = new Set();
+            const assignments = [];
+            const used = new Set();
+            function recurse(slotIdx){
+                if(so) return;
+                if(slotIdx === numToUse){
+                    const board = [...curB];
+                    const assigns = [];
+                    for(const a of assignments){
+                        board[a.pos] = a.char;
+                        assigns.push({pos: a.pos, char: a.char, boxIdx: a.boxIdx});
+                    }
+                    for(let i=0;i<7;i++) if(!board[i]) board[i] = '・';
+                    const bs = board.join('');
+                    if(!seen.has(bs)){ seen.add(bs); results.push({board: bs, combo: ca(bs), assignments: assigns}); }
+                    return;
+                }
+                const pos = es[slotIdx];
+                for(let s=0;s<sources.length;s++){
+                    if(used.has(s)) continue;
+                    const src = sources[s];
+                    for(const ch of src.chars){
+                        used.add(s);
+                        assignments.push({pos, char: ch, boxIdx: src.letterIndex});
+                        recurse(slotIdx + 1);
+                        assignments.pop();
+                        used.delete(s);
+                    }
+                }
+            }
+            recurse(0);
+        } else {
+            const BEAM_WIDTH = 2500;
+            let beam = [{ board: [...curB], assignments: [], used: new Set() }];
+            for(let slotIdx = 0; slotIdx < numToUse; slotIdx++){
+                if(so) break;
+                const pos = es[slotIdx];
+                const nextMap = new Map();
+                for(const state of beam){
+                    for(let s=0; s<sources.length; s++){
+                        if(state.used.has(s)) continue;
+                        const src = sources[s];
+                        for(const ch of src.chars){
+                            const nb = [...state.board];
+                            nb[pos] = ch;
+                            const key = nb.join('|');
+                            const na = [...state.assignments, {pos, char: ch, boxIdx: src.letterIndex}];
+                            const newCount = countBoxesFromAssignments(na);
+                            const existing = nextMap.get(key);
+                            if(existing && existing.boxCount >= newCount) continue;
+                            const nu = new Set(state.used); nu.add(s);
+                            nextMap.set(key, { board: nb, assignments: na, used: nu, boxCount: newCount });
+                        }
+                    }
+                }
+                let arr = [...nextMap.values()];
+                for(const st of arr){
+                    const b = [...st.board];
+                    for(let i=0;i<7;i++) if(!b[i]) b[i]='・';
+                    st.partialCombo = ca(b.join(''));
+                }
+                arr.sort((a,b)=>{
+                    if(b.partialCombo !== a.partialCombo) return b.partialCombo - a.partialCombo;
+                    return b.boxCount - a.boxCount;
+                });
+                beam = arr.slice(0, BEAM_WIDTH);
+            }
+            const seen = new Set();
+            for(const st of beam){
+                const board = [...st.board];
+                for(let i=0;i<7;i++) if(!board[i]) board[i]='・';
+                const bs = board.join('');
+                if(seen.has(bs)) continue;
+                seen.add(bs);
+                results.push({board: bs, combo: ca(bs), assignments: st.assignments});
+            }
+        }
+
+        finalizeResults(results, curB, es, sources);
+    }, 10);
 }
+
 function finalizeResults(results,curB,es,assignedBoxes){
-    results.sort((a,b)=>b.combo-a.combo);
+    results.sort((a,b)=>{
+        const dc = b.combo - a.combo;
+        if(dc !== 0) return dc;
+        const db = countBoxesUsed(b) - countBoxesUsed(a);
+        if(db !== 0) return db;
+        const dd = countDeadCells(a.board) - countDeadCells(b.board);
+        if(dd !== 0) return dd;
+        return getMaxWordLength(b.board) - getMaxWordLength(a.board);
+    });
     const unique=[],seen=new Set();
     for(const r of results){if(!seen.has(r.board)){seen.add(r.board);unique.push(r);if(unique.length>=15)break;}}
     if(unique.length===0){
@@ -654,7 +818,7 @@ function finalizeResults(results,curB,es,assignedBoxes){
     fo(unique);
 }
 function isSmallKana(c){return'ゃゅょっャュョッ'.includes(c);}
-function fo(best){io=false;ob.style.display='inline-block';stb.style.display='none';if(!best||best.length===0){or2.innerHTML='<div class="no-results">No boards found.</div>';return;}const curB=pi.map(i=>i.value.trim());const bcl=['box-A','box-B','box-C','box-D','box-E'];or2.innerHTML=best.map(item=>{const words=fw(item.board);const lwp=glp(item.board);const dw=words.slice(0,6).map(w=>w.word);const bl=new Array(7).fill('');if(item.assignments){for(const a of item.assignments){if(a.boxIdx>=0&&a.boxIdx<=4){bl[a.pos]=String.fromCharCode(65+a.boxIdx);}}}const chars=item.board.split('');const cc2=chars.map((c,i)=>{let cls='char-cell';const label=bl[i];const wob=!!curB[i];if(label){cls+=' '+bcl[label.charCodeAt(0)-65];}else if(wob){cls+=' existing';}if(!lwp.has(i)){cls+=' dead';}const badge=label?`<span class="box-badge">${label}</span>`:'';const sk=isSmallKana(c)?' small-kana':'';return`<span class="${cls}"><span class="char-text${sk}">${c}</span>${badge}</span>`;}).join('');return`<div class="optimize-item" data-board="${item.board}"><div class="board-layout">${cc2}</div><div class="board-details">Combo: ${item.combo}</div><div class="board-words-display">${dw.join(', ')}${words.length>6?' +'+(words.length-6)+' more':''}</div></div>`;}).join('');or2.innerHTML+=`<div class="optimize-legend"><span><span class="legend-box" style="background:#fce4ec;border-color:#c62828;"></span> Box A</span><span><span class="legend-box" style="background:#e3f2fd;border-color:#1565c0;"></span> Box B</span><span><span class="legend-box" style="background:#e8f5e9;border-color:#2e7d32;"></span> Box C</span><span><span class="legend-box" style="background:#fff3e0;border-color:#e65100;"></span> Box D</span><span><span class="legend-box" style="background:#f3e5f5;border-color:#6a1b9a;"></span> Box E (Friend)</span><span><span class="legend-box" style="background:#f5f5f5;border-color:#ddd;"></span> Existing</span><span>Dotted = not in 4+ letter word</span></div>`;document.querySelectorAll('.optimize-item').forEach(item=>item.addEventListener('click',()=>{swp(item.dataset.board);}));}
+function fo(best){io=false;ob.style.display='inline-block';stb.style.display='none';if(!best||best.length===0){or2.innerHTML='<div class="no-results">No boards found.</div>';return;}const curB=pi.map(i=>i.value.trim());const bcl=['box-A','box-B','box-C','box-D','box-E'];or2.innerHTML=best.map(item=>{const words=fw(item.board);const lwp=glp(item.board);const dw=words.slice(0,6).map(w=>w.word);const bl=new Array(7).fill('');if(item.assignments){for(const a of item.assignments){if(a.boxIdx>=0&&a.boxIdx<=4){bl[a.pos]=String.fromCharCode(65+a.boxIdx);}}}const chars=item.board.split('');const cc2=chars.map((c,i)=>{let cls='char-cell';const label=bl[i];const wob=!!curB[i];if(label){cls+=' '+bcl[label.charCodeAt(0)-65];}else if(wob){cls+=' existing';}if(!lwp.has(i)){cls+=' dead';}const badge=label?`<span class="box-badge">${label}</span>`:'';const sk=isSmallKana(c)?' small-kana':'';return`<span class="${cls}"><span class="char-text${sk}">${c}</span>${badge}</span>`;}).join('');const maxLen = words.length ? Math.max(...words.map(w=>w.word.length)) : 0;return`<div class="optimize-item" data-board="${item.board}"><div class="board-layout">${cc2}</div><div class="board-details">Combo: ${item.combo} · Max word: ${maxLen}</div><div class="board-words-display">${dw.join(', ')}${words.length>6?' +'+(words.length-6)+' more':''}</div></div>`;}).join('');or2.innerHTML+=`<div class="optimize-legend"><span><span class="legend-box" style="background:#fce4ec;border-color:#c62828;"></span> Box A</span><span><span class="legend-box" style="background:#e3f2fd;border-color:#1565c0;"></span> Box B</span><span><span class="legend-box" style="background:#e8f5e9;border-color:#2e7d32;"></span> Box C</span><span><span class="legend-box" style="background:#fff3e0;border-color:#e65100;"></span> Box D</span><span><span class="legend-box" style="background:#f3e5f5;border-color:#6a1b9a;"></span> Box E (Friend)</span><span><span class="legend-box" style="background:#f5f5f5;border-color:#ddd;"></span> Existing</span><span>Dotted = not in 4+ letter word</span></div>`;document.querySelectorAll('.optimize-item').forEach(item=>item.addEventListener('click',()=>{swp(item.dataset.board);}));}
 document.getElementById('loadingMsg').style.display='block';
 Promise.all([
     ld(),

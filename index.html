@@ -228,7 +228,26 @@ function ld(){return fetch('https://raw.githubusercontent.com/DragonicBear/KotoD
     wordThemeMap=tempMap;ws=new Set(d.map(w=>w.word));
     const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;
 }).catch(()=>{d=gd();const tempMap=new Map();d.forEach(w=>{if(tempMap.has(w.word)){tempMap.set(w.word,[...new Set([...tempMap.get(w.word),...w.themes])]);}else{tempMap.set(w.word,[...w.themes]);}});wordThemeMap=tempMap;ws=new Set(d.map(w=>w.word));const cm=cg(d);for(const w of d)w.combo=cm.get(w.word)||0;document.getElementById('loadingMsg').textContent='⚠ Sample dictionary loaded.';return new Promise(r=>setTimeout(r,300));});}
-function buildThemeSubwordMap(){if(themeSubwordMapBuilt)return;themeSubwordMapBuilt=true;themeSubwordMap.clear();const themeToWords=new Map();for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){if(!themeToWords.has(t))themeToWords.set(t,new Set());themeToWords.get(t).add(w.word);}}}for(const [theme,directWords] of themeToWords){const resultSet=new Set();for(const dw of directWords){resultSet.add(dw);for(const w of d){if(w.word!==dw&&w.word.includes(dw)){resultSet.add(w.word);}}}themeSubwordMap.set(theme,resultSet);}}
+function buildThemeSubwordMap(){
+    if(themeSubwordMapBuilt)return;
+    themeSubwordMap.clear();
+    // Look up each word's short substrings instead of scanning the full
+    // dictionary once for every themed word. Duplicate readings are already
+    // merged in wordThemeMap, so all of their themes are preserved.
+    for(const word of wordThemeMap.keys()){
+        for(let start=0;start<word.length;start++){
+            for(let end=start+1;end<=word.length;end++){
+                const themes=wordThemeMap.get(word.slice(start,end));
+                if(!themes)continue;
+                for(const theme of themes){
+                    if(!themeSubwordMap.has(theme))themeSubwordMap.set(theme,new Set());
+                    themeSubwordMap.get(theme).add(word);
+                }
+            }
+        }
+    }
+    themeSubwordMapBuilt=true;
+}
 function wordMatchesThemes(word,selectedArr){if(!themeSubwordMapBuilt)buildThemeSubwordMap();for(const t of selectedArr){const set=themeSubwordMap.get(t);if(set&&set.has(word))return true;}return false;}
 
 let pi,ri,ss,ts,rab,tg,rs,os,ob,stb,or2,uad;

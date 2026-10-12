@@ -183,3 +183,64 @@ summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 6px; bor
 [data-theme="dark"] .app-tag { background: #3b3420; border-color: #70603a; color: #e7ce88; }
 [data-theme="dark"] .result-word > span > span { color: var(--muted) !important; }
 [data-theme="dark"] .words-popup > div[style] { color: var(--muted) !important; }
+
+/* Phone controls: use the available width instead of wrapping desktop rows. */
+#app {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+    padding-bottom: max(60px, env(safe-area-inset-bottom));
+}
+@media (max-width: 600px) {
+    #app { padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); }
+    .app-header { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+    .app-header > div { min-width: 0; }
+    .app-subtitle { font-size: 11px; line-height: 1.5; }
+    .color-mode-toggle { margin: 0 !important; padding: 8px 10px; min-height: 44px; font-size: 12px; }
+    h1 { font-size: 25px; }
+    details > summary.section-heading { min-height: 44px; }
+    .section-heading h2 { font-size: 17px; }
+    .section-number { flex-shrink: 0; }
+    .section-help { font-size: 13px; }
+    .filters .filter-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .filter-label { padding: 0; }
+    .radio-group { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+    .radio-group label { justify-content: center; padding: 8px 2px; gap: 5px; min-height: 44px; font-size: 14px; }
+    .radio-group input { width: 16px; height: 16px; }
+    .theme-toggle-btn, .theme-actions button { min-height: 44px; }
+    .theme-dropdown .theme-option { min-height: 44px; }
+    .theme-dropdown { position: static; max-height: min(320px, 50dvh); margin-top: 8px; }
+    .refine-controls { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: stretch; }
+    .mini-btn { min-height: 44px; }
+    .toggle-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .toggle-option { min-height: 40px; padding: 8px 4px; }
+    .deck-grid { gap: 12px; }
+    .refine-input { height: 54px; padding-left: 48px; padding-right: 8px; }
+    .deck-role { left: 3px; bottom: 5px; width: 40px; height: 44px; border-radius: 9px; }
+    .friend-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+    .friend-box { width: 100%; max-width: none; }
+    .friend-badge { left: 10px; }
+    .char-autocomplete { width: min(320px, calc(100vw - 54px)); max-height: min(270px, 40dvh); }
+    .char-option { min-height: 56px; }
+    .board-requirement-check { min-height: 44px; }
+    .action-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    #clearBtn { min-height: 44px; }
+    .pos-clear { min-height: 36px; }
+    .sort-select { min-height: 44px; font-size: 16px; max-width: 70%; min-width: 0; }
+    .text-filter-container { min-height: 52px; }
+    .result-word > span { min-width: 0; overflow-wrap: anywhere; }
+    .words-popup { padding: 16px; max-height: 75dvh; }
+}
+@media (max-width: 359px) {
+    .app-header { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 8px; }
+    .brand-tile { width: 40px; height: 40px; font-size: 25px; }
+    h1 { font-size: 22px; }
+    .radio-group { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .refine-controls { grid-template-columns: minmax(0, 1fr); }
+    .refine-input::placeholder { font-size: 12px; }
+}
+/* Landscape phones retain generous tap targets and respect the sensor housing. */
+@media (pointer: coarse) and (orientation: landscape) {
+    .deck-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .deck-grid .refine-input-wrap:nth-child(2n) .char-autocomplete { left: auto; right: 0; }
+    .sort-select, .theme-toggle-btn, .mini-btn { min-height: 44px; font-size: 16px; }
+}

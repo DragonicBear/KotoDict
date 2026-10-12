@@ -172,26 +172,29 @@
             .optimize-item .board-layout .char-cell .box-badge { top: -4px; right: -4px; width: 10px; height: 10px; font-size: 6px; }
         }
     </style>
+    <script>
+        // Apply the saved theme before painting; private browsing may block storage.
+        try { if(localStorage.getItem('kotodict-theme')==='dark') document.documentElement.dataset.theme='dark'; } catch(e) {}
+    </script>
     <link rel="stylesheet" href="ui.css">
 </head>
 <body>
     <div id="app">
-        <div class="container"><header class="app-header"><span class="brand-tile" aria-hidden="true">こ</span><div><h1>KotoDict</h1><p class="app-subtitle">Your Kotodaman board &amp; deck companion</p></div><span class="app-tag">ことばをつなごう</span></header><div class="loading" id="loadingMsg">Loading dictionary...</div><div id="mainContent" style="display:none;">
-            <section class="input-section" aria-labelledby="boardTitle">
-            <div class="section-heading"><span class="section-number" aria-hidden="true">01</span><h2 id="boardTitle">Your board</h2></div><p class="section-help">Enter the board’s kana. Switch B (board) to C (changeable) for a tile you can play.</p>
+        <div class="container"><header class="app-header"><span class="brand-tile" aria-hidden="true">こ</span><div><h1>KotoDict</h1><p class="app-subtitle">Your Kotodaman board &amp; deck companion</p></div><span class="app-tag">ことばをつなごう</span><button type="button" id="colorModeToggle" class="color-mode-toggle" aria-label="Dark mode" aria-pressed="false">Dark mode</button></header><div class="loading" id="loadingMsg">Loading dictionary...</div><div id="mainContent" style="display:none;">
+            <details class="input-section" aria-labelledby="boardTitle">
+            <summary class="section-heading"><span class="section-number" aria-hidden="true">01</span><h2 id="boardTitle">Your board</h2></summary><div class="section-body"><p class="section-help">Enter the board’s kana. Switch B (board) to C (changeable) for a tile you can play.</p>
             <div class="pos-filter-container" id="boardContainer"><div data-index="0"><input type="text" class="pos-input" data-index="0" autocomplete="off" aria-label="Board tile 1"><button type="button" class="cell-toggle board" data-index="0" aria-label="Tile 1: changeable" aria-pressed="false">B</button></div><div data-index="1"><input type="text" class="pos-input" data-index="1" autocomplete="off" aria-label="Board tile 2"><button type="button" class="cell-toggle board" data-index="1" aria-label="Tile 2: changeable" aria-pressed="false">B</button></div><div data-index="2"><input type="text" class="pos-input" data-index="2" autocomplete="off" aria-label="Board tile 3"><button type="button" class="cell-toggle board" data-index="2" aria-label="Tile 3: changeable" aria-pressed="false">B</button></div><div data-index="3"><input type="text" class="pos-input" data-index="3" autocomplete="off" aria-label="Board tile 4"><button type="button" class="cell-toggle board" data-index="3" aria-label="Tile 4: changeable" aria-pressed="false">B</button></div><div data-index="4"><input type="text" class="pos-input" data-index="4" autocomplete="off" aria-label="Board tile 5"><button type="button" class="cell-toggle board" data-index="4" aria-label="Tile 5: changeable" aria-pressed="false">B</button></div><div data-index="5"><input type="text" class="pos-input" data-index="5" autocomplete="off" aria-label="Board tile 6"><button type="button" class="cell-toggle board" data-index="5" aria-label="Tile 6: changeable" aria-pressed="false">B</button></div><div data-index="6"><input type="text" class="pos-input" data-index="6" autocomplete="off" aria-label="Board tile 7"><button type="button" class="cell-toggle board" data-index="6" aria-label="Tile 7: changeable" aria-pressed="false">B</button></div></div>
             <div class="pos-clear-container" id="posClearContainer"><button class="pos-clear" data-index="0" aria-label="Clear board tile 1">×</button><button class="pos-clear" data-index="1" aria-label="Clear board tile 2">×</button><button class="pos-clear" data-index="2" aria-label="Clear board tile 3">×</button><button class="pos-clear" data-index="3" aria-label="Clear board tile 4">×</button><button class="pos-clear" data-index="4" aria-label="Clear board tile 5">×</button><button class="pos-clear" data-index="5" aria-label="Clear board tile 6">×</button><button class="pos-clear" data-index="6" aria-label="Clear board tile 7">×</button></div>
             <div class="pos-labels-container"><div class="pos-label">1</div><div class="pos-label">2</div><div class="pos-label">3</div><div class="pos-label">4</div><div class="pos-label">5</div><div class="pos-label">6</div><div class="pos-label">7</div></div>
-            <div class="action-row"><label class="board-requirement-check"><input type="checkbox" id="requireAllBoard"> Must use all board chars</label><button id="clearBtn" type="button">Reset board</button></div></section>
+            <div class="action-row"><label class="board-requirement-check"><input type="checkbox" id="requireAllBoard"> Must use all board chars</label><button id="clearBtn" type="button">Reset board</button></div></div></details>
             
-            <div class="refine-section" id="refineSection" aria-labelledby="deckTitle"><div class="section-heading"><span class="section-number" aria-hidden="true">02</span><h2 class="refine-title" id="deckTitle">Your deck</h2></div><p class="section-help" id="deckHelp">Search a unit in hiragana or katakana, then select its letters. Tap a badge to assign A–D for matching.</p><div class="refine-controls"><button id="clearRefineBtn" class="mini-btn" type="button">Clear All</button><div class="toggle-switch logic-toggle"><button type="button" class="toggle-option" data-logic="OR" aria-pressed="false">Match any</button><button type="button" class="toggle-option active" data-logic="AND" aria-pressed="true">Match all</button></div></div><div class="deck-grid" id="deckGrid"></div>
+            <details class="refine-section" id="refineSection" aria-labelledby="deckTitle"><summary class="section-heading"><span class="section-number" aria-hidden="true">02</span><h2 class="refine-title" id="deckTitle">Your deck</h2></summary><div class="section-body"><p class="section-help" id="deckHelp">Search a unit in hiragana or katakana, then select its letters. Tap a badge to assign A–D for matching.</p><div class="refine-controls"><button id="clearRefineBtn" class="mini-btn" type="button">Clear All</button><div class="toggle-switch logic-toggle"><button type="button" class="toggle-option" data-logic="OR" aria-pressed="false">Match any</button><button type="button" class="toggle-option active" data-logic="AND" aria-pressed="true">Match all</button></div></div><div class="deck-grid" id="deckGrid"></div>
             <div class="friend-row"><label class="friend-label" for="friendInput">Friend · E</label><div class="refine-input-wrap role-E friend-box"><span class="friend-badge">E</span><input type="text" class="refine-input" id="friendInput" autocomplete="off" placeholder="Search a unit…" aria-describedby="deckHelp"></div></div>
-            <div class="pool-toggle-row"><label class="board-requirement-check" title="'Only use deck' checks that non-board characters come from the deck pool. Board characters count as already available."><input type="checkbox" id="useAllDeckBoxes" checked> Only use deck</label></div>
-            </div>
+            <div class="pool-toggle-row"><label class="board-requirement-check" title="'Only use deck' checks that non-board characters come from the deck pool. Board characters count as already available."><input type="checkbox" id="useAllDeckBoxes" checked> Only use deck</label></div></div></details>
 
-            <div class="optimize-section" id="optimizeSection" style="display:block;"><div class="optimize-header"><div><h2 class="optimize-title">Find your next move</h2><p class="optimize-description">Explore the best combinations for your board and deck.</p></div><div><button id="optimizeBtn" class="primary" type="button">Find Best Board</button><button id="stopOptimizeBtn" class="optimize-stop-btn" type="button" style="display:none;">Stop</button></div></div><div id="optimizeResults" class="optimize-results"></div></div>
+            <details class="optimize-section" id="optimizeSection"><summary class="section-heading"><h2 class="optimize-title">Find your next move</h2></summary><div class="section-body"><p class="section-help">Explore the best combinations for your board and deck.</p><div class="optimize-header"><div><button id="optimizeBtn" class="primary" type="button">Find Best Board</button><button id="stopOptimizeBtn" class="optimize-stop-btn" type="button" style="display:none;">Stop</button></div></div><div id="optimizeResults" class="optimize-results"></div></div></details>
             
-            <section class="filters" aria-labelledby="filtersTitle"><div class="section-heading"><span class="section-number" aria-hidden="true">03</span><h2 id="filtersTitle">Refine your search</h2></div>
+            <details class="filters" aria-labelledby="filtersTitle"><summary class="section-heading"><span class="section-number" aria-hidden="true">03</span><h2 id="filtersTitle">Refine your search</h2></summary><div class="section-body">
                 <div class="filter-row"><span class="filter-label">Length:</span><div class="radio-group"><label><input type="checkbox" name="chars" value="2"><span>2</span></label><label><input type="checkbox" name="chars" value="3"><span>3</span></label><label><input type="checkbox" name="chars" value="4"><span>4</span></label><label><input type="checkbox" name="chars" value="5"><span>5</span></label><label><input type="checkbox" name="chars" value="6"><span>6</span></label><label><input type="checkbox" name="chars" value="7"><span>7</span></label></div></div>
                 <div class="filter-row"><span class="filter-label">Theme:</span>
                     <div class="theme-checklist-container" id="themeChecklistContainer">
@@ -203,7 +206,7 @@
                         </div>
                     </div>
                 </div>
-            </section>
+            </div></details>
             <div class="sort-row"><label class="sort-label" for="sortSelect">Matches</label><select id="sortSelect" class="sort-select"><option value="combo-desc" selected>Combo (High→Low)</option><option value="combo-asc">Combo (Low→High)</option><option value="asc">Length (Low→High)</option><option value="desc">Length (High→Low)</option></select></div>
             <div class="text-filter-container"><label class="text-filter-label" for="textSearch">Pattern</label><input type="text" id="textSearch" class="text-filter-input" autocomplete="off" placeholder="Filter by kana…"></div>
             <div class="results"><div class="result-count" id="resultCount">Enter characters to search</div><div id="resultList"></div></div>
@@ -211,6 +214,19 @@
     </div>
 <script>
 (function(){
+const colorModeToggle=document.getElementById('colorModeToggle');
+function updateColorModeToggle(){
+    const dark=document.documentElement.dataset.theme==='dark';
+    colorModeToggle.setAttribute('aria-pressed',String(dark));
+    colorModeToggle.textContent=dark?'Light mode':'Dark mode';
+}
+updateColorModeToggle();
+colorModeToggle.addEventListener('click',()=>{
+    const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';
+    document.documentElement.dataset.theme=theme;
+    try { localStorage.setItem('kotodict-theme',theme); } catch(e) {}
+    updateColorModeToggle();
+});
 let d=[],cl='AND',ws=new Set(),ff=new Array(7).fill(false),io=false,so=false;const cc=new Map();
 let wordThemeMap=new Map(),selectedThemes=new Set(),themeSubwordMap=new Map(),themeSubwordMapBuilt=false;
 let characters=[];

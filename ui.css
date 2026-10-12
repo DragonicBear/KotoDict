@@ -244,3 +244,12 @@ summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 6px; bor
     .deck-grid .refine-input-wrap:nth-child(2n) .char-autocomplete { left: auto; right: 0; }
     .sort-select, .theme-toggle-btn, .mini-btn { min-height: 44px; font-size: 16px; }
 }
+
+.deck-save-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.deck-save-controls button { min-height: 44px; }
+.deck-save-status { margin: 12px 0 0; }
+button:disabled { opacity: .5; cursor: default; }
+@media (max-width: 600px) {
+    .deck-save-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .deck-save-controls button { padding: 10px 8px; font-size: 13px; }
+}

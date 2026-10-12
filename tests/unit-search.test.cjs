@@ -19,7 +19,7 @@ function autocomplete(characters) {
         };
     });
     const context = vm.createContext({
-        characters, ri: inputs.slice(0, 12), friendInput: inputs[12],
+        wanakana: require('../vendor/wanakana.min.js'), characters, ri: inputs.slice(0, 12), friendInput: inputs[12],
         document: { createElement() {
             const classes = new Set();
             return {
@@ -49,7 +49,7 @@ test('all deck slots and friend search match kana scripts and preserve selection
     for (const input of autocomplete(characters)) {
         const expected = search(input, 'キュウセイ');
         assert.ok(expected.includes('キュウセイ'));
-        for (const query of ['きゅうせい', 'きュうセい', 'ｷｭｳｾｲ', '  きゅうせい  ']) {
+        for (const query of ['きゅうせい', 'きュうセい', 'ｷｭｳｾｲ', '  きゅうせい  ', 'kyuusei', 'KYUUSEI', 'ｋｙｕｕｓｅｉ', 'kyuuせい']) {
             assert.equal(search(input, query), expected, query);
         }
         input.events.keydown({ key: 'ArrowDown', preventDefault() {} });
@@ -80,4 +80,15 @@ test('autocomplete keeps the existing result order and 15-result limit', () => {
     assert.equal((results.match(/class="char-name"/g) || []).length, 15);
     assert.ok(results.indexOf('カナ0<') < results.indexOf('カナ14<'));
     assert.ok(!results.includes('カナ15<'));
+});
+
+
+test('romaji unit names support long vowels and keep Latin name searches literal', () => {
+    const [input] = autocomplete([
+        { name: 'ゲーム', hiragana: 'けげ' },
+        { name: 'ABC(天)', hiragana: 'あ' },
+    ]);
+    const expected = search(input, 'ゲーム');
+    for (const query of ['geemu', 'ge-mu', 'げーむ']) assert.equal(search(input, query), expected);
+    assert.ok(search(input, 'abc').includes('ABC(天)'));
 });

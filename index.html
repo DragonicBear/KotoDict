@@ -486,6 +486,12 @@ function normalizeUnitReading(text){
 function setupCharAutocomplete(){
     const allInputs = [...ri];
     if (friendInput) allInputs.push(friendInput);
+    let activeWrap=null,activeClose=null;
+    const closeOutside=(event)=>{
+        if(activeWrap&&!activeWrap.contains(event.target))activeClose();
+    };
+    document.addEventListener('pointerdown',closeOutside);
+    document.addEventListener('focusin',closeOutside);
     allInputs.forEach((input)=>{
         const wrap=input.parentElement;
         const dropdown=document.createElement('div');
@@ -493,39 +499,63 @@ function setupCharAutocomplete(){
         wrap.appendChild(dropdown);
         let selectedIndex=-1;
         let filteredChars=[];
-        const closeDropdown=()=>{dropdown.classList.remove('open');selectedIndex=-1;};
+        let pointerStart=null,cancelSelection=false;
+        const closeDropdown=()=>{
+            dropdown.classList.remove('open');selectedIndex=-1;
+            if(activeWrap===wrap){activeWrap=null;activeClose=null;}
+        };
+        const selectUnit=(index)=>{
+            const c=filteredChars[index];
+            if(!c)return;
+            input.value=c.hiragana;
+            input.classList.add('filled');
+            closeDropdown();cc.clear();ps();
+        };
+        // Let the browser scroll normally. A drag/cancel must never select a unit.
+        dropdown.addEventListener('pointerdown',e=>{
+            pointerStart={x:e.clientX,y:e.clientY};cancelSelection=false;
+        });
+        dropdown.addEventListener('pointermove',e=>{
+            if(pointerStart&&Math.hypot(e.clientX-pointerStart.x,e.clientY-pointerStart.y)>8)cancelSelection=true;
+        });
+        dropdown.addEventListener('pointercancel',()=>{cancelSelection=true;pointerStart=null;});
+        dropdown.addEventListener('scroll',()=>{cancelSelection=true;},{passive:true});
         const updateDropdown=()=>{
             const query=normalizeUnitSearch(input.value.trim());
             if(!query||characters.length===0){closeDropdown();return;}
             const kanaQuery=normalizeUnitReading(normalizeKanaInput(query));
-            filteredChars=characters.filter(c=>{const name=normalizeUnitSearch(c.name);return name.includes(query)||normalizeUnitReading(name).includes(kanaQuery);}).slice(0,15);
+            const seen=new Set();
+            filteredChars=characters.map(c=>{
+                const name=normalizeUnitSearch(c.name),reading=normalizeUnitReading(name);
+                return {c,exact:name===query||reading===kanaQuery,match:name.includes(query)||reading.includes(kanaQuery)};
+            }).filter(({c,match})=>{
+                const key=JSON.stringify([c.name,c.hiragana]);
+                if(!match||seen.has(key))return false;
+                seen.add(key);return true;
+            }).sort((a,b)=>Number(b.exact)-Number(a.exact)).slice(0,15).map(({c})=>c);
             if(filteredChars.length===0){closeDropdown();return;}
+            if(activeClose&&activeWrap!==wrap)activeClose();
+            activeWrap=wrap;activeClose=closeDropdown;
             if(selectedIndex>=filteredChars.length)selectedIndex=filteredChars.length-1;
             dropdown.innerHTML=filteredChars.map((c,i)=>`<div class="char-option${i===selectedIndex?' selected':''}" data-index="${i}"><span class="char-name">${c.name}</span><span class="char-hira">${c.hiragana}</span></div>`).join('');
             dropdown.classList.add('open');
             dropdown.querySelectorAll('.char-option').forEach(opt=>{
-                const handler=(e)=>{
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const c=filteredChars[parseInt(opt.dataset.index)];
-                    input.value=c.hiragana;
-                    input.classList.add('filled');
-                    closeDropdown();
-                    cc.clear();
-                    ps();
-                };
-                opt.addEventListener('mousedown',handler);
-                opt.addEventListener('touchstart',handler,{passive:false});
+                opt.addEventListener('click',e=>{
+                    e.preventDefault();e.stopPropagation();
+                    if(cancelSelection)return;
+                    selectUnit(parseInt(opt.dataset.index,10));
+                });
             });
         };
         input.addEventListener('input',()=>{selectedIndex=-1;updateDropdown();});
         input.addEventListener('focus',()=>{if(input.value.trim())updateDropdown();});
-        input.addEventListener('blur',()=>{setTimeout(closeDropdown,200);});
+        // Keyboard dismissal on iOS blurs the input; keep results available.
+        // Close only on selection, Escape, or interaction outside this field.
         input.addEventListener('keydown',(e)=>{
             if(!dropdown.classList.contains('open'))return;
             if(e.key==='ArrowDown'){e.preventDefault();selectedIndex=Math.min(selectedIndex+1,filteredChars.length-1);updateDropdown();}
             else if(e.key==='ArrowUp'){e.preventDefault();selectedIndex=Math.max(selectedIndex-1,0);updateDropdown();}
-            else if(e.key==='Enter'&&selectedIndex>=0){e.preventDefault();const c=filteredChars[selectedIndex];input.value=c.hiragana;input.classList.add('filled');closeDropdown();cc.clear();ps();}
+            else if(e.key==='Enter'&&selectedIndex>=0){e.preventDefault();selectUnit(selectedIndex);}
             else if(e.key==='Escape'){closeDropdown();}
         });
     });
@@ -882,7 +912,7 @@ function fo(best){io=false;ob.style.display='inline-block';stb.style.display='no
 document.getElementById('loadingMsg').style.display='block';
 Promise.all([
     ld(),
-    fetch('https://raw.githubusercontent.com/DragonicBear/KotoDict/main/characters.json').then(r=>{if(!r.ok)throw Error('e');return r.json();}).then(data=>{characters=data;}).catch(()=>{characters=[];})
+    fetch('characters.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('e');return r.json();}).then(data=>{characters=data;}).catch(()=>{characters=[];})
 ]).then(()=>{document.getElementById('loadingMsg').style.display='none';document.getElementById('mainContent').style.display='block';init();})
 .catch(err=>{console.error('Load error:',err);document.getElementById('loadingMsg').textContent='⚠ Error loading dictionary.';});
 })();

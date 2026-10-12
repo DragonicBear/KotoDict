@@ -20,15 +20,24 @@ function autocomplete(characters) {
     });
     const context = vm.createContext({
         wanakana: require('../vendor/wanakana.min.js'), characters, ri: inputs.slice(0, 12), friendInput: inputs[12],
-        document: { createElement() {
+        document: { addEventListener() {}, createElement() {
             const classes = new Set();
             return {
-                innerHTML: '',
+                markup: '', events: {}, options: [],
+                get innerHTML() { return this.markup; },
+                set innerHTML(value) {
+                    this.markup = value;
+                    this.options = [...value.matchAll(/data-index="(\d+)"/g)].map(match => ({
+                        dataset: { index: match[1] }, events: {},
+                        addEventListener(name, handler) { this.events[name] = handler; },
+                    }));
+                },
+                addEventListener(name, handler) { this.events[name] = handler; },
                 classList: {
                     add: name => classes.add(name), remove: name => classes.delete(name),
                     contains: name => classes.has(name),
                 },
-                querySelectorAll: () => [],
+                querySelectorAll() { return this.options; },
             };
         } },
         cc: { clear() {} }, ps() {}, setTimeout,
@@ -91,4 +100,38 @@ test('romaji unit names support long vowels and keep Latin name searches literal
     const expected = search(input, 'ゲーム');
     for (const query of ['geemu', 'ge-mu', 'げーむ']) assert.equal(search(input, query), expected);
     assert.ok(search(input, 'abc').includes('ABC(天)'));
+});
+
+
+test('utsutsu shows the exact current unit first, once, and selects its letters', () => {
+    const data = JSON.parse(fs.readFileSync(path.join(root, 'characters.json'), 'utf8'));
+    const [input] = autocomplete(data);
+    for (const query of ['utsutsu', 'うつつ', 'ウツツ']) {
+        const results = search(input, query);
+        assert.ok(results.startsWith('<div class="char-option" data-index="0"><span class="char-name">うつつ</span>'));
+        assert.equal((results.match(/>うつゆゅがい</g) || []).length, 1);
+        input.events.keydown({key:'ArrowDown',preventDefault(){}});
+        input.events.keydown({key:'Enter',preventDefault(){}});
+        assert.equal(input.value, 'うつゆゅがい');
+    }
+});
+
+
+test('touch movement, cancellation and scrolling suppress selection until a fresh tap', () => {
+    const [input] = autocomplete([{ name: 'うつつ', hiragana: 'うつゆゅがい' }]);
+    const dropdown = input.parentElement.dropdown;
+    const click = { preventDefault() {}, stopPropagation() {} };
+    for (const gesture of ['pointermove', 'pointercancel', 'scroll']) {
+        search(input, 'utsutsu');
+        dropdown.events.pointerdown({ clientX: 20, clientY: 20 });
+        assert.equal(input.value, 'utsutsu');
+        dropdown.events[gesture]({ clientX: 20, clientY: 60 });
+        dropdown.options[0].events.click(click);
+        assert.equal(input.value, 'utsutsu', gesture);
+        assert.equal(dropdown.classList.contains('open'), true);
+        dropdown.events.pointerdown({ clientX: 20, clientY: 20 });
+        dropdown.options[0].events.click(click);
+        assert.equal(input.value, 'うつゆゅがい');
+        assert.equal(dropdown.classList.contains('open'), false);
+    }
 });

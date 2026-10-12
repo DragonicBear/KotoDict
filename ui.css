@@ -253,3 +253,9 @@ button:disabled { opacity: .5; cursor: default; }
     .deck-save-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
     .deck-save-controls button { padding: 10px 8px; font-size: 13px; }
 }
+
+.loadout-panel { margin-top: 20px; padding-top: 18px; border-top: 1px dashed var(--line); }
+.loadout-field { width: 100%; min-width: 0; min-height: 46px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 16px; color: var(--ink); background: #fff; }
+.loadout-panel .deck-save-controls { margin: 10px 0 16px; }
+.loadout-panel .section-help { margin: 8px 0 0; }
+[data-theme="dark"] .loadout-field { background: #243446; color: var(--ink); }

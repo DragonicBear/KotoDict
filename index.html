@@ -443,6 +443,11 @@ function gm(ca2,ci2,boxes,lo,iv,o,excludeSet){
     }
 }
 
+function normalizeUnitSearch(text){
+    // Fold kana scripts and width without changing displayed names or deck letters.
+    return text.normalize('NFKC').toLowerCase().replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));
+}
+
 function setupCharAutocomplete(){
     const allInputs = [...ri];
     if (friendInput) allInputs.push(friendInput);
@@ -455,9 +460,9 @@ function setupCharAutocomplete(){
         let filteredChars=[];
         const closeDropdown=()=>{dropdown.classList.remove('open');selectedIndex=-1;};
         const updateDropdown=()=>{
-            const query=input.value.trim().toLowerCase();
+            const query=normalizeUnitSearch(input.value.trim());
             if(!query||characters.length===0){closeDropdown();return;}
-            filteredChars=characters.filter(c=>c.name.toLowerCase().includes(query)).slice(0,15);
+            filteredChars=characters.filter(c=>normalizeUnitSearch(c.name).includes(query)).slice(0,15);
             if(filteredChars.length===0){closeDropdown();return;}
             if(selectedIndex>=filteredChars.length)selectedIndex=filteredChars.length-1;
             dropdown.innerHTML=filteredChars.map((c,i)=>`<div class="char-option${i===selectedIndex?' selected':''}" data-index="${i}"><span class="char-name">${c.name}</span><span class="char-hira">${c.hiragana}</span></div>`).join('');

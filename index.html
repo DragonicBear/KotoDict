@@ -331,8 +331,7 @@ function cycleRole(idx){
     }
     boxRoles[idx] = next;
     updateRoleBadge(idx);
-    cc.clear();
-    ps();
+    scheduleSearch();
 }
 
 function getAssignedBoxes(){
@@ -519,7 +518,7 @@ function setupDeckStorage(){
     load.addEventListener('click',()=>{
         const item=selected();if(!item)return;
         if(!persist({...loadoutLibrary,activeId:item.id}))return;
-        applySavedDeck(item.deck);savedDeckSnapshot=JSON.stringify(currentDeck());ps();
+        applySavedDeck(item.deck);savedDeckSnapshot=JSON.stringify(currentDeck());scheduleSearch();
     });
     remove.addEventListener('click',()=>{
         const item=selected();if(!item)return;
@@ -556,29 +555,29 @@ function init(){
         });
     });
 
-    tg.forEach(t=>t.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(t.dataset.index);ff[i]=!ff[i];t.classList.toggle('free',ff[i]);t.classList.toggle('board',!ff[i]);t.textContent=ff[i]?'C':'B';t.setAttribute('aria-pressed',String(ff[i]));cc.clear();ps();}));
-    document.querySelectorAll('#posClearContainer .pos-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(b.dataset.index);pi[i].value='';pi[i].classList.remove('filled');cc.clear();ps();}));
-    document.querySelectorAll('.logic-toggle .toggle-option').forEach(o=>o.addEventListener('click',()=>{document.querySelectorAll('.logic-toggle .toggle-option').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-pressed','false');});o.classList.add('active');o.setAttribute('aria-pressed','true');cl=o.dataset.logic;rs.classList.toggle('or-mode',cl==='OR');ps();}));
-    document.getElementById('clearBtn').addEventListener('click',e=>{e.preventDefault();pi.forEach(i=>{i.value='';i.classList.remove('filled');});ff.fill(false);tg.forEach(t=>{t.classList.remove('free');t.classList.add('board');t.textContent='B';t.setAttribute('aria-pressed','false');});ts.value='';or2.innerHTML='';selectedThemes.clear();updateThemeUI();cc.clear();ps();});
-    document.getElementById('clearRefineBtn').addEventListener('click',e=>{e.preventDefault();ri.forEach(i=>{i.value='';i.classList.remove('filled');});boxRoles.fill('');for(let i=0;i<NUM_DECK_BOXES;i++)updateRoleBadge(i);if(friendInput){friendInput.value='';friendInput.classList.remove('filled');}or2.innerHTML='';cc.clear();ps();});
-    let st;const ds=()=>{clearTimeout(st);st=setTimeout(ps,150);};
+    tg.forEach(t=>t.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(t.dataset.index);ff[i]=!ff[i];t.classList.toggle('free',ff[i]);t.classList.toggle('board',!ff[i]);t.textContent=ff[i]?'C':'B';t.setAttribute('aria-pressed',String(ff[i]));cc.clear();scheduleSearch();}));
+    document.querySelectorAll('#posClearContainer .pos-clear').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();const i=parseInt(b.dataset.index);pi[i].value='';pi[i].classList.remove('filled');cc.clear();scheduleSearch();}));
+    document.querySelectorAll('.logic-toggle .toggle-option').forEach(o=>o.addEventListener('click',()=>{document.querySelectorAll('.logic-toggle .toggle-option').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-pressed','false');});o.classList.add('active');o.setAttribute('aria-pressed','true');cl=o.dataset.logic;rs.classList.toggle('or-mode',cl==='OR');scheduleSearch();}));
+    document.getElementById('clearBtn').addEventListener('click',e=>{e.preventDefault();pi.forEach(i=>{i.value='';i.classList.remove('filled');});ff.fill(false);tg.forEach(t=>{t.classList.remove('free');t.classList.add('board');t.textContent='B';t.setAttribute('aria-pressed','false');});ts.value='';or2.innerHTML='';selectedThemes.clear();updateThemeUI();cc.clear();scheduleSearch();});
+    document.getElementById('clearRefineBtn').addEventListener('click',e=>{e.preventDefault();ri.forEach(i=>{i.value='';i.classList.remove('filled');});boxRoles.fill('');for(let i=0;i<NUM_DECK_BOXES;i++)updateRoleBadge(i);if(friendInput){friendInput.value='';friendInput.classList.remove('filled');}or2.innerHTML='';cc.clear();scheduleSearch();});
+    const ds=()=>scheduleSearch(150);
     pi.forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);cc.clear();ds();}));
-    [...ri,friendInput].forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);cc.clear();ds();}));
+    [...ri,friendInput].forEach(i=>i.addEventListener('input',()=>{i.classList.toggle('filled',i.value.length>0);ds();}));
     ts.addEventListener('input',ds);
-    document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.addEventListener('change',ps));
-    ss.addEventListener('change',ps);rab.addEventListener('change',ps);
+    document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.addEventListener('change',()=>scheduleSearch()));
+    ss.addEventListener('change',()=>scheduleSearch());
     ob.addEventListener('click',()=>{if(!io)so2();});stb.addEventListener('click',()=>{so=true;});
     themeToggleBtn.addEventListener('click',(e)=>{e.stopPropagation();themeDropdown.classList.toggle('open');if(themeDropdown.classList.contains('open')){themeSearchInput.value='';filterThemeOptions('');themeSearchInput.focus();}});
     themeSearchInput.addEventListener('input',()=>filterThemeOptions(themeSearchInput.value));
-    themeSelectAllBtn.addEventListener('click',()=>{const allThemes=getAllThemes();allThemes.forEach(t=>selectedThemes.add(t));updateThemeUI();ps();});
-    themeClearAllBtn.addEventListener('click',()=>{selectedThemes.clear();updateThemeUI();ps();});
+    themeSelectAllBtn.addEventListener('click',()=>{const allThemes=getAllThemes();allThemes.forEach(t=>selectedThemes.add(t));updateThemeUI();scheduleSearch();});
+    themeClearAllBtn.addEventListener('click',()=>{selectedThemes.clear();updateThemeUI();scheduleSearch();});
     document.addEventListener('click',(e)=>{if(!e.target.closest('#themeChecklistContainer')){themeDropdown.classList.remove('open');}});
     setupDeckStorage();
     setupCharAutocomplete();
-    ps();populateThemeChecklist();
+    scheduleSearch();populateThemeChecklist();
 }
 function getAllThemes(){const themes=new Set();const excludeKeywords=['イベント','コラボ','コラボレーション','collab','event','イベ','期間限定','フェス','fes','復刻','ガチャ','キャンペーン','CP','限定','コラボ記念','周年'];for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){const lower=t.toLowerCase();if(!excludeKeywords.some(kw=>lower.includes(kw.toLowerCase()))){themes.add(t);}}}}return [...themes].sort((a,b)=>a.localeCompare(b));}
-function populateThemeChecklist(){const themes=getAllThemes();const themeCounts=new Map();for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){themeCounts.set(t,(themeCounts.get(t)||0)+1);}}}themeOptionsList.innerHTML=themes.map(t=>{const count=themeCounts.get(t)||0;return`<label class="theme-option"><input type="checkbox" value="${t}" class="theme-checkbox"><span>${t}</span><span class="theme-count">${count}</span></label>`;}).join('');document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.addEventListener('change',()=>{if(cb.checked){selectedThemes.add(cb.value);}else{selectedThemes.delete(cb.value);}updateThemeUI();ps();});});}
+function populateThemeChecklist(){const themes=getAllThemes();const themeCounts=new Map();for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){themeCounts.set(t,(themeCounts.get(t)||0)+1);}}}themeOptionsList.innerHTML=themes.map(t=>{const count=themeCounts.get(t)||0;return`<label class="theme-option"><input type="checkbox" value="${t}" class="theme-checkbox"><span>${t}</span><span class="theme-count">${count}</span></label>`;}).join('');document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.addEventListener('change',()=>{if(cb.checked){selectedThemes.add(cb.value);}else{selectedThemes.delete(cb.value);}updateThemeUI();scheduleSearch();});});}
 function filterThemeOptions(query){const lower=query.toLowerCase();document.querySelectorAll('.theme-option').forEach(opt=>{const text=opt.textContent.toLowerCase();opt.style.display=text.includes(lower)?'flex':'none';});}
 function updateThemeUI(){document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.checked=selectedThemes.has(cb.value);});themeCount.textContent=selectedThemes.size;if(selectedThemes.size>0){themeCount.classList.add('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Themes Selected';}else{themeCount.classList.remove('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Select Themes';}}
 
@@ -603,6 +602,47 @@ function matchUnitPositions(chars, indices, units){
         if(letterIndex>=0)boxMap.set(indices[i],letterIndex);
     }
     return {matched:new Set([...owners.keys()].map(i=>indices[i])),count:owners.size,boxMap};
+}
+
+// Compile the 12 deck slots plus friend into bit masks once per search.
+// Reuse scratch space while counting matches.
+// Colour assignments are only needed for the first 300 displayed results.
+function createUnitCounter(units){
+    const masks=new Map();
+    units.forEach((unit,i)=>unit.chars.forEach(ch=>masks.set(ch,(masks.get(ch)||0)|(1<<i))));
+    const owners=new Int32Array(units.length);
+    let word='',excluded=null,visited=0;
+    function assign(pos){
+        let available=(masks.get(word[pos])||0)&~visited;
+        while(available){
+            const bit=available&-available;
+            available&=~bit;
+            if(visited&bit)continue;
+            visited|=bit;
+            const unit=31-Math.clz32(bit);
+            if(owners[unit]===-1||assign(owners[unit])){
+                owners[unit]=pos;return true;
+            }
+        }
+        return false;
+    }
+    return (text,excludeSet=null,limit=units.length)=>{
+        if(!limit)return 0;
+        word=text;excluded=excludeSet;
+        // Most broad searches only need to know whether any deck kana occurs.
+        if(limit===1){
+            for(let i=0;i<word.length;i++)if((!excluded||!excluded.has(i))&&masks.has(word[i]))return 1;
+            return 0;
+        }
+        owners.fill(-1);
+        let count=0;
+        for(let i=0;i<word.length;i++){
+            if(excluded&&excluded.has(i))continue;
+            visited=0;
+            if(assign(i)&&++count===limit)break;
+        }
+        return count;
+    };
 }
 
 function gm(ca2,ci2,boxes,lo,iv,o,excludeSet){
@@ -639,6 +679,15 @@ function normalizeUnitReading(text){
 function setupCharAutocomplete(){
     const allInputs = [...ri];
     if (friendInput) allInputs.push(friendInput);
+    const seenUnits=new Set();
+    const searchableUnits=characters.filter(c=>{
+        const key=JSON.stringify([c.name,c.hiragana]);
+        if(seenUnits.has(key))return false;
+        seenUnits.add(key);return true;
+    }).map(c=>{
+        const name=normalizeUnitSearch(c.name);
+        return {c,name,reading:normalizeUnitReading(name)};
+    });
     let activeWrap=null,activeClose=null;
     const closeOutside=(event)=>{
         if(activeWrap&&!activeWrap.contains(event.target))activeClose();
@@ -662,7 +711,7 @@ function setupCharAutocomplete(){
             if(!c)return;
             input.value=c.hiragana;
             input.classList.add('filled');
-            closeDropdown();cc.clear();ps();
+            closeDropdown();scheduleSearch();
         };
         // Let the browser scroll normally. A drag/cancel must never select a unit.
         dropdown.addEventListener('pointerdown',e=>{
@@ -677,15 +726,12 @@ function setupCharAutocomplete(){
             const query=normalizeUnitSearch(input.value.trim());
             if(!query||characters.length===0){closeDropdown();return;}
             const kanaQuery=normalizeUnitReading(normalizeKanaInput(query));
-            const seen=new Set();
-            filteredChars=characters.map(c=>{
-                const name=normalizeUnitSearch(c.name),reading=normalizeUnitReading(name);
-                return {c,exact:name===query||reading===kanaQuery,match:name.includes(query)||reading.includes(kanaQuery)};
-            }).filter(({c,match})=>{
-                const key=JSON.stringify([c.name,c.hiragana]);
-                if(!match||seen.has(key))return false;
-                seen.add(key);return true;
-            }).sort((a,b)=>Number(b.exact)-Number(a.exact)).slice(0,15).map(({c})=>c);
+            const exact=[],partial=[];
+            for(const {c,name,reading} of searchableUnits){
+                if(name===query||reading===kanaQuery)exact.push(c);
+                else if(partial.length<15&&(name.includes(query)||reading.includes(kanaQuery)))partial.push(c);
+            }
+            filteredChars=exact.concat(partial).slice(0,15);
             if(filteredChars.length===0){closeDropdown();return;}
             if(activeClose&&activeWrap!==wrap)activeClose();
             activeWrap=wrap;activeClose=closeDropdown;
@@ -714,6 +760,20 @@ function setupCharAutocomplete(){
     });
 }
 
+let searchTimer=null,searchFrame=null;
+function scheduleSearch(delay=0){
+    clearTimeout(searchTimer);
+    if(searchFrame!==null)cancelAnimationFrame(searchFrame);
+    searchTimer=null;searchFrame=null;
+    if(delay){searchTimer=setTimeout(()=>scheduleSearch(),delay);return;}
+    // Paint the typed text, selected unit, or role badge before filtering.
+    // A newer input cancels pending work, including an old typing debounce.
+    searchFrame=requestAnimationFrame(()=>{
+        searchFrame=null;
+        searchTimer=setTimeout(()=>{searchTimer=null;ps();},0);
+    });
+}
+
 function ps(){
     updateDeckSaveStatus();
     const rc=document.getElementById('resultCount'),rl=document.getElementById('resultList');
@@ -727,6 +787,8 @@ function ps(){
     const hrf=rfc.length>0;let results=d;
     const deckSources=uabv?getDeckSources():[];
     const hasDeckPool=deckSources.length>0;
+    if(!hapf&&!hrf&&!hasDeckPool&&cf.length===0&&tf.length===0&&selectedThemes.size===0){rc.textContent=`Waiting for input... (${d.length} words)`;rl.innerHTML='';return;}
+    const countDeck=createUnitCounter(deckSources),countAssigned=createUnitCounter(rfcBoxes);
     if(selectedThemes.size>0){const selectedArr=[...selectedThemes];results=results.filter(w=>wordMatchesThemes(w.word,selectedArr));}
     if(cf.length>0){const fs=new Set(cf);results=results.filter(w=>fs.has(w.word.length));}
 
@@ -756,7 +818,7 @@ function ps(){
         }
     }
 
-    let wm=new Map(),vbw=[];const rbi=(rabv&&hapf)?iv.reduce((a,v,i)=>{if(v.length>0)a.push(i);return a;},[]):[];
+    const buckets=new Map();let totalResults=0;const rbi=(rabv&&hapf)?iv.reduce((a,v,i)=>{if(v.length>0)a.push(i);return a;},[]):[];
     for(const w of results){
         const len=w.word.length;
         if(hapf&&len>7)continue;
@@ -765,16 +827,16 @@ function ps(){
             // Check board letters and assign each empty position to a distinct unit.
             for(let s=0;s<=7-len;s++){
                 let fits=true;
-                const neededChars=[],neededIndices=[];
+                const neededChars=[];
                 for(let i=0;i<len;i++){
                     if(iv[s+i]){
                         if(!iv[s+i].includes(w.word[i])){fits=false;break;}
                     } else if(hasDeckPool){
-                        neededChars.push(w.word[i]);neededIndices.push(i);
+                        neededChars.push(w.word[i]);
                     }
                 }
                 if(fits&&hasDeckPool){
-                    fits=matchUnitPositions(neededChars,neededIndices,deckSources).count===neededChars.length;
+                    fits=neededChars.length<=deckSources.length&&countDeck(neededChars)===neededChars.length;
                 }
                 if(fits&&rabv&&rbi.length>0){
                     const we=s+len;
@@ -785,42 +847,58 @@ function ps(){
             if(vo.length===0)continue;
         } else {
             if(hasDeckPool){
-                const indices=[...w.word].map((_,i)=>i).filter(i=>!patternFixedPositions||!patternFixedPositions.has(i));
-                const chars=indices.map(i=>w.word[i]);
-                const count=matchUnitPositions(chars,indices,deckSources).count;
-                // Without a playable pattern, search for any deck kana in the word.
                 // Extra wildcard slots stay unrestricted when the deck is too small.
-                const requireAll=tf.includes('-')&&chars.length<=deckSources.length;
-                if(requireAll?count!==chars.length:count===0)continue;
+                const needed=len-(patternFixedPositions?patternFixedPositions.size:0);
+                const requireAll=tf.includes('-')&&needed<=deckSources.length;
+                const count=countDeck(w.word,patternFixedPositions,requireAll?needed:1);
+                if(requireAll?count!==needed:count===0)continue;
             }
             vo=[-1];
         }
         let ac2=0;if(hapf){for(const o of vo){const c2=cp(w.word,o,iv,ff);if(c2>ac2)ac2=c2;}}else ac2=w.combo||0;
-        let bo=vo[0],irm=false,mi=new Set(),rmc=0,bmap=new Map();
-        if(hrf){let bestC=cl==='AND'?-1:0;for(const o of vo){const ch=w.word.split('');let cts=[],ci2=[];if(o===-1){cts=[...ch];ci2=ch.map((_,i)=>i);}else{for(let i=0;i<ch.length;i++){if(!iv[o+i]){cts.push(ch[i]);ci2.push(i);}}}const dx=gm(cts,ci2,rfcBoxes,cl,iv,o,patternFixedPositions);if(cl==='OR'){if(dx.matched.size>0){bo=o;mi=dx.matched;rmc=dx.count;irm=true;bmap=dx.boxMap;break;}}else{if(dx.count>bestC){bestC=dx.count;bo=o;mi=dx.matched;rmc=dx.count;irm=(dx.count>=maxBoxes);bmap=dx.boxMap;}}}if(cl==='OR'&&!irm)continue;if(cl==='AND'&&rmc===0)continue;}
-        wm.set(w.word,{validOffsets:[bo],isRefineMatch:irm,refineMatchedCount:rmc,matchedIndices:mi,combo:ac2,totalConstraints:maxBoxes,boxMap:bmap});vbw.push(w);}
-    vbw.sort((a,b)=>{
-        const ma=wm.get(a.word),mb=wm.get(b.word);
+        let bo=vo[0],irm=false,rmc=0;
         if(hrf){
-            if(ma.isRefineMatch!==mb.isRefineMatch)return ma.isRefineMatch?-1:1;
-            if(!uabv && cl==='AND' && ma.refineMatchedCount!==mb.refineMatchedCount){
-                return mb.refineMatchedCount-ma.refineMatchedCount;
+            let bestC=-1;
+            for(const o of vo){
+                let excluded=patternFixedPositions;
+                if(o!==-1){
+                    excluded=new Set();
+                    for(let i=0;i<len;i++)if(iv[o+i])excluded.add(i);
+                }
+                const count=countAssigned(w.word,excluded,cl==='OR'?1:maxBoxes);
+                if(count>bestC){bestC=count;bo=o;rmc=count;irm=cl==='OR'?count>0:count>=maxBoxes;}
+                if(irm)break;
             }
+            if(rmc===0)continue;
         }
-        switch(so2){case'asc':return a.word.length-b.word.length;case'desc':return b.word.length-a.word.length;case'combo-asc':return ma.combo-mb.combo;case'combo-desc':return mb.combo-ma.combo;default:return 0;}
-    });
-    const mr=300,dr=vbw.slice(0,mr);
-    if(!hapf&&!hrf&&!hasDeckPool&&cf.length===0&&tf.length===0&&selectedThemes.size===0){rc.textContent=`Waiting for input... (${d.length} words)`;rl.innerHTML='';return;}
+        totalResults++;
+        const refineRank=hrf&&!irm?1:0;
+        const countRank=hrf&&!uabv&&cl==='AND'?-rmc:0;
+        let sortRank=0;
+        switch(so2){case'asc':sortRank=len;break;case'desc':sortRank=-len;break;case'combo-asc':sortRank=ac2;break;case'combo-desc':sortRank=-ac2;break;}
+        const key=`${refineRank}:${countRank}:${sortRank}`;
+        let bucket=buckets.get(key);
+        if(!bucket){bucket={refineRank,countRank,sortRank,items:[]};buckets.set(key,bucket);}
+        // Equal-ranked results retain dictionary order; only 300 can be displayed.
+        if(bucket.items.length<300)bucket.items.push({word:w,match:{validOffsets:[bo],isRefineMatch:irm,refineMatchedCount:rmc,combo:ac2,totalConstraints:maxBoxes}});
+    }
+    const mr=300,dr=[];
+    const ranked=[...buckets.values()].sort((a,b)=>a.refineRank-b.refineRank||a.countRank-b.countRank||a.sortRank-b.sortRank);
+    for(const bucket of ranked){
+        dr.push(...bucket.items.slice(0,mr-dr.length));
+        if(dr.length===mr)break;
+    }
     if(dr.length===0){rc.textContent="No matches found";rl.innerHTML='<div class="no-results">No words match your criteria</div>';}
     else{
-        rc.textContent=`Found ${vbw.length} words${vbw.length>mr?` (Showing first ${mr})`:''}`;
+        rc.textContent=`Found ${totalResults} words${totalResults>mr?` (Showing first ${mr})`:''}`;
         const boxColors=['#c62828','#1565c0','#2e7d32','#e65100','#6a1b9a'];
         const boxBgs=['#fce4ec','#e3f2fd','#e8f5e9','#fff3e0','#f3e5f5'];
         const hp=[];
-        for(const w of dr){
-            const m=wm.get(w.word),dt=w.displays[0]||w.word;
+        for(const {word:w,match:m} of dr){
+            const dt=w.displays[0]||w.word;
             const tt=w.themes&&w.themes.length>0?`<div class="result-themes">Theme: ${w.themes.join(', ')}</div>`:'';
             const po=m.validOffsets[0],ch=w.word.split('');
+            if(hrf)m.boxMap=gm(ch,ch.map((_,i)=>i),rfcBoxes,cl,iv,po,patternFixedPositions).boxMap;
             let gi=new Set();
             if(po!==-1){for(let i=0;i<ch.length;i++){if(iv[po+i])gi.add(i);}}
             const hwh=ch.map((c,i)=>{

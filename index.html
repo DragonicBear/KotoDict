@@ -191,7 +191,16 @@
             
             <details class="refine-section" id="refineSection" aria-labelledby="deckTitle"><summary class="section-heading"><span class="section-number" aria-hidden="true">02</span><h2 class="refine-title" id="deckTitle">Your deck</h2></summary><div class="section-body"><p class="section-help" id="deckHelp">Search a unit in kana or romaji (e.g. kyuusei), then select its letters. Tap a badge to assign A–D for matching.</p><div class="refine-controls"><button id="clearRefineBtn" class="mini-btn" type="button">Clear All</button><div class="toggle-switch logic-toggle"><button type="button" class="toggle-option" data-logic="OR" aria-pressed="false">Match any</button><button type="button" class="toggle-option active" data-logic="AND" aria-pressed="true">Match all</button></div></div><div class="deck-grid" id="deckGrid"></div>
             <div class="friend-row"><label class="friend-label" for="friendInput">Friend · E</label><div class="refine-input-wrap role-E friend-box"><span class="friend-badge">E</span><input type="text" class="refine-input" id="friendInput" autocomplete="off" placeholder="Search a unit…" aria-describedby="deckHelp"></div></div>
-            <div class="deck-save-controls"><button type="button" id="saveDeckBtn" class="primary">Save deck</button><button type="button" id="forgetDeckBtn" class="mini-btn" disabled>Forget saved deck</button></div><p id="deckSaveStatus" class="section-help deck-save-status" role="status">Save your deck on this device to restore it next time.</p>
+            <div class="loadout-panel">
+                <label for="loadoutSelect" class="slot-label">Saved loadouts</label>
+                <select id="loadoutSelect" class="loadout-field" aria-describedby="loadoutHelp"><option value="">No saved loadouts</option></select>
+                <p id="loadoutHelp" class="section-help">Choose a loadout, then Load to replace your current deck. The last saved or loaded deck restores next time.</p>
+                <div class="deck-save-controls"><button type="button" id="loadDeckBtn" class="mini-btn" disabled>Load selected</button><button type="button" id="deleteDeckBtn" class="mini-btn" disabled>Delete selected</button></div>
+                <label for="loadoutName" class="slot-label">Loadout name</label>
+                <input id="loadoutName" class="loadout-field" type="text" maxlength="60" placeholder="e.g. Fire team" autocomplete="off">
+                <div class="deck-save-controls"><button type="button" id="saveDeckBtn" class="primary">Save as new</button><button type="button" id="updateDeckBtn" class="mini-btn" disabled>Update selected</button></div>
+                <p id="deckSaveStatus" class="section-help deck-save-status" role="status">Loadouts are saved in this browser on this device.</p>
+            </div>
             <div class="pool-toggle-row"><label class="board-requirement-check" title="'Only use deck' checks that non-board characters come from the deck pool. Board characters count as already available."><input type="checkbox" id="useAllDeckBoxes" checked> Only use deck</label></div></div></details>
 
             <details class="optimize-section" id="optimizeSection"><summary class="section-heading"><h2 class="optimize-title">Find your next move</h2></summary><div class="section-body"><p class="section-help">Explore the best combinations for your board and deck.</p><div class="optimize-header"><div><button id="optimizeBtn" class="primary" type="button">Find Best Board</button><button id="stopOptimizeBtn" class="optimize-stop-btn" type="button" style="display:none;">Stop</button></div></div><div id="optimizeResults" class="optimize-results"></div></div></details>
@@ -379,7 +388,8 @@ function isFormableFromPool(word, pool){
 }
 
 const DECK_STORAGE_KEY='kotodict-deck-v1';
-let savedDeckSnapshot=null;
+const LOADOUT_STORAGE_KEY='kotodict-loadouts-v1';
+let savedDeckSnapshot=null,loadoutLibrary={version:1,activeId:null,loadouts:[]};
 function currentDeck(){
     return {version:1,slots:ri.map(i=>i.value),roles:[...boxRoles],friend:friendInput.value,logic:cl,onlyDeck:uad.checked};
 }
@@ -391,51 +401,122 @@ function validSavedDeck(deck){
     const assigned=deck.roles.filter(Boolean);
     return new Set(assigned).size===assigned.length;
 }
+function validLoadoutLibrary(value){
+    if(!value||value.version!==1||!Array.isArray(value.loadouts))return false;
+    const ids=new Set(),names=new Set();
+    for(const item of value.loadouts){
+        if(!item||typeof item.id!=='string'||!item.id||typeof item.name!=='string'||
+            !item.name.trim()||item.name.length>60||!validSavedDeck(item.deck)||
+            ids.has(item.id)||names.has(item.name.trim().toLowerCase()))return false;
+        ids.add(item.id);names.add(item.name.trim().toLowerCase());
+    }
+    return value.activeId===null||ids.has(value.activeId);
+}
+function applySavedDeck(deck){
+    ri.forEach((input,i)=>{input.value=deck.slots[i];input.classList.toggle('filled',!!input.value);});
+    friendInput.value=deck.friend;friendInput.classList.toggle('filled',!!deck.friend);
+    boxRoles=[...deck.roles];boxRoles.forEach((_,i)=>updateRoleBadge(i));
+    cl=deck.logic;uad.checked=deck.onlyDeck;
+    rs.classList.toggle('or-mode',cl==='OR');
+    document.querySelectorAll('.logic-toggle .toggle-option').forEach(button=>{
+        const active=button.dataset.logic===cl;
+        button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));
+    });
+    document.querySelectorAll('.char-autocomplete.open').forEach(menu=>menu.classList.remove('open'));
+    or2.innerHTML='';cc.clear();
+}
 function updateDeckSaveStatus(){
     if(savedDeckSnapshot===null)return;
+    const active=loadoutLibrary.loadouts.find(item=>item.id===loadoutLibrary.activeId);
+    if(!active)return;
     document.getElementById('deckSaveStatus').textContent=JSON.stringify(currentDeck())===savedDeckSnapshot
-        ?'Deck saved on this device. It will restore next time.'
-        :'Unsaved changes. Tap Save deck to update your saved deck.';
+        ?`“${active.name}” is saved on this device and will restore next time.`
+        :`Unsaved changes to “${active.name}”. Save as new or update a selected loadout.`;
 }
 function setupDeckStorage(){
     const status=document.getElementById('deckSaveStatus');
-    const forget=document.getElementById('forgetDeckBtn');
-    try {
-        const raw=localStorage.getItem(DECK_STORAGE_KEY);
-        if(raw!==null){
-            forget.disabled=false;
-            const deck=JSON.parse(raw);
-            if(!validSavedDeck(deck))throw Error('Invalid saved deck');
-            ri.forEach((input,i)=>{input.value=deck.slots[i];input.classList.toggle('filled',!!input.value);});
-            friendInput.value=deck.friend;
-            friendInput.classList.toggle('filled',!!deck.friend);
-            boxRoles=[...deck.roles];
-            boxRoles.forEach((_,i)=>updateRoleBadge(i));
-            cl=deck.logic;uad.checked=deck.onlyDeck;
-            rs.classList.toggle('or-mode',cl==='OR');
-            document.querySelectorAll('.logic-toggle .toggle-option').forEach(button=>{
-                const active=button.dataset.logic===cl;
-                button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));
-            });
-            savedDeckSnapshot=JSON.stringify(currentDeck());
-            updateDeckSaveStatus();
+    const select=document.getElementById('loadoutSelect');
+    const name=document.getElementById('loadoutName');
+    const save=document.getElementById('saveDeckBtn');
+    const update=document.getElementById('updateDeckBtn');
+    const load=document.getElementById('loadDeckBtn');
+    const remove=document.getElementById('deleteDeckBtn');
+    const selected=()=>loadoutLibrary.loadouts.find(item=>item.id===select.value);
+    const updateControls=()=>{
+        const item=selected();
+        update.disabled=load.disabled=remove.disabled=!item;
+        name.value=item?item.name:'';
+    };
+    const render=(id)=>{
+        select.replaceChildren();
+        if(!loadoutLibrary.loadouts.length){
+            const option=document.createElement('option');option.value='';option.textContent='No saved loadouts';select.appendChild(option);
         }
-    } catch(e) {status.textContent='Could not load a saved deck. You can still enter and use a deck.';}
-    document.getElementById('saveDeckBtn').addEventListener('click',()=>{
-        const deck=currentDeck();
-        if(!validSavedDeck(deck)){status.textContent='Could not save: each deck entry must be 500 characters or fewer.';return;}
-        try {
-            const snapshot=JSON.stringify(deck);
-            localStorage.setItem(DECK_STORAGE_KEY,snapshot);
-            savedDeckSnapshot=snapshot;forget.disabled=false;updateDeckSaveStatus();
-        } catch(e) {status.textContent='Could not save on this device. Your current deck is still available.';}
+        for(const item of loadoutLibrary.loadouts){
+            const option=document.createElement('option');option.value=item.id;option.textContent=item.name;select.appendChild(option);
+        }
+        select.value=id||loadoutLibrary.loadouts[0]?.id||'';
+        select.disabled=!loadoutLibrary.loadouts.length;updateControls();
+    };
+    // Commit storage before changing the UI so quota/privacy failures cannot lose loadouts.
+    const persist=(next)=>{
+        try {localStorage.setItem(LOADOUT_STORAGE_KEY,JSON.stringify(next));loadoutLibrary=next;return true;}
+        catch(e){status.textContent='Could not save changes on this device. Your deck and saved loadouts are unchanged.';return false;}
+    };
+    try {
+        const raw=localStorage.getItem(LOADOUT_STORAGE_KEY);
+        if(raw!==null){
+            const parsed=JSON.parse(raw);
+            if(!validLoadoutLibrary(parsed))throw Error('Invalid loadouts');
+            loadoutLibrary=parsed;
+        }else{
+            const legacy=localStorage.getItem(DECK_STORAGE_KEY);
+            if(legacy!==null){
+                const deck=JSON.parse(legacy);
+                if(!validSavedDeck(deck))throw Error('Invalid legacy deck');
+                const migrated={version:1,activeId:'legacy-deck',loadouts:[{id:'legacy-deck',name:'My saved deck',deck}]};
+                localStorage.setItem(LOADOUT_STORAGE_KEY,JSON.stringify(migrated));
+                loadoutLibrary=migrated;
+            }
+        }
+        const active=loadoutLibrary.loadouts.find(item=>item.id===loadoutLibrary.activeId);
+        if(active){applySavedDeck(active.deck);savedDeckSnapshot=JSON.stringify(currentDeck());updateDeckSaveStatus();}
+    }catch(e){
+        status.textContent='Could not read saved loadouts. Reload to try again; your stored data has not been replaced.';
+        save.disabled=update.disabled=load.disabled=remove.disabled=select.disabled=true;
+        return;
+    }
+    render(loadoutLibrary.activeId);
+    select.addEventListener('change',updateControls);
+    const saveCurrent=(replace)=>{
+        const title=name.value.trim(),deck=currentDeck(),target=replace?selected():null;
+        if(!title||title.length>60){status.textContent='Enter a loadout name (1–60 characters).';name.focus();return;}
+        if(replace&&!target)return;
+        if(loadoutLibrary.loadouts.some(item=>item.id!==target?.id&&item.name.toLowerCase()===title.toLowerCase())){
+            status.textContent='That name is already saved. Choose another name or update that loadout.';return;
+        }
+        if(!validSavedDeck(deck)){status.textContent='Each deck entry must be 500 characters or fewer.';return;}
+        const id=target?.id||crypto.randomUUID();
+        const item={id,name:title,deck};
+        const items=target?loadoutLibrary.loadouts.map(old=>old.id===id?item:old):[...loadoutLibrary.loadouts,item];
+        if(!persist({version:1,activeId:id,loadouts:items}))return;
+        savedDeckSnapshot=JSON.stringify(deck);render(id);updateDeckSaveStatus();
+    };
+    save.addEventListener('click',()=>saveCurrent(false));
+    update.addEventListener('click',()=>saveCurrent(true));
+    load.addEventListener('click',()=>{
+        const item=selected();if(!item)return;
+        if(!persist({...loadoutLibrary,activeId:item.id}))return;
+        applySavedDeck(item.deck);savedDeckSnapshot=JSON.stringify(currentDeck());ps();
     });
-    forget.addEventListener('click',()=>{
-        try {
-            localStorage.removeItem(DECK_STORAGE_KEY);
-            savedDeckSnapshot=null;forget.disabled=true;
-            status.textContent='Saved deck removed. Your current deck is unchanged.';
-        } catch(e) {status.textContent='Could not remove the saved deck. Please try again.';}
+    remove.addEventListener('click',()=>{
+        const item=selected();if(!item)return;
+        const isActive=item.id===loadoutLibrary.activeId;
+        const next={version:1,activeId:isActive?null:loadoutLibrary.activeId,loadouts:loadoutLibrary.loadouts.filter(old=>old.id!==item.id)};
+        if(!persist(next))return;
+        if(isActive)savedDeckSnapshot=null;
+        render(next.activeId);
+        status.textContent=`Deleted “${item.name}”. Your current deck is unchanged.`;
     });
 }
 

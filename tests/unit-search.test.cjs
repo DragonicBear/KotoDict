@@ -6,9 +6,9 @@ const { test } = require('node:test');
 
 const root = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const source = html.slice(html.indexOf('function normalizeUnitSearch('), html.indexOf('\nfunction ps()'));
+const source = html.slice(html.indexOf('function normalizeUnitSearch('), html.indexOf('\nlet searchTimer='));
 
-function autocomplete(characters) {
+function autocomplete(characters, wanakana = require('../vendor/wanakana.min.js')) {
     const inputs = Array.from({ length: 13 }, () => {
         const events = {};
         return {
@@ -19,7 +19,7 @@ function autocomplete(characters) {
         };
     });
     const context = vm.createContext({
-        wanakana: require('../vendor/wanakana.min.js'), characters, ri: inputs.slice(0, 12), friendInput: inputs[12],
+        wanakana, characters, ri: inputs.slice(0, 12), friendInput: inputs[12],
         document: { addEventListener() {}, createElement() {
             const classes = new Set();
             return {
@@ -40,7 +40,7 @@ function autocomplete(characters) {
                 querySelectorAll() { return this.options; },
             };
         } },
-        cc: { clear() {} }, ps() {}, setTimeout,
+        cc: { clear() {} }, scheduleSearch() {}, setTimeout,
     });
     vm.runInContext(source + '\nsetupCharAutocomplete();', context);
     return inputs;
@@ -133,5 +133,20 @@ test('touch movement, cancellation and scrolling suppress selection until a fres
         dropdown.options[0].events.click(click);
         assert.equal(input.value, 'うつゆゅがい');
         assert.equal(dropdown.classList.contains('open'), false);
+    }
+});
+
+test('unit readings are prepared once and shared by every slot while typing', () => {
+    const library = require('../vendor/wanakana.min.js');
+    let conversions = 0;
+    const inputs = autocomplete([
+        {name: 'ゲーム', hiragana: 'けげ'},
+        {name: 'キュウセイ', hiragana: 'きく'},
+    ], {...library, toKatakana(...args) { conversions++; return library.toKatakana(...args); }});
+    assert.equal(conversions, 2);
+    for(const input of inputs) {
+        const before = conversions;
+        search(input, 'geemu');
+        assert.equal(conversions - before, 1); // Only the query needs conversion.
     }
 });

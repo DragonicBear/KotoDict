@@ -211,7 +211,7 @@
                     <div class="theme-checklist-container" id="themeChecklistContainer">
                         <button class="theme-toggle-btn" id="themeToggleBtn"><span>Select Themes</span><span class="selected-count" id="themeCount">0</span></button>
                         <div class="theme-dropdown" id="themeDropdown">
-                            <input type="text" class="theme-search-input" id="themeSearchInput" placeholder="Search themes...">
+                            <input type="text" class="theme-search-input" id="themeSearchInput" placeholder="Search themes in kana or romaji…" aria-label="Search themes in Japanese or romaji">
                             <div id="themeOptionsList"></div>
                             <div class="theme-actions"><button id="themeSelectAll">Select All</button><button id="themeClearAll">Clear All</button></div>
                         </div>
@@ -578,7 +578,73 @@ function init(){
 }
 function getAllThemes(){const themes=new Set();const excludeKeywords=['イベント','コラボ','コラボレーション','collab','event','イベ','期間限定','フェス','fes','復刻','ガチャ','キャンペーン','CP','限定','コラボ記念','周年'];for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){const lower=t.toLowerCase();if(!excludeKeywords.some(kw=>lower.includes(kw.toLowerCase()))){themes.add(t);}}}}return [...themes].sort((a,b)=>a.localeCompare(b));}
 function populateThemeChecklist(){const themes=getAllThemes();const themeCounts=new Map();for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){themeCounts.set(t,(themeCounts.get(t)||0)+1);}}}themeOptionsList.innerHTML=themes.map(t=>{const count=themeCounts.get(t)||0;return`<label class="theme-option"><input type="checkbox" value="${t}" class="theme-checkbox"><span>${t}</span><span class="theme-count">${count}</span></label>`;}).join('');document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.addEventListener('change',()=>{if(cb.checked){selectedThemes.add(cb.value);}else{selectedThemes.delete(cb.value);}updateThemeUI();scheduleSearch();});});}
-function filterThemeOptions(query){const lower=query.toLowerCase();document.querySelectorAll('.theme-option').forEach(opt=>{const text=opt.textContent.toLowerCase();opt.style.display=text.includes(lower)?'flex':'none';});}
+// Kana conversion cannot infer kanji readings. Keep aliases for dictionary themes
+// here; the original label remains the value used for theme selection.
+const THEME_READINGS={
+    'お菓子':'おかし', 'その他製造':'そのたせいぞう', 'ゴム製品':'ごむせいひん',
+    'スポーツ選手':'すぽーつせんしゅ', '七福神':'しちふくじん', '三国志':'さんごくし',
+    '三角なもの':'さんかくなもの', '不動産':'ふどうさん', '世知辛い':'せちがらい',
+    '丸いもの':'まるいもの', '乗り物':'のりもの', '企業名':'きぎょうめい',
+    '体操':'たいそう', '偉人':'いじん', '元号':'げんごう', '元素':'げんそ',
+    '冷たいもの':'つめたいもの', '副詞':'ふくし', '助動詞':'じょどうし',
+    '助詞':'じょし', '動詞':'どうし', '化学':'かがく', '医薬品':'いやくひん',
+    '卓球':'たっきゅう', '単位・通貨':'たんい・つうか', '哺乳類':'ほにゅうるい',
+    '喫茶店':'きっさてん', '四角いもの':'しかくいもの', '囲碁・将棋・麻雀':'いご・しょうぎ・まーじゃん',
+    '国・地域':'くに・ちいき', '地名':'ちめい', '天気':'てんき', '学校':'がっこう',
+    '学校の教科':'がっこうのきょうか', '定食':'ていしょく', '家具':'かぐ', '家電':'かでん',
+    '寿司':'すし', '居酒屋':'いざかや', '山手線の駅名':'やまのてせんのえきめい',
+    '島':'しま', '年末年始':'ねんまつねんし', '年末年始テーマ':'ねんまつねんしてーま',
+    '店舗':'てんぽ', '建設':'けんせつ', '形容詞':'けいようし', '怪談・伝承':'かいだん・でんしょう',
+    '情報・通信':'じょうほう・つうしん', '感動詞':'かんどうし', '戦国':'せんごく',
+    '戦艦':'せんかん', '接続詞':'せつぞくし', '文房具':'ぶんぼうぐ', '料理':'りょうり',
+    '方言':'ほうげん', '日本史':'にほんし|にっぽんし', '旧国':'きゅうこく', '星':'ほし',
+    '星座':'せいざ', '映画':'えいが', '春の七草':'はるのななくさ', '本':'ほん',
+    '東京23区':'とうきょう23く|とうきょうにじゅうさんく', '柔道':'じゅうどう', '格闘':'かくとう',
+    '植物・キノコ':'しょくぶつ・きのこ', '楽器':'がっき', '機械':'きかい',
+    '水泳':'すいえい', '水球':'すいきゅう', '海外':'かいがい', '焼肉':'やきにく',
+    '熱いもの':'あついもの', '牛丼':'ぎゅうどん', '白いもの':'しろいもの', '百均':'ひゃっきん',
+    '相撲':'すもう', '相撲の決まり手':'すもうのきまりて', '神話':'しんわ',
+    '秋の七草':'あきのななくさ', '空運':'くううん', '精密機器':'せいみつきき',
+    '緑のもの':'みどりのもの', '職業':'しょくぎょう', '自然地形':'しぜんちけい',
+    '色':'いろ', '芸能人':'げいのうじん', '虫':'むし', '衣服':'いふく',
+    '証券・商品先物取引':'しょうけん・しょうひんさきものとりひき', '調味料':'ちょうみりょう',
+    '赤いもの':'あかいもの', '身体':'しんたい|からだ', '連体詞':'れんたいし',
+    '都道府県':'とどうふけん', '重量挙げ':'じゅうりょうあげ', '野球':'やきゅう',
+    '野菜・果物':'やさい・くだもの', '金属製品':'きんぞくせいひん', '鉄道':'てつどう',
+    '鉄鋼':'てっこう', '鉱業':'こうぎょう', '銀行':'ぎんこう', '陸上':'りくじょう',
+    '陸運':'りくうん', '電化製品':'でんかせいひん', '電気':'でんき', '電気機器':'でんききき',
+    '青いもの':'あおいもの', '食品':'しょくひん', '飲み物':'のみもの', '飲食店':'いんしょくてん',
+    '駅':'えき', '駅名':'えきめい', '魚介':'ぎょかい', '鳥':'とり',
+    '黄色いもの':'きいろいもの', '黒いもの':'くろいもの'
+};
+const themeSearchKeys=new Map();
+function normalizeThemeText(text){
+    return normalizeUnitSearch(text).replace(/[・/\s]+/g,'');
+}
+function getThemeSearchKeys(theme){
+    if(!themeSearchKeys.has(theme)){
+        const labels=[theme,...(THEME_READINGS[theme]||'').split('|').filter(Boolean)];
+        const keys=labels.flatMap(label=>{
+            const folded=normalizeThemeText(label);
+            // Include both library kana expansion (すぽうつ) and the usual
+            // doubled-vowel romaji spelling (supootsu → すぽおつ).
+            const romaji=wanakana.toRomaji(wanakana.toKatakana(folded,{passRomaji:true}));
+            return [folded,normalizeUnitReading(folded),normalizeThemeText(normalizeKanaInput(romaji))];
+        });
+        themeSearchKeys.set(theme,[...new Set(keys)]);
+    }
+    return themeSearchKeys.get(theme);
+}
+function filterThemeOptions(query){
+    const folded=normalizeThemeText(query.trim());
+    const kana=normalizeUnitReading(normalizeKanaInput(folded));
+    document.querySelectorAll('.theme-option').forEach(opt=>{
+        const theme=opt.querySelector('input').value;
+        const matches=getThemeSearchKeys(theme).some(key=>key.includes(folded)||key.includes(kana));
+        opt.style.display=matches?'flex':'none';
+    });
+}
+
 function updateThemeUI(){document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.checked=selectedThemes.has(cb.value);});themeCount.textContent=selectedThemes.size;if(selectedThemes.size>0){themeCount.classList.add('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Themes Selected';}else{themeCount.classList.remove('has-selection');themeToggleBtn.querySelector('span:first-child').textContent='Select Themes';}}
 
 // Maximum one-to-one matching: each unit chooses one kana at one position.

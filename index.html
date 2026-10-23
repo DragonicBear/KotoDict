@@ -182,7 +182,8 @@
 <body>
     <div id="app">
         <div class="container"><header class="app-header"><span class="brand-tile" aria-hidden="true">こ</span><div><h1>KotoDict</h1><p class="app-subtitle">Your Kotodaman board &amp; deck companion</p></div><span class="app-tag">ことばをつなごう</span><button type="button" id="colorModeToggle" class="color-mode-toggle" aria-label="Dark mode" aria-pressed="false">Dark mode</button></header><div class="loading" id="loadingMsg">Loading dictionary...</div><div id="mainContent" style="display:none;">
-            <details class="input-section" aria-labelledby="boardTitle">
+            <p id="appStateStatus" class="section-help" role="status" hidden></p>
+            <details id="boardSection" class="input-section" aria-labelledby="boardTitle">
             <summary class="section-heading"><span class="section-number" aria-hidden="true">01</span><h2 id="boardTitle">Your board</h2></summary><div class="section-body"><p class="section-help">Enter kana or romaji (e.g. ka → か). Switch B (board) to C (character) for a tile you can play.</p>
             <div class="pos-filter-container" id="boardContainer"><div data-index="0"><input type="text" class="pos-input" data-index="0" autocomplete="off" aria-label="Board tile 1"><button type="button" class="cell-toggle board" data-index="0" aria-label="Tile 1: character" aria-pressed="false">B</button></div><div data-index="1"><input type="text" class="pos-input" data-index="1" autocomplete="off" aria-label="Board tile 2"><button type="button" class="cell-toggle board" data-index="1" aria-label="Tile 2: character" aria-pressed="false">B</button></div><div data-index="2"><input type="text" class="pos-input" data-index="2" autocomplete="off" aria-label="Board tile 3"><button type="button" class="cell-toggle board" data-index="2" aria-label="Tile 3: character" aria-pressed="false">B</button></div><div data-index="3"><input type="text" class="pos-input" data-index="3" autocomplete="off" aria-label="Board tile 4"><button type="button" class="cell-toggle board" data-index="3" aria-label="Tile 4: character" aria-pressed="false">B</button></div><div data-index="4"><input type="text" class="pos-input" data-index="4" autocomplete="off" aria-label="Board tile 5"><button type="button" class="cell-toggle board" data-index="4" aria-label="Tile 5: character" aria-pressed="false">B</button></div><div data-index="5"><input type="text" class="pos-input" data-index="5" autocomplete="off" aria-label="Board tile 6"><button type="button" class="cell-toggle board" data-index="5" aria-label="Tile 6: character" aria-pressed="false">B</button></div><div data-index="6"><input type="text" class="pos-input" data-index="6" autocomplete="off" aria-label="Board tile 7"><button type="button" class="cell-toggle board" data-index="6" aria-label="Tile 7: character" aria-pressed="false">B</button></div></div>
             <div class="pos-clear-container" id="posClearContainer"><button class="pos-clear" data-index="0" aria-label="Clear board tile 1">×</button><button class="pos-clear" data-index="1" aria-label="Clear board tile 2">×</button><button class="pos-clear" data-index="2" aria-label="Clear board tile 3">×</button><button class="pos-clear" data-index="3" aria-label="Clear board tile 4">×</button><button class="pos-clear" data-index="4" aria-label="Clear board tile 5">×</button><button class="pos-clear" data-index="5" aria-label="Clear board tile 6">×</button><button class="pos-clear" data-index="6" aria-label="Clear board tile 7">×</button></div>
@@ -194,7 +195,7 @@
             <div class="loadout-panel">
                 <label for="loadoutSelect" class="slot-label">Saved loadouts</label>
                 <select id="loadoutSelect" class="loadout-field" aria-describedby="loadoutHelp"><option value="">No saved loadouts</option></select>
-                <p id="loadoutHelp" class="section-help">Choose a loadout, then Load to replace your current deck. The last saved or loaded deck restores next time.</p>
+                <p id="loadoutHelp" class="section-help">Choose a loadout, then Load to replace your current deck. Your current board, deck and filters restore after a refresh. Named loadouts change only when you save or update them.</p>
                 <div class="deck-save-controls"><button type="button" id="loadDeckBtn" class="mini-btn" disabled>Load selected</button><button type="button" id="deleteDeckBtn" class="mini-btn" disabled>Delete selected</button></div>
                 <label for="loadoutName" class="slot-label">Loadout name</label>
                 <input id="loadoutName" class="loadout-field" type="text" maxlength="60" placeholder="e.g. Fire team" autocomplete="off">
@@ -205,7 +206,7 @@
 
             <details class="optimize-section" id="optimizeSection"><summary class="section-heading"><h2 class="optimize-title">Find your next move</h2></summary><div class="section-body"><p class="section-help">Explore the best combinations for your board and deck.</p><div class="optimize-header"><div><button id="optimizeBtn" class="primary" type="button">Find Best Board</button><button id="stopOptimizeBtn" class="optimize-stop-btn" type="button" style="display:none;">Stop</button></div></div><div id="optimizeResults" class="optimize-results"></div></div></details>
             
-            <details class="filters" aria-labelledby="filtersTitle"><summary class="section-heading"><span class="section-number" aria-hidden="true">03</span><h2 id="filtersTitle">Refine your search</h2></summary><div class="section-body">
+            <details id="filtersSection" class="filters" aria-labelledby="filtersTitle"><summary class="section-heading"><span class="section-number" aria-hidden="true">03</span><h2 id="filtersTitle">Refine your search</h2></summary><div class="section-body">
                 <div class="filter-row"><span class="filter-label">Length:</span><div class="radio-group"><label><input type="checkbox" name="chars" value="2"><span>2</span></label><label><input type="checkbox" name="chars" value="3"><span>3</span></label><label><input type="checkbox" name="chars" value="4"><span>4</span></label><label><input type="checkbox" name="chars" value="5"><span>5</span></label><label><input type="checkbox" name="chars" value="6"><span>6</span></label><label><input type="checkbox" name="chars" value="7"><span>7</span></label></div></div>
                 <div class="filter-row"><span class="filter-label">Theme:</span>
                     <div class="theme-checklist-container" id="themeChecklistContainer">
@@ -441,8 +442,8 @@ function updateDeckSaveStatus(){
     const active=loadoutLibrary.loadouts.find(item=>item.id===loadoutLibrary.activeId);
     if(!active)return;
     document.getElementById('deckSaveStatus').textContent=JSON.stringify(currentDeck())===savedDeckSnapshot
-        ?`“${active.name}” is saved on this device and will restore next time.`
-        :`Unsaved changes to “${active.name}”. Save as new or update a selected loadout.`;
+        ?`“${active.name}” is saved as a loadout on this device.`
+        :`Changes to “${active.name}” are not saved to that loadout. Save as new or update a selected loadout.`;
 }
 function setupDeckStorage(){
     const status=document.getElementById('deckSaveStatus');
@@ -531,6 +532,76 @@ function setupDeckStorage(){
     });
 }
 
+const APP_STORAGE_KEY='kotodict-app-state-v1';
+const APP_SECTION_IDS=['boardSection','refineSection','optimizeSection','filtersSection'];
+let appStateReady=false,lastAppState=null;
+function currentAppState(){
+    return {
+        version:1,board:pi.map(input=>input.value),characterTiles:[...ff],deck:currentDeck(),
+        pattern:ts.value,sort:ss.value,requireAllBoard:rab.checked,
+        lengths:Array.from(document.querySelectorAll('input[name="chars"]:checked'),input=>input.value),
+        themes:[...selectedThemes],themeQuery:themeSearchInput.value,
+        sections:APP_SECTION_IDS.map(id=>document.getElementById(id).open)
+    };
+}
+function validAppState(state){
+    const text=value=>typeof value==='string'&&value.length<=500;
+    const list=(value,size,check)=>Array.isArray(value)&&value.length===size&&value.every(check);
+    return !!state&&state.version===1&&list(state.board,7,text)&&
+        list(state.characterTiles,7,value=>typeof value==='boolean')&&validSavedDeck(state.deck)&&
+        text(state.pattern)&&['combo-desc','combo-asc','asc','desc'].includes(state.sort)&&
+        typeof state.requireAllBoard==='boolean'&&Array.isArray(state.lengths)&&state.lengths.length<=6&&
+        state.lengths.every(value=>['2','3','4','5','6','7'].includes(value))&&
+        Array.isArray(state.themes)&&state.themes.length<=500&&state.themes.every(text)&&text(state.themeQuery)&&
+        list(state.sections,APP_SECTION_IDS.length,value=>typeof value==='boolean');
+}
+function appStateNotice(message){
+    const status=document.getElementById('appStateStatus');
+    status.textContent=message;status.hidden=!message;
+}
+function persistAppState(){
+    if(!appStateReady)return;
+    try{
+        const state=currentAppState();
+        if(!validAppState(state)){appStateNotice('Some entries are too long to save automatically. Keep each entry within 500 characters.');return;}
+        const raw=JSON.stringify(state);
+        if(raw===lastAppState)return;
+        localStorage.setItem(APP_STORAGE_KEY,raw);
+        lastAppState=raw;appStateNotice('');
+    }catch(e){appStateNotice('Your browser could not save the current session. You can keep searching, but changes may be lost after a refresh.');}
+}
+function restoreAppState(state){
+    applySavedDeck(state.deck);
+    pi.forEach((input,i)=>{input.value=state.board[i];input.classList.toggle('filled',!!input.value);});
+    ff=[...state.characterTiles];
+    tg.forEach((button,i)=>{
+        button.classList.toggle('free',ff[i]);button.classList.toggle('board',!ff[i]);
+        button.textContent=ff[i]?'C':'B';button.setAttribute('aria-pressed',String(ff[i]));
+    });
+    ts.value=state.pattern;ss.value=state.sort;rab.checked=state.requireAllBoard;
+    document.querySelectorAll('input[name="chars"]').forEach(input=>{input.checked=state.lengths.includes(input.value);});
+    const available=new Set(Array.from(document.querySelectorAll('.theme-checkbox'),input=>input.value));
+    selectedThemes=new Set(state.themes.filter(theme=>available.has(theme)));
+    themeSearchInput.value=state.themeQuery;updateThemeUI();filterThemeOptions(state.themeQuery);
+    APP_SECTION_IDS.forEach((id,i)=>{document.getElementById(id).open=state.sections[i];});
+    updateDeckSaveStatus();
+}
+function setupAppStateStorage(){
+    try{
+        const raw=localStorage.getItem(APP_STORAGE_KEY);
+        if(raw!==null){
+            const state=JSON.parse(raw);
+            if(!validAppState(state))throw Error('Invalid app state');
+            restoreAppState(state);
+        }
+    }catch(e){appStateNotice('Could not restore the previous session. New changes will be saved if browser storage is available.');}
+    // Do not overwrite missing or unreadable storage simply by opening the app.
+    lastAppState=JSON.stringify(currentAppState());appStateReady=true;
+    APP_SECTION_IDS.forEach(id=>document.getElementById(id).addEventListener('toggle',persistAppState));
+    window.addEventListener('pagehide',persistAppState);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')persistAppState();});
+}
+
 function init(){
     buildDeckGrid();
     pi=Array.from(document.querySelectorAll('.pos-input'));
@@ -567,14 +638,16 @@ function init(){
     document.querySelectorAll('input[type="checkbox"]').forEach(i=>i.addEventListener('change',()=>scheduleSearch()));
     ss.addEventListener('change',()=>scheduleSearch());
     ob.addEventListener('click',()=>{if(!io)so2();});stb.addEventListener('click',()=>{so=true;});
-    themeToggleBtn.addEventListener('click',(e)=>{e.stopPropagation();themeDropdown.classList.toggle('open');if(themeDropdown.classList.contains('open')){themeSearchInput.value='';filterThemeOptions('');themeSearchInput.focus();}});
-    themeSearchInput.addEventListener('input',()=>filterThemeOptions(themeSearchInput.value));
+    themeToggleBtn.addEventListener('click',(e)=>{e.stopPropagation();themeDropdown.classList.toggle('open');if(themeDropdown.classList.contains('open')){filterThemeOptions(themeSearchInput.value);themeSearchInput.focus();}});
+    themeSearchInput.addEventListener('input',()=>{filterThemeOptions(themeSearchInput.value);persistAppState();});
     themeSelectAllBtn.addEventListener('click',()=>{const allThemes=getAllThemes();allThemes.forEach(t=>selectedThemes.add(t));updateThemeUI();scheduleSearch();});
     themeClearAllBtn.addEventListener('click',()=>{selectedThemes.clear();updateThemeUI();scheduleSearch();});
     document.addEventListener('click',(e)=>{if(!e.target.closest('#themeChecklistContainer')){themeDropdown.classList.remove('open');}});
     setupDeckStorage();
+    populateThemeChecklist();
+    setupAppStateStorage();
     setupCharAutocomplete();
-    scheduleSearch();populateThemeChecklist();
+    scheduleSearch();
 }
 function getAllThemes(){const themes=new Set();const excludeKeywords=['イベント','コラボ','コラボレーション','collab','event','イベ','期間限定','フェス','fes','復刻','ガチャ','キャンペーン','CP','限定','コラボ記念','周年'];for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){const lower=t.toLowerCase();if(!excludeKeywords.some(kw=>lower.includes(kw.toLowerCase()))){themes.add(t);}}}}return [...themes].sort((a,b)=>a.localeCompare(b));}
 function populateThemeChecklist(){const themes=getAllThemes();const themeCounts=new Map();for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){themeCounts.set(t,(themeCounts.get(t)||0)+1);}}}themeOptionsList.innerHTML=themes.map(t=>{const count=themeCounts.get(t)||0;return`<label class="theme-option"><input type="checkbox" value="${t}" class="theme-checkbox"><span>${t}</span><span class="theme-count">${count}</span></label>`;}).join('');document.querySelectorAll('.theme-checkbox').forEach(cb=>{cb.addEventListener('change',()=>{if(cb.checked){selectedThemes.add(cb.value);}else{selectedThemes.delete(cb.value);}updateThemeUI();scheduleSearch();});});}
@@ -828,6 +901,7 @@ function setupCharAutocomplete(){
 
 let searchTimer=null,searchFrame=null;
 function scheduleSearch(delay=0){
+    persistAppState();
     clearTimeout(searchTimer);
     if(searchFrame!==null)cancelAnimationFrame(searchFrame);
     searchTimer=null;searchFrame=null;

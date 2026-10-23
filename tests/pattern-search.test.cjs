@@ -138,7 +138,7 @@ test('search scheduling paints first and cancels superseded typing or role chang
         cancelAnimationFrame: id => frames.delete(id),
         setTimeout: fn => { timers.set(++nextId, fn); return nextId; },
         clearTimeout: id => timers.delete(id),
-        ps: () => searches++,
+        ps: () => searches++, persistAppState() {},
     });
     vm.runInContext(html.slice(html.indexOf('let searchTimer='), html.indexOf('function ps()')), context);
     function flush(queue) {

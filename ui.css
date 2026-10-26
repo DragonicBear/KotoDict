@@ -8,6 +8,7 @@
     --paper: #fffdf7;
 }
 html, body { position: static; height: auto; min-height: 100%; overflow-x: clip; }
+html { scrollbar-gutter: stable; }
 body { color: var(--ink); background: var(--paper); overscroll-behavior: auto; }
 #app { height: auto; overflow: visible; padding: 28px 20px 60px; }
 .container { max-width: 900px; padding: 0; background: transparent; box-shadow: none; margin-bottom: 0; }
@@ -86,7 +87,10 @@ input[type="checkbox"] { accent-color: var(--blue); flex-shrink: 0; }
 .text-filter-container:focus-within { border-color: var(--blue); }
 .text-filter-label { font-size: 13px; color: var(--muted); }
 .text-filter-input { min-width: 0; min-height: 34px; }
-.result-count { font-size: 13px; padding-left: 2px; color: var(--muted); }
+/* Keep enough page below the pattern field to preserve its scroll position
+   when a long result list becomes empty. svh stays stable as mobile bars move. */
+.results { min-height: 100vh; min-height: 100svh; overflow-anchor: none; }
+.result-count { min-height: 3em; line-height: 1.5; font-size: 13px; padding-left: 2px; color: var(--muted); }
 .result-item { background: white; border: 1px solid var(--line); border-left: 4px solid #d7e3e7; border-radius: 12px; padding: 18px; }
 .result-item.refine-match { border-left-color: var(--blue); background: #f3fbfe; }
 .result-word { gap: 12px; flex-wrap: wrap; color: var(--ink); }

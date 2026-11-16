@@ -178,6 +178,7 @@
     </script>
     <link rel="stylesheet" href="ui.css">
     <script src="vendor/wanakana.min.js"></script>
+    <script src="pattern-history.js"></script>
 </head>
 <body>
     <div id="app">
@@ -222,6 +223,14 @@
             <div class="sort-row"><label class="sort-label" for="sortSelect">Matches</label><select id="sortSelect" class="sort-select"><option value="combo-desc" selected>Combo (High→Low)</option><option value="combo-asc">Combo (Low→High)</option><option value="asc">Length (Low→High)</option><option value="desc">Length (High→Low)</option></select></div>
             <div class="text-filter-container"><label class="text-filter-label" for="textSearch">Pattern</label><input type="text" id="textSearch" class="text-filter-input" autocomplete="off" placeholder="Kana or romaji…" aria-describedby="patternHelp"></div>
             <p class="section-help" id="patternHelp">Romaji works too: ka → か, shi → し. Use - for one unknown kana, e.g. ka--.</p>
+            <details class="pattern-history" id="patternHistory">
+                <summary class="section-heading"><span>Recent patterns</span><span id="patternHistoryCount">0</span></summary>
+                <p class="section-help">Your latest 50 patterns are saved on this device after a pause, Enter, or leaving the field. Tap a pattern to search again.</p>
+                <button type="button" class="mini-btn" id="clearPatternHistory" disabled>Clear history</button>
+                <p id="patternHistoryEmpty" class="section-help">No recent patterns yet.</p>
+                <ul id="patternHistoryList" class="pattern-history-list"></ul>
+                <p id="patternHistoryStatus" class="section-help" role="status" hidden></p>
+            </details>
             <div class="results"><div class="result-count" id="resultCount">Enter characters to search</div><div id="resultList"></div></div>
         </div><footer class="app-footer">Made for word play · An unofficial Kotodaman companion</footer></div>
     </div>
@@ -647,6 +656,7 @@ function init(){
     populateThemeChecklist();
     setupAppStateStorage();
     setupCharAutocomplete();
+    createPatternHistory({input:ts,normalize:normalizeKanaInput,onSelect:()=>scheduleSearch()});
     scheduleSearch();
 }
 function getAllThemes(){const themes=new Set();const excludeKeywords=['イベント','コラボ','コラボレーション','collab','event','イベ','期間限定','フェス','fes','復刻','ガチャ','キャンペーン','CP','限定','コラボ記念','周年'];for(const w of d){if(w.themes&&Array.isArray(w.themes)){for(const t of w.themes){const lower=t.toLowerCase();if(!excludeKeywords.some(kw=>lower.includes(kw.toLowerCase()))){themes.add(t);}}}}return [...themes].sort((a,b)=>a.localeCompare(b));}

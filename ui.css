@@ -263,3 +263,16 @@ button:disabled { opacity: .5; cursor: default; }
 .loadout-panel .deck-save-controls { margin: 10px 0 16px; }
 .loadout-panel .section-help { margin: 8px 0 0; }
 [data-theme="dark"] .loadout-field { background: #243446; color: var(--ink); }
+
+/* History stays collapsed until requested, so recording a query does not move results. */
+.pattern-history { margin: 0 0 18px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); }
+.pattern-history summary { font-size: 14px; }
+.pattern-history summary + .section-help { margin-top: 12px; }
+#patternHistoryCount { color: var(--muted); font-size: 12px; }
+#clearPatternHistory { margin-bottom: 10px; }
+.pattern-history-list { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow-y: auto; }
+.pattern-history-list li { display: flex; gap: 8px; margin-bottom: 6px; }
+.pattern-history-reuse { flex: 1; min-width: 0; text-align: left; overflow-wrap: anywhere; padding: 10px 12px; background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
+.pattern-history-reuse:hover { border-color: var(--blue); background: var(--paper); }
+.pattern-history-delete { flex: 0 0 44px; min-height: 44px; font-size: 20px; }
+#patternHistoryStatus { margin: 10px 0 0; }

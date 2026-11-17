@@ -264,7 +264,7 @@ button:disabled { opacity: .5; cursor: default; }
 .loadout-panel .section-help { margin: 8px 0 0; }
 [data-theme="dark"] .loadout-field { background: #243446; color: var(--ink); }
 
-/* History stays collapsed until requested, so recording a query does not move results. */
+/* Saved patterns stay collapsed until requested. */
 .pattern-history { margin: 0 0 18px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); }
 .pattern-history summary { font-size: 14px; }
 .pattern-history summary + .section-help { margin-top: 12px; }
@@ -275,4 +275,5 @@ button:disabled { opacity: .5; cursor: default; }
 .pattern-history-reuse { flex: 1; min-width: 0; text-align: left; overflow-wrap: anywhere; padding: 10px 12px; background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
 .pattern-history-reuse:hover { border-color: var(--blue); background: var(--paper); }
 .pattern-history-delete { flex: 0 0 44px; min-height: 44px; font-size: 20px; }
-#patternHistoryStatus { margin: 10px 0 0; }
+.pattern-save-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+#patternHistoryStatus { margin: 0; }

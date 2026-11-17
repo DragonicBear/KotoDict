@@ -223,13 +223,13 @@
             <div class="sort-row"><label class="sort-label" for="sortSelect">Matches</label><select id="sortSelect" class="sort-select"><option value="combo-desc" selected>Combo (High→Low)</option><option value="combo-asc">Combo (Low→High)</option><option value="asc">Length (Low→High)</option><option value="desc">Length (High→Low)</option></select></div>
             <div class="text-filter-container"><label class="text-filter-label" for="textSearch">Pattern</label><input type="text" id="textSearch" class="text-filter-input" autocomplete="off" placeholder="Kana or romaji…" aria-describedby="patternHelp"></div>
             <p class="section-help" id="patternHelp">Romaji works too: ka → か, shi → し. Use - for one unknown kana, e.g. ka--.</p>
+            <div class="pattern-save-row"><button type="button" class="mini-btn" id="savePattern" disabled>Save pattern</button><span id="patternHistoryStatus" class="section-help" role="status" hidden></span></div>
             <details class="pattern-history" id="patternHistory">
-                <summary class="section-heading"><span>Recent patterns</span><span id="patternHistoryCount">0</span></summary>
-                <p class="section-help">Your latest 50 patterns are saved on this device after a pause, Enter, or leaving the field. Tap a pattern to search again.</p>
-                <button type="button" class="mini-btn" id="clearPatternHistory" disabled>Clear history</button>
-                <p id="patternHistoryEmpty" class="section-help">No recent patterns yet.</p>
+                <summary class="section-heading"><span>Saved patterns</span><span id="patternHistoryCount">0</span></summary>
+                <p class="section-help">Use Save pattern to keep a pattern on this device. Tap a saved pattern to search again. You can keep up to 50 patterns.</p>
+                <button type="button" class="mini-btn" id="clearPatternHistory" disabled>Clear saved patterns</button>
+                <p id="patternHistoryEmpty" class="section-help">No saved patterns yet.</p>
                 <ul id="patternHistoryList" class="pattern-history-list"></ul>
-                <p id="patternHistoryStatus" class="section-help" role="status" hidden></p>
             </details>
             <div class="results"><div class="result-count" id="resultCount">Enter characters to search</div><div id="resultList"></div></div>
         </div><footer class="app-footer">Made for word play · An unofficial Kotodaman companion</footer></div>

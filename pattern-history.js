@@ -1,15 +1,13 @@
-/* Recent pattern searches, separate from saved deck and current app state. */
+/* Manually saved patterns, separate from saved deck and current app state. */
 function createPatternHistory(options){
     const input=options.input,normalize=options.normalize,onSelect=options.onSelect;
     const doc=options.document||document,win=options.window||window;
     const storage=options.storage||(()=>win.localStorage);
-    const later=options.setTimeout||((fn,delay)=>win.setTimeout(fn,delay));
-    const cancel=options.clearTimeout||(id=>win.clearTimeout(id));
     const key='kotodict-pattern-history-v1',limit=50;
     const list=doc.getElementById('patternHistoryList'),count=doc.getElementById('patternHistoryCount');
     const empty=doc.getElementById('patternHistoryEmpty'),status=doc.getElementById('patternHistoryStatus');
-    const clear=doc.getElementById('clearPatternHistory');
-    let entries=[],timer=null,dirty=false,composing=false;
+    const clear=doc.getElementById('clearPatternHistory'),save=doc.getElementById('savePattern');
+    let entries=[],composing=false;
     const valid=value=>typeof value==='string'&&value.length>0&&value.length<=500&&/^[\u3041-\u3096ー-]+$/.test(value);
     function notice(message){status.textContent=message;status.hidden=!message;}
     function read(){
@@ -29,7 +27,7 @@ function createPatternHistory(options){
             return false;
         }
     }
-    function stopTimer(){if(timer!==null)cancel(timer);timer=null;}
+    function updateSaveButton(){save.disabled=composing||!valid(normalize(input.value.trim(),true));}
     function render(){
         list.replaceChildren();
         count.textContent=String(entries.length);
@@ -43,13 +41,10 @@ function createPatternHistory(options){
             remove.className='pattern-history-delete';remove.textContent='×';
             remove.setAttribute('aria-label','Delete pattern: '+pattern);
             reuse.addEventListener('click',()=>{
-                remember();stopTimer();dirty=false;input.value=pattern;
-                if(write([pattern,...entries.filter(item=>item!==pattern)]))render();
+                input.value=pattern;updateSaveButton();
                 onSelect();input.focus({preventScroll:true});
             });
             remove.addEventListener('click',()=>{
-                // A later blur/pagehide must not silently recreate a deleted entry.
-                remember();stopTimer();dirty=false;
                 if(write(entries.filter(item=>item!==pattern))){
                     render();
                     const next=list.children[Math.min(index,list.children.length-1)];
@@ -59,37 +54,28 @@ function createPatternHistory(options){
             row.append(reuse,remove);list.appendChild(row);
         });
     }
-    function remember(){
-        stopTimer();
-        if(!dirty||composing)return;
+    save.addEventListener('click',()=>{
+        updateSaveButton();
+        if(save.disabled)return;
         const pattern=normalize(input.value.trim(),true);
-        if(!valid(pattern)){dirty=false;return;}
-        if(write([pattern,...entries.filter(item=>item!==pattern)].slice(0,limit))){
-            dirty=false;render();
+        if(entries.length>=limit&&!entries.includes(pattern)){
+            notice('You have 50 saved patterns. Delete one before saving another.');return;
         }
-    }
-    function changed(){
-        stopTimer();dirty=true;
-        if(!composing)timer=later(remember,1200);
-    }
-    input.addEventListener('input',changed);
-    input.addEventListener('compositionstart',()=>{composing=true;stopTimer();});
-    input.addEventListener('compositionend',()=>{composing=false;changed();});
+        if(write([pattern,...entries.filter(item=>item!==pattern)])){
+            render();notice('Saved pattern: '+pattern);
+        }
+    });
+    input.addEventListener('input',updateSaveButton);
+    input.addEventListener('compositionstart',()=>{composing=true;updateSaveButton();});
+    input.addEventListener('compositionend',()=>{composing=false;updateSaveButton();});
     input.addEventListener('keydown',event=>{
-        if(event.key==='Enter'&&!event.isComposing&&!composing){dirty=true;remember();onSelect();}
+        if(event.key==='Enter'&&!event.isComposing&&!composing)onSelect();
     });
-    input.addEventListener('blur',event=>{
-        // Let a history button handle the pending query without replacing its DOM
-        // between focus moving away from the input and the ensuing click.
-        if(!doc.getElementById('patternHistory').contains(event.relatedTarget))remember();
-    });
-    win.addEventListener('pagehide',remember);
-    doc.addEventListener('visibilitychange',()=>{if(doc.visibilityState==='hidden')remember();});
+    doc.getElementById('clearBtn').addEventListener('click',updateSaveButton);
     clear.addEventListener('click',()=>{
-        stopTimer();dirty=false;
         if(write([])){render();doc.querySelector('#patternHistory summary').focus({preventScroll:true});}
     });
-    try{entries=read();}catch(e){notice('Could not read pattern history. New searches will be saved if browser storage is available.');}
-    render();
+    try{entries=read();}catch(e){notice('Could not read pattern history. Use Save pattern to try saving if browser storage is available.');}
+    render();updateSaveButton();
 }
 if(typeof module!=='undefined'&&module.exports)module.exports={createPatternHistory};

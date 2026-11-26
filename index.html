@@ -223,11 +223,16 @@
             <div class="sort-row"><label class="sort-label" for="sortSelect">Matches</label><select id="sortSelect" class="sort-select"><option value="combo-desc" selected>Combo (High→Low)</option><option value="combo-asc">Combo (Low→High)</option><option value="asc">Length (Low→High)</option><option value="desc">Length (High→Low)</option></select></div>
             <div class="text-filter-container"><label class="text-filter-label" for="textSearch">Pattern</label><input type="text" id="textSearch" class="text-filter-input" autocomplete="off" placeholder="Kana or romaji…" aria-describedby="patternHelp"></div>
             <p class="section-help" id="patternHelp">Romaji works too: ka → か, shi → し. Use - for one unknown kana, e.g. ka--.</p>
-            <div class="pattern-save-row"><button type="button" class="mini-btn" id="savePattern" disabled>Save pattern</button><span id="patternHistoryStatus" class="section-help" role="status" hidden></span></div>
+            <div class="pattern-save-row"><label for="patternGroup">Quest group</label><select class="sort-select" id="patternGroup"><option value="">Ungrouped</option></select><button type="button" class="mini-btn" id="savePattern" disabled>Save pattern</button><span id="patternHistoryStatus" class="section-help" role="status" hidden></span></div>
             <details class="pattern-history" id="patternHistory">
                 <summary class="section-heading"><span>Saved patterns</span><span id="patternHistoryCount">0</span></summary>
-                <p class="section-help">Use Save pattern to keep a pattern on this device. Tap a saved pattern to search again. You can keep up to 50 patterns.</p>
-                <button type="button" class="mini-btn" id="clearPatternHistory" disabled>Clear saved patterns</button>
+                <p class="section-help">Save up to 50 boards per quest group. Select a saved pattern to search it again.</p>
+                <div class="pattern-save-row">
+                    <input id="patternGroupName" class="loadout-field" maxlength="60" aria-label="New quest group name" placeholder="New quest name">
+                    <button type="button" class="mini-btn" id="addPatternGroup">Create group</button>
+                    <button type="button" class="mini-btn" id="deletePatternGroup" disabled>Delete group</button>
+                </div>
+                <button type="button" class="mini-btn" id="clearPatternHistory" disabled>Clear patterns in this group</button>
                 <p id="patternHistoryEmpty" class="section-help">No saved patterns yet.</p>
                 <ul id="patternHistoryList" class="pattern-history-list"></ul>
             </details>

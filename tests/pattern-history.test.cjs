@@ -19,7 +19,7 @@ function element(){
     };
 }
 function app(storage=new Map(),failure={}){
-    const ids=Object.fromEntries(['patternHistory','patternHistoryList','patternHistoryCount','patternHistoryEmpty','patternHistoryStatus','clearPatternHistory','savePattern','clearBtn'].map(id=>[id,element()]));
+    const ids=Object.fromEntries(['patternHistory','patternHistoryList','patternHistoryCount','patternHistoryEmpty','patternHistoryStatus','clearPatternHistory','savePattern','clearBtn','patternGroup','patternGroupName','addPatternGroup','deletePatternGroup'].map(id=>[id,element()]));
     const summary=element(),input=element(),win=element(),doc=element();
     ids.patternHistory.append(summary,ids.patternHistoryList,ids.clearPatternHistory);
     doc.getElementById=id=>ids[id];doc.querySelector=()=>summary;doc.createElement=element;
@@ -108,4 +108,21 @@ test('failed saves and deletions keep existing data and allow retry',()=>{
 test('board reset updates Save button availability without changing saved patterns',()=>{
     const a=app();a.type('sai');a.save();a.input.value='';a.ids.clearBtn.fire('click');
     assert.equal(a.ids.savePattern.disabled,true);assert.deepEqual(a.patterns(),['さい']);
+});
+
+test('quest groups keep independent boards and restore the selected quest',()=>{
+    const a=app();a.type('sai');a.save();
+    function create(name){a.ids.patternGroupName.value=name;a.ids.addPatternGroup.fire('click');}
+    create('Quest A');a.type('kou--');a.save();
+    create('Quest B');assert.equal(a.rows().length,0);
+    a.type('--sho-');a.save();
+    const b=app(a.storage);
+    assert.equal(b.ids.patternGroup.value,'Quest B');
+    assert.equal(b.rows()[0].children[0].textContent,'--しょ-');
+    b.ids.patternGroup.value='Quest A';b.ids.patternGroup.fire('change');
+    assert.equal(b.rows()[0].children[0].textContent,'こう--');
+    b.win.confirm=()=>true;b.ids.deletePatternGroup.fire('click');
+    assert.equal(b.ids.patternGroup.value,'');
+    assert.equal(b.rows()[0].children[0].textContent,'さい');
+    assert.deepEqual(b.ids.patternGroup.children.map(option=>option.textContent),['Ungrouped','Quest B']);
 });

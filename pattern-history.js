@@ -7,7 +7,42 @@ function createPatternHistory(options){
     const list=doc.getElementById('patternHistoryList'),count=doc.getElementById('patternHistoryCount');
     const empty=doc.getElementById('patternHistoryEmpty'),status=doc.getElementById('patternHistoryStatus');
     const clear=doc.getElementById('clearPatternHistory'),save=doc.getElementById('savePattern');
-    let entries=[],composing=false;
+    const groupKey='kotodict-pattern-groups-v1';
+    const picker=doc.getElementById('patternGroup'),nameInput=doc.getElementById('patternGroupName');
+    const deleteGroup=doc.getElementById('deletePatternGroup');
+    let groups=[],active='',entries=[],composing=false;
+    function showGroup(){
+        picker.replaceChildren();
+        for(const name of ['',...groups.map(group=>group.name)]){
+            const option=doc.createElement('option');
+            option.value=name;option.textContent=name||'Ungrouped';picker.appendChild(option);
+        }
+        picker.value=active;deleteGroup.disabled=!active;
+        render();
+    }
+    function selectGroup(nextGroups,nextActive){
+        try{
+            const patterns=nextActive?nextGroups.find(group=>group.name===nextActive).patterns:read();
+            storage().setItem(groupKey,JSON.stringify({version:1,groups:nextGroups,active:nextActive}));
+            groups=nextGroups;active=nextActive;entries=patterns;notice('');showGroup();return true;
+        }catch(e){
+            picker.value=active;notice('Could not save quest groups in this browser.');return false;
+        }
+    }
+    picker.addEventListener('change',()=>selectGroup(groups,picker.value));
+    doc.getElementById('addPatternGroup').addEventListener('click',()=>{
+        const name=nameInput.value.trim();
+        if(!name){nameInput.focus();return;}
+        if(['Ungrouped',...groups.map(group=>group.name)].some(existing=>existing.toLowerCase()===name.toLowerCase())){
+            notice('Choose a different quest group name.');return;
+        }
+        if(selectGroup([...groups,{name,patterns:[]}],name))nameInput.value='';
+    });
+    deleteGroup.addEventListener('click',()=>{
+        if(active&&win.confirm('Delete “'+active+'” and its saved patterns?')){
+            selectGroup(groups.filter(group=>group.name!==active),'');
+        }
+    });
     const valid=value=>typeof value==='string'&&value.length>0&&value.length<=500&&/^[\u3041-\u3096ー-]+$/.test(value);
     function notice(message){status.textContent=message;status.hidden=!message;}
     function read(){
@@ -19,6 +54,10 @@ function createPatternHistory(options){
         return [...new Set(data.patterns)];
     }
     function write(next){
+        if(active){
+            const updated=groups.map(group=>group.name===active?{name:active,patterns:next}:group);
+            return selectGroup(updated,active);
+        }
         try{
             storage().setItem(key,JSON.stringify({version:1,patterns:next}));
             entries=next;notice('');return true;
@@ -76,6 +115,19 @@ function createPatternHistory(options){
         if(write([])){render();doc.querySelector('#patternHistory summary').focus({preventScroll:true});}
     });
     try{entries=read();}catch(e){notice('Could not read pattern history. Use Save pattern to try saving if browser storage is available.');}
-    render();updateSaveButton();
+    try{
+        const raw=storage().getItem(groupKey);
+        if(raw!==null){
+            const saved=JSON.parse(raw);
+            if(saved.version!==1||!Array.isArray(saved.groups)||!saved.groups.every(group=>
+                typeof group.name==='string'&&group.name.trim()&&group.name.length<=60&&
+                Array.isArray(group.patterns)&&group.patterns.length<=limit&&group.patterns.every(valid)
+            ))throw Error('Invalid groups');
+            groups=saved.groups;
+            const selected=groups.find(group=>group.name===saved.active);
+            if(selected){active=selected.name;entries=selected.patterns;}
+        }
+    }catch(e){notice('Could not read saved quest groups.');}
+    showGroup();updateSaveButton();
 }
 if(typeof module!=='undefined'&&module.exports)module.exports={createPatternHistory};
